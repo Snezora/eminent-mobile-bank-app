@@ -5,7 +5,7 @@ export default function Index() {
   if (Platform.OS === 'web') {
     return (
       <div className=' w-[100%] flex justify-center text-center items-center'>
-        <p className='text-center font-bold'>Text for web</p>
+        <p className='text-center font-bold'>Welcome to Bank Loan Application Approval Prediction Model</p>
       </div>
     );
   }
