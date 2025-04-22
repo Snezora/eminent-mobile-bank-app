@@ -7,9 +7,9 @@ import {
   useColorScheme,
   RefreshControl,
   ScrollView,
-  Button,
   ViewStyle,
   Dimensions,
+  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { transactions } from "@/assets/data/dummyTransactions";
@@ -24,6 +24,8 @@ import dayjs from "dayjs";
 import { Dropdown, MultiSelect } from "react-native-element-dropdown";
 import { Transaction } from "@/assets/data/types";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
+import { DateSort, DateSortComponent } from "@/src/components/DateSort";
+import Button from "@/src/components/Button";
 
 const dateSort = [
   { label: "Ascending", value: "ascending" },
@@ -50,7 +52,10 @@ const TransferAdminPage = () => {
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
+  const [updateTime, setUpdateTime] = useState(new Date());
 
+  const isBetween = require("dayjs/plugin/isBetween");
+  dayjs.extend(isBetween);
   const deviceWidth = Dimensions.get("window").width; //full width
 
   useEffect(() => {
@@ -66,22 +71,22 @@ const TransferAdminPage = () => {
       setTransactions(filtered);
     }
 
-    if (dateOrder === "ascending") {
-      filtered.sort((a, b) => {
-        const dateA = new Date(a.transfer_datetime).getTime();
-        const dateB = new Date(b.transfer_datetime).getTime();
-        return dateA - dateB;
-      });
-    } else {
-      filtered.sort((a, b) => {
-        const dateA = new Date(a.transfer_datetime).getTime();
-        const dateB = new Date(b.transfer_datetime).getTime();
-        return dateB - dateA;
+    if (startDate && endDate) {
+      filtered = transactions.filter((transaction) => {
+        const transactionDate = dayjs(transaction.transfer_datetime);
+        return dayjs(transactionDate).isBetween(
+          startDate,
+          endDate,
+          "day",
+          "[]"
+        );
       });
     }
 
+    filtered = DateSort(dateOrder, filtered);
+
     setTransactions(filtered);
-  }, [dateOrder, selectedTransferTypes]);
+  }, [dateOrder, selectedTransferTypes, startDate, endDate]);
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -97,35 +102,44 @@ const TransferAdminPage = () => {
             return (
               <View style={styles.filterContainer}>
                 <Text style={styles.filterTitle}>Sort & Filter</Text>
-                <ScrollView style={{ height: "100%" }}>
+                <ScrollView style={{ height: "80%" }}>
                   <Text style={styles.filterSubtitle}>Sort</Text>
                   <Text style={styles.filterOption}>Date Order</Text>
-                  <Dropdown
-                    value={dateOrder}
-                    data={dateSort}
-                    onChange={(value) => {
-                      setDateOrder(value.value);
-                    }}
-                    labelField={"label"}
-                    valueField={"value"}
-                    containerStyle={{
-                      marginBottom: 20,
-                      borderRadius: 10,
-                      backgroundColor: "white",
-                      padding: 10,
-                    }}
-                    style={{
-                      borderRadius: 10,
-                      backgroundColor: "white",
-                      padding: 10,
-                      borderColor: "black",
-                      borderWidth: 1,
-                      marginTop: 10,
-                      marginBottom: 20,
-                    }}
+                  <DateSortComponent
+                    dateOrder={dateOrder}
+                    setDateOrder={setDateOrder}
                   />
-                  <Text style={styles.filterSubtitle}>Filter by</Text>
-                  <Text style={styles.filterOption}>Transfer Type</Text>
+                  <Text style={[styles.filterSubtitle, { marginTop: 10 }]}>
+                    Filter by
+                  </Text>
+                  <View
+                    style={{
+                      flex: 1,
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                    }}
+                  >
+                    <Text style={styles.filterOption}>Transfer Type</Text>
+                    {selectedTransferTypes.length > 0 && (
+                      <TouchableOpacity
+                        onPress={() => {
+                          setTransferTypes([]);
+                        }}
+                      >
+                        <Text
+                          style={{
+                            textAlign: "center",
+                            fontSize: 16,
+                            color: Colors.light.themeColor,
+                            fontWeight: "bold",
+                          }}
+                        >
+                          Clear
+                        </Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+
                   <MultiSelect
                     value={selectedTransferTypes}
                     data={transferTypes}
@@ -179,9 +193,36 @@ const TransferAdminPage = () => {
                       );
                     }}
                   />
-                  <Text style={[styles.filterOption, { marginTop: 20 }]}>
-                    Date Range
-                  </Text>
+                  <View
+                    style={{
+                      flex: 1,
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                      marginTop: 20,
+                    }}
+                  >
+                    <Text style={[styles.filterOption]}>Date Range</Text>
+                    {(endDate || startDate) && (
+                      <TouchableOpacity
+                        onPress={() => {
+                          setStartDate(null);
+                          setEndDate(null);
+                        }}
+                      >
+                        <Text
+                          style={{
+                            textAlign: "center",
+                            fontSize: 16,
+                            color: Colors.light.themeColor,
+                            fontWeight: "bold",
+                          }}
+                        >
+                          Clear
+                        </Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+
                   <View style={styles.startEndDateContainer}>
                     <TouchableOpacity
                       onPress={() => setShowStartDatePicker(true)}
@@ -200,18 +241,17 @@ const TransferAdminPage = () => {
                           paddingVertical: 10,
                           color: Colors.light.themeColor,
                           fontWeight: "bold",
-
                         }}
                       >
                         {startDate
                           ? dayjs(startDate).format("DD/MM/YY")
-                          : "End Date"}
+                          : "Start Date"}
                       </Text>
                     </TouchableOpacity>
 
                     <Text style={{ fontWeight: "bold", fontSize: 20 }}>-</Text>
                     <TouchableOpacity
-                      onPress={() => setShowStartDatePicker(true)}
+                      onPress={() => setShowEndDatePicker(true)}
                       style={{
                         backgroundColor: "white",
                         borderRadius: 10,
@@ -239,6 +279,7 @@ const TransferAdminPage = () => {
                   <DateTimePickerModal
                     isVisible={showStartDatePicker}
                     mode="date"
+                    date={startDate ?? new Date()}
                     onConfirm={(date) => {
                       setShowStartDatePicker(false);
                       setStartDate(date);
@@ -246,6 +287,7 @@ const TransferAdminPage = () => {
                     onCancel={() => {
                       setShowStartDatePicker(false);
                     }}
+                    maximumDate={endDate ?? new Date()}
                     pickerStyleIOS={{
                       width: deviceWidth,
                       padding: 0,
@@ -257,6 +299,7 @@ const TransferAdminPage = () => {
                   <DateTimePickerModal
                     isVisible={showEndDatePicker}
                     mode="date"
+                    date={endDate ?? new Date()}
                     onConfirm={(date) => {
                       setShowEndDatePicker(false);
                       setEndDate(date);
@@ -264,6 +307,8 @@ const TransferAdminPage = () => {
                     onCancel={() => {
                       setShowEndDatePicker(false);
                     }}
+                    minimumDate={startDate ?? new Date(0)}
+                    maximumDate={new Date()}
                     pickerStyleIOS={{
                       width: deviceWidth,
                       padding: 0,
@@ -273,13 +318,45 @@ const TransferAdminPage = () => {
                     }}
                   />
                 </ScrollView>
+                <View style={{ gap: 20 }}>
+                  <Text style={{ fontSize: 12, color: "#6b6b6b" }}>
+                    *Note: The date range filter will only work if both dates
+                    are selected.
+                  </Text>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      gap: 10,
+                      justifyContent: "space-evenly",
+                    }}
+                  >
+                    <Button
+                      label="Clear"
+                      onClick={() => {
+                        setOpen(false);
+                        setStartDate(null);
+                        setEndDate(null);
+                        setTransferTypes([]);
+                        setDateOrder("ascending");
+                      }}
+                      type="reject"
+                    />
+                    <Button
+                      label="Filter"
+                      onClick={() => {
+                        setOpen(false);
+                      }}
+                      type="default"
+                    />
+                  </View>
+                </View>
               </View>
             );
           }}
           drawerType="front"
           drawerPosition="right"
           drawerStyle={{
-            backgroundColor: "white",
+            backgroundColor: Colors.light.background,
             width: "70%",
             padding: 20,
             borderTopLeftRadius: 50,
@@ -310,85 +387,137 @@ const TransferAdminPage = () => {
           <View
             style={{
               flexDirection: "row",
-              justifyContent: "flex-end",
-              backgroundColor: "white",
+              justifyContent: "space-between",
+              backgroundColor: Colors.light.background,
+              alignItems: "center",
+              padding: 10,
             }}
           >
+            <View style={{ flexDirection: "column" }}>
+              <Text style={{ fontSize: 14, fontWeight: "bold" }}>
+                Last Updated On:{" "}
+              </Text>
+              <Text style={{ fontSize: 14, color: Colors.light.themeColor }}>
+                {dayjs(updateTime).format("DD/MM/YYYY HH:mm:ss")}
+              </Text>
+            </View>
             <TouchableOpacity
               style={{
                 padding: 10,
                 borderRadius: 10,
-                margin: 10,
                 borderColor: Colors.light.themeColor,
                 borderWidth: 1,
                 flexDirection: "row",
                 gap: 10,
+                backgroundColor: Colors.light.themeColorSecondary,
               }}
               onPress={() => setOpen(true)}
             >
-              <Text style={{ color: Colors.light.themeColor }}>Filter</Text>
-              <Ionicons name="filter" size={16}></Ionicons>
+              <Text style={{ color: "white" }}>Filter</Text>
+              <Ionicons name="filter" size={16} color={"white"}></Ionicons>
             </TouchableOpacity>
           </View>
-          <FlatList
-            data={newTransactions}
-            // renderItem={({ item }) => <AdminTransfersBlock {...item} />}
-            renderItem={({ item, index }) => {
-              const prevItem = index > 0 ? newTransactions[index - 1] : null;
-              const showSeparator =
-                index === 0 ||
-                (prevItem &&
-                  dayjs(prevItem.transfer_datetime).format("YYYY-MM-DD") !==
-                    dayjs(item.transfer_datetime).format("YYYY-MM-DD"));
+          {!newTransactions.length && (
+            <View
+              style={{
+                flex: 1,
+                // justifyContent: "center",
+                alignItems: "center",
+                backgroundColor: Colors.light.background,
+                paddingTop: 100,
+              }}
+            >
+              <Image
+                source={require("@/assets/images/laptop.gif")}
+                style={{ width: 150, height: 150 }}
+              />
+              <Text style={{ fontSize: 18, fontWeight: "bold" }}>
+                No transactions found
+              </Text>
+              <TouchableOpacity
+                onPress={() => {
+                  setOpen(true);
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 16,
+                    color: Colors.light.themeColorSecondary,
+                    textDecorationLine: "underline",
+                    fontWeight: "bold",
+                    marginTop: 10,
+                  }}
+                >
+                  Filter Again
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
+          {newTransactions.length > 0 && (
+            <FlatList
+              data={newTransactions}
+              // renderItem={({ item }) => <AdminTransfersBlock {...item} />}
+              renderItem={({ item, index }) => {
+                const prevItem = index > 0 ? newTransactions[index - 1] : null;
+                const showSeparator =
+                  index === 0 ||
+                  (prevItem &&
+                    dayjs(prevItem.transfer_datetime).format("YYYY-MM-DD") !==
+                      dayjs(item.transfer_datetime).format("YYYY-MM-DD"));
 
-              return (
-                <>
-                  {showSeparator && (
-                    <View
-                      style={{
-                        backgroundColor: "#ccc",
-                        marginBottom: 20,
-                        paddingVertical: 5,
-                      }}
-                    >
-                      <Text
+                return (
+                  <>
+                    {showSeparator && (
+                      <View
                         style={{
-                          fontSize: 14,
-                          fontWeight: "bold",
-                          textAlign: "center",
+                          backgroundColor: Colors.light.themeColorAccent,
+                          marginBottom: 20,
+                          paddingVertical: 5,
                         }}
                       >
-                        {dayjs(item.transfer_datetime).isSame(dayjs(), "date")
-                          ? "Today"
-                          : dayjs(item.transfer_datetime).format(
-                              "DD MMMM YYYY"
-                            )}
-                        {/* {dayjs(item.transfer_datetime).format("DD MMMM YYYY")} */}
-                      </Text>
-                    </View>
-                  )}
-                  <AdminTransfersBlock {...item} />
-                </>
-              );
-            }}
-            keyExtractor={(item) => item.transaction_id}
-            style={{ paddingVertical: 10, backgroundColor: "white" }}
-            contentContainerStyle={{ paddingBottom: 20 }}
-            showsVerticalScrollIndicator={false}
-            showsHorizontalScrollIndicator={false}
-            ItemSeparatorComponent={() => <View style={{ height: 20 }} />}
-            refreshControl={
-              <RefreshControl
-                refreshing={loading}
-                onRefresh={() => {
-                  setLoading(true);
-                  setTimeout(() => {
-                    setLoading(false);
-                  }, 2000);
-                }}
-              />
-            }
-          />
+                        <Text
+                          style={{
+                            fontSize: 14,
+                            fontWeight: "bold",
+                            textAlign: "center",
+                          }}
+                        >
+                          {dayjs(item.transfer_datetime).isSame(dayjs(), "date")
+                            ? "Today"
+                            : dayjs(item.transfer_datetime).format(
+                                "DD MMMM YYYY"
+                              )}
+                          {/* {dayjs(item.transfer_datetime).format("DD MMMM YYYY")} */}
+                        </Text>
+                      </View>
+                    )}
+                    <AdminTransfersBlock {...item} />
+                  </>
+                );
+              }}
+              keyExtractor={(item) => item.transaction_id}
+              style={{
+                paddingVertical: 10,
+                backgroundColor: Colors.light.background,
+              }}
+              contentContainerStyle={{ paddingBottom: 20 }}
+              showsVerticalScrollIndicator={false}
+              showsHorizontalScrollIndicator={false}
+              ItemSeparatorComponent={() => <View style={{ height: 20 }} />}
+              refreshControl={
+                <RefreshControl
+                  refreshing={loading}
+                  onRefresh={() => {
+                    setLoading(true);
+                    setTimeout(() => {
+                      setLoading(false);
+                      setUpdateTime(new Date());
+                    }, 2000);
+                  }}
+                />
+              }
+            />
+          )}
         </Drawer>
       </SafeAreaView>
     </GestureHandlerRootView>
@@ -399,6 +528,7 @@ const styles = StyleSheet.create({
   filterContainer: {
     paddingHorizontal: 10,
     width: "100%",
+    backgroundColor: Colors.light.background,
   },
   filterTitle: {
     fontSize: 24,
