@@ -86,14 +86,17 @@ const AdminPage = () => {
           >
             <Text>Transfers</Text>
           </Card>
-          <Card style={[styles.cards]}>
+          <Card
+            style={[styles.cards]}
+            onPress={() => router.push("/(admin)/loans")}
+          >
             <Text>Loans</Text>
           </Card>
           <Card style={[styles.cards]}>
             <Text>Accounts</Text>
           </Card>
           <Card style={[styles.cards]}>
-            <Text>Settings</Text>
+            <Text>Approvals</Text>
           </Card>
         </View>
       </View>

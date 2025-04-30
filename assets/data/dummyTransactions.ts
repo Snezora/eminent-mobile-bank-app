@@ -40,15 +40,6 @@ export const transactions: Transaction[] = [
     transfer_datetime: '2025-04-01T08:00:00Z',
   },
   {
-    transaction_id: 't5a5b5c5-d5e5-f505-a5b5-c5d5e5f505t5', // Unique UUID
-    initiator_account_id: accounts[1].account_id, // Siti's Savings account
-    receiver_account_no: '444433334444', // Sample receiver
-    amount: 300.00,
-    purpose: 'Utility Bill',
-    type_of_transfer: 'DuitNow',
-    transfer_datetime: '2025-04-05T10:00:00Z',
-  },
-  {
     transaction_id: 't6a6b6c6-d6e6-f606-a6b6-c6d6e6f606t6', // Unique UUID
     initiator_account_id: accounts[2].account_id, // Siti's Current account
     receiver_account_no: accounts[0].account_no, // Transfer to Ali's Savings

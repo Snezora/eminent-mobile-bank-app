@@ -15,6 +15,9 @@ const IndexPage = () => {
       <Link href={'/(admin)'} asChild>
         <Button label="Admin" />
       </Link>
+      <Link href={'/(auth)/home-page'} asChild>
+        <Button label="Auth" />
+      </Link>
     </View>
   );
 };

@@ -1,8 +1,9 @@
 import Colors from "@/src/constants/Colors";
 import { router, useLocalSearchParams } from "expo-router";
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { transactions } from "@/assets/data/dummyTransactions";
+import { accounts } from "@/assets/data/dummyAccounts";
 import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
 import {
@@ -10,6 +11,10 @@ import {
   convertUSDToMYR,
 } from "@/src/providers/convertCurrency";
 import dayjs from "dayjs";
+import { Account, Customer } from "@/assets/data/types";
+import { fetchAccountDetails } from "@/src/providers/fetchAccountDetails";
+import { fetchCustomerDetails } from "@/src/providers/fetchCustomerDetails";
+import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 
 const TransferDetails = () => {
   const { transferID } = useLocalSearchParams();
@@ -22,20 +27,54 @@ const TransferDetails = () => {
     router.push("/+not-found");
   }
 
-  const [newRate, setNewRate] = useState<number | null>(null);
+  const [newRate, setNewRate] = useState<number | string | null>("...");
+  const [loading, setLoading] = useState(true);
+  const [senderAccount, setSenderAccount] = useState<Account | undefined>(
+    undefined
+  );
+  const [receiverAccount, setReceiverAccount] = useState<Account | undefined>(
+    undefined
+  );
+  const [senderCustomer, setSenderCustomer] = useState<Customer | undefined>(
+    undefined
+  );
+  const [receiverCustomer, setReceiverCustomer] = useState<
+    Customer | undefined
+  >(undefined);
 
   useEffect(() => {
-    const fetchNewRate = async () => {
-      const rate = await convertCurrency(
-        transaction!.amount,
-        "usd",
-        "myr",
-        dayjs(transaction!.transfer_datetime).format("YYYY-MM-DD")
+    const fetchAccounts = async () => {
+      const sender = await fetchAccountDetails(
+        transaction?.initiator_account_id
       );
-      setNewRate(rate!);
+      const senderCustomer = await fetchCustomerDetails(sender?.customer_id);
+      setSenderAccount(sender);
+      setSenderCustomer(senderCustomer);
+
+      const receiver = await fetchAccountDetails(
+        undefined,
+        transaction?.receiver_account_no
+      );
+      const receiverCustomer = await fetchCustomerDetails(
+        receiver?.customer_id
+      );
+      setReceiverAccount(receiver);
+      setReceiverCustomer(receiverCustomer);
     };
-    fetchNewRate();
-  }, [transaction!.amount]);
+    fetchAccounts().then(() => {
+      const fetchNewRate = async () => {
+        const rate = await convertCurrency(
+          transaction!.amount,
+          "usd",
+          "myr",
+          dayjs(transaction!.transfer_datetime).format("YYYY-MM-DD")
+        );
+        setNewRate(rate!);
+      };
+      fetchNewRate().then(() => {});
+      setLoading(false);
+    });
+  }, []);
 
   return (
     <SafeAreaView
@@ -48,78 +87,209 @@ const TransferDetails = () => {
           Back To Transfers
         </Text>
       </View>
-      <View
-        style={{
-          backgroundColor: Colors.light.themeColorSecondary,
-          paddingHorizontal: 10,
-          paddingVertical: 20,
-        }}
-      >
-        <Text style={{ fontSize: 18, fontWeight: "bold", color: "white" }}>
-          Transfer Details
-        </Text>
-      </View>
-      <View
-        style={{
-          backgroundColor: Colors.light.background,
-          paddingHorizontal: 10,
-          paddingVertical: 30,
-          gap: 20,
-        }}
-      >
-        <View style={styles.formContainer}>
-          <Text style={styles.title}>Transaction ID: </Text>
-          <Text>{transaction?.transaction_id}</Text>
-        </View>
-        <View style={styles.formContainer}>
-          <Text style={[styles.title, { alignSelf: "center" }]}>Amount: </Text>
-          <View style={{ alignItems: "flex-end" }}>
-            <Text style={{ fontSize: 16, fontWeight: "bold" }}>
-              USD {transaction?.amount.toFixed(2)}
-            </Text>
+      <View style={{ flex: 1, backgroundColor: Colors.light.background }}>
+        {loading && (
+          <Animated.View
+            exiting={FadeOut.duration(1000)}
+            style={{
+              flex: 1,
+              justifyContent: "center",
+              alignItems: "center",
+              backgroundColor: Colors.light.background,
+            }}
+          >
+            <ActivityIndicator
+              size="large"
+              color={Colors.light.themeColor}
+              style={{ marginBottom: 20 }}
+            />
+          </Animated.View>
+        )}
+        {!loading && (
+          <Animated.View entering={FadeIn.duration(1000)} style={{ flex: 1 }}>
             <View
               style={{
-                height: 2,
-                backgroundColor: Colors.light.themeColor,
-                width: "100%",
+                backgroundColor: Colors.light.themeColorSecondary,
+                paddingHorizontal: 10,
+                paddingVertical: 15,
               }}
-            ></View>
-            <Text style={{ fontSize: 16, fontWeight: "bold", color: "Black" }}>
-              RM {newRate?.toFixed(2)}
-            </Text>
-          </View>
-        </View>
-        <View style={styles.formContainer}>
-          <Text style={styles.title}>Method of Transfer:</Text>
-          <Text>{transaction?.type_of_transfer}</Text>
-        </View>
-        <View style={styles.formContainer}>
-          <Text style={styles.title}>Transfer Date: </Text>
-          <Text>
-            {dayjs(transaction?.transfer_datetime).format("YYYY-MM-DD hh:mmA")}{" "}
-          </Text>
-        </View>
+            >
+              <Text
+                style={{ fontSize: 18, fontWeight: "bold", color: "white" }}
+              >
+                Transfer Details
+              </Text>
+            </View>
+            <View
+              style={{
+                backgroundColor: Colors.light.background,
+                paddingHorizontal: 10,
+                paddingBottom: 30,
+                paddingTop: 20,
+                gap: 20,
+              }}
+            >
+              <View style={[styles.formContainer, { alignItems: "center" }]}>
+                <Text style={styles.title}>Transaction ID: </Text>
+                <Text
+                  style={{
+                    textAlign: "right",
+                    flexWrap: "wrap",
+                    flex: 1,
+                    alignSelf: "center",
+                    maxWidth: "50%",
+                  }}
+                >
+                  {transaction?.transaction_id}
+                </Text>
+              </View>
+              <View style={styles.formContainer}>
+                <Text style={[styles.title, { alignSelf: "center" }]}>
+                  Amount:{" "}
+                </Text>
+                <View style={{ alignItems: "flex-end" }}>
+                  <Text>USD {transaction?.amount.toFixed(2)}</Text>
+                  <View
+                    style={{
+                      height: 2,
+                      backgroundColor: Colors.light.themeColor,
+                      width: "100%",
+                    }}
+                  ></View>
+                  <Text>RM {typeof newRate == "number" ? newRate.toFixed(2) : newRate}</Text>
+                </View>
+              </View>
+              <View style={styles.formContainer}>
+                <Text style={styles.title}>Method of Transfer:</Text>
+                <Text>{transaction?.type_of_transfer}</Text>
+              </View>
+              <View style={styles.formContainer}>
+                <Text style={styles.title}>Transfer Date: </Text>
+                <Text>
+                  {dayjs(transaction?.transfer_datetime).format(
+                    "YYYY-MM-DD hh:mmA"
+                  )}{" "}
+                </Text>
+              </View>
+            </View>
+            <View
+              style={{
+                backgroundColor: Colors.light.themeColorSecondary,
+                paddingHorizontal: 10,
+                paddingVertical: 15,
+              }}
+            >
+              <Text
+                style={{ fontSize: 18, fontWeight: "bold", color: "white" }}
+              >
+                Sender Details
+              </Text>
+            </View>
+            <View
+              style={{
+                backgroundColor: Colors.light.background,
+                paddingHorizontal: 10,
+                paddingBottom: 30,
+                paddingTop: 20,
+                gap: 20,
+              }}
+            >
+              <View style={[styles.formContainer, { alignItems: "center" }]}>
+                <Text style={styles.title}>Sender Account No: </Text>
+                <Text
+                  style={{
+                    textAlign: "right",
+                    flexWrap: "wrap",
+                    flex: 1,
+                    alignSelf: "center",
+                    maxWidth: "50%",
+                  }}
+                >
+                  {senderAccount?.account_no}
+                </Text>
+              </View>
+              <View style={[styles.formContainer, { alignItems: "center" }]}>
+                <Text style={styles.title}>Sender Account Nickname: </Text>
+                <Text
+                  style={{
+                    textAlign: "right",
+                    flexWrap: "wrap",
+                    flex: 1,
+                    alignSelf: "center",
+                    maxWidth: "50%",
+                  }}
+                >
+                  {senderAccount?.account_type}
+                </Text>
+              </View>
+              <View style={styles.formContainer}>
+                <Text style={styles.title}>Sender Name:</Text>
+                <Text>
+                  {senderCustomer?.first_name + " " + senderCustomer?.last_name}
+                </Text>
+              </View>
+              <View style={styles.formContainer}>
+                <Text style={styles.title}>Sender Phone Number:</Text>
+                <Text>{senderCustomer?.phone_no}</Text>
+              </View>
+            </View>
+            <View
+              style={{
+                backgroundColor: Colors.light.themeColorSecondary,
+                paddingHorizontal: 10,
+                paddingVertical: 15,
+              }}
+            >
+              <Text
+                style={{ fontSize: 18, fontWeight: "bold", color: "white" }}
+              >
+                Receiver Details
+              </Text>
+            </View>
+            <View
+              style={{
+                backgroundColor: Colors.light.background,
+                paddingHorizontal: 10,
+                paddingBottom: 30,
+                paddingTop: 20,
+                gap: 20,
+              }}
+            >
+              <View style={[styles.formContainer, { alignItems: "center" }]}>
+                <Text style={styles.title}>Receiver Account No: </Text>
+                <Text
+                  style={{
+                    textAlign: "right",
+                    flexWrap: "wrap",
+                    flex: 1,
+                    alignSelf: "center",
+                    maxWidth: "50%",
+                  }}
+                >
+                  {receiverAccount?.account_no}
+                </Text>
+              </View>
+              <View style={styles.formContainer}>
+                <Text style={styles.title}>Receiver Account Nickname:</Text>
+                <Text>
+                  {receiverAccount?.account_type} 
+                  {/* Please replace this with nickname later on from Supabase */}
+                </Text>
+              </View>
+              <View style={styles.formContainer}>
+                <Text style={styles.title}>Receiver Name:</Text>
+                <Text>
+                  {receiverCustomer?.first_name + " " + receiverCustomer?.last_name}
+                </Text>
+              </View>
+              <View style={styles.formContainer}>
+                <Text style={styles.title}>Receiver Phone Number:</Text>
+                <Text>{receiverCustomer?.phone_no}</Text>
+              </View>
+            </View>
+          </Animated.View>
+        )}
       </View>
-      <View
-        style={{
-          backgroundColor: Colors.light.themeColorSecondary,
-          paddingHorizontal: 10,
-          paddingVertical: 20,
-        }}
-      >
-        <Text style={{ fontSize: 18, fontWeight: "bold", color: "white" }}>
-          Sender Details
-        </Text>
-      </View>
-      <View
-        style={{
-          backgroundColor: Colors.light.background,
-          paddingHorizontal: 10,
-          paddingVertical: 30,
-          gap: 20,
-          flex: 1 //Remove later
-        }}
-      ></View>
     </SafeAreaView>
   );
 };
@@ -151,7 +321,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 16,
     fontWeight: "bold",
-    color: Colors.light.themeColorSecondary,
+    color: "#777",
   },
 });
 

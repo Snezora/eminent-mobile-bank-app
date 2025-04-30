@@ -26,6 +26,7 @@ import { Transaction } from "@/assets/data/types";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { DateSort, DateSortComponent } from "@/src/components/DateSort";
 import Button from "@/src/components/Button";
+import Animated, { LinearTransition, SequencedTransition, SlideInLeft } from "react-native-reanimated";
 
 const dateSort = [
   { label: "Ascending", value: "ascending" },
@@ -417,6 +418,7 @@ const TransferAdminPage = () => {
               <Ionicons name="filter" size={16} color={"white"}></Ionicons>
             </TouchableOpacity>
           </View>
+          <View style={{borderColor: Colors.light.themeColor, borderWidth: 1}}></View>
           {!newTransactions.length && (
             <View
               style={{
@@ -454,7 +456,7 @@ const TransferAdminPage = () => {
             </View>
           )}
           {newTransactions.length > 0 && (
-            <FlatList
+            <Animated.FlatList
               data={newTransactions}
               // renderItem={({ item }) => <AdminTransfersBlock {...item} />}
               renderItem={({ item, index }) => {
@@ -473,6 +475,9 @@ const TransferAdminPage = () => {
                           backgroundColor: Colors.light.themeColorAccent,
                           marginBottom: 20,
                           paddingVertical: 5,
+                          width: "30%",
+                          alignSelf: "center",
+                          borderRadius: 30,
                         }}
                       >
                         <Text
@@ -500,10 +505,16 @@ const TransferAdminPage = () => {
                 paddingVertical: 10,
                 backgroundColor: Colors.light.background,
               }}
-              contentContainerStyle={{ paddingBottom: 20 }}
-              showsVerticalScrollIndicator={false}
+              contentContainerStyle={{ paddingVertical: 10, paddingBottom: 40 }}
+              showsVerticalScrollIndicator={false} 
               showsHorizontalScrollIndicator={false}
               ItemSeparatorComponent={() => <View style={{ height: 20 }} />}
+              itemLayoutAnimation={LinearTransition}
+              onLayout={() => {
+                setTimeout(() => {
+                  setLoading(false);
+                }, 2000);
+              }}
               refreshControl={
                 <RefreshControl
                   refreshing={loading}

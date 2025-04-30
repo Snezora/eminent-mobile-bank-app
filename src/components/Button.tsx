@@ -1,21 +1,30 @@
-import { TouchableOpacity, View, Text, StyleSheet, StyleProp } from "react-native";
+import {
+  TouchableOpacity,
+  View,
+  Text,
+  StyleSheet,
+  StyleProp,
+} from "react-native";
 import Colors from "../constants/Colors";
 
 const colorMap = {
   default: Colors.light.themeColorSecondary,
   reject: Colors.light.themeColorReject,
+  transparent: 'transparent',
 };
 
 const Button = ({
   label,
   onClick,
   type = "default",
-  style
+  style,
+  textStyle,
 }: {
   label: string;
   onClick?: () => void;
   type?: keyof typeof colorMap;
-  style? : StyleProp<any>;
+  style?: StyleProp<any>;
+  textStyle?: StyleProp<any>;
 }) => {
   return (
     <TouchableOpacity
@@ -23,7 +32,7 @@ const Button = ({
       style={[styles.button, style, { backgroundColor: colorMap[type] }]}
     >
       <View>
-        <Text style={styles.buttonText}>{label}</Text>
+        <Text style={[styles.buttonText, textStyle]}>{label}</Text>
       </View>
     </TouchableOpacity>
   );

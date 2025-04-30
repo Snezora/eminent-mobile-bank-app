@@ -96,11 +96,9 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 10,
     backgroundColor: "#fff",
-    borderColor: "black",
-    borderWidth: 1,
     borderRadius: 10,
     flexDirection: "row",
-    marginHorizontal: 10,
+    marginHorizontal: 20,
   },
   leftContainer: {
     flex: 1,
