@@ -1,0 +1,2 @@
+Put
+source bin/activate in .venv
