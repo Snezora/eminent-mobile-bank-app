@@ -18,6 +18,7 @@ import AdminLoansBlock from "@/src/components/AdminLoansBlock";
 import { Loan } from "@/assets/data/types";
 import fetchLoans from "@/src/providers/fetchListofLoans";
 import { useAuth } from "@/src/providers/AuthProvider";
+import Modal from "react-native-modal";
 
 const LoansPage = () => {
   const [open, setOpen] = useState(false);
@@ -61,7 +62,7 @@ const LoansPage = () => {
     //delay by 2 seconds
     setTimeout(() => {
       fetchAndSetLoans().then(() => setPageLoading(false));
-    }, 2000)
+    }, 2000);
   }, []);
 
   return (
@@ -180,6 +181,7 @@ const LoansPage = () => {
             )}
           </View>
         </View>
+
       </SafeAreaView>
     </GestureHandlerRootView>
   );

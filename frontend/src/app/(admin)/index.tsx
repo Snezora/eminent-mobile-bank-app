@@ -96,11 +96,11 @@ const AdminPage = () => {
           >
             <Text>Loans</Text>
           </Card>
-          <Card style={[styles.cards]}>
+          <Card style={[styles.cards]} onPress={() => router.push("/(admin)/accounts")}>
             <Text>Accounts</Text>
           </Card>
           <Card style={[styles.cards]} onPress={() => console.log(session)}>
-            <Text>Approvals</Text>
+            <Text>Profile</Text>
           </Card>
         </View>
       </View>

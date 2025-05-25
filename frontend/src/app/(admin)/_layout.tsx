@@ -31,50 +31,6 @@ export default function TabLayout() {
   }
 
   return (
-    // <Tabs
-    //   screenOptions={{
-    //     headerShown: false,
-    //     tabBarShowLabel: true,
-    //   }}
-    // >
-    //   <Tabs.Screen
-    //     name="index"
-    //     options={{
-    //       title: "Home",
-    //       headerShown: false,
-    //       href: "/(admin)",
-    //       tabBarIcon: ({ color }) => <TabBarIcon name="home" color={color} />,
-    //     }}
-    //   />
-    //   <Tabs.Screen
-    //     name="loans"
-    //     options={{
-    //       title: "Loans",
-    //       href: "/(admin)/loans",
-    //       tabBarIcon: ({ color }) => <TabBarIcon name="money" color={color} />,
-    //     }}
-    //   />
-    //   <Tabs.Screen
-    //     name="transfers"
-    //     options={{
-    //       href: "/(admin)/transfers",
-    //       tabBarIcon: ({ color }) => (
-    //         <TabBarIcon name="exchange" color={color} />
-    //       ),
-    //       tabBarStyle: { display: "none" },
-    //     }}
-    //   />
-    //   <Tabs.Screen
-    //     name="TransferDetails/[id]"
-    //     options={{
-    //       href: "/(admin)/transfers",
-    //       tabBarIcon: ({ color }) => (
-    //         <TabBarIcon name="exchange" color={color} />
-    //       ),
-    //       tabBarItemStyle: { display: "none" },
-    //     }}
-    //   />
-    // </Tabs>
     <Stack>
       <Stack.Screen name="index" options={{ headerShown: false }} />
       <Stack.Screen
@@ -93,7 +49,6 @@ export default function TabLayout() {
           headerTintColor: Colors.light.themeColor,
           // headerBackTitle: "Back",
         }}
-      
       />
       <Stack.Screen
         name="LoanDetails/[id]"
@@ -109,6 +64,14 @@ export default function TabLayout() {
         options={{
           headerShown: false,
           headerTitle: "Loans",
+          headerBackTitle: "Back",
+        }}
+      />
+      <Stack.Screen
+        name="accounts"
+        options={{
+          headerShown: false,
+          headerTitle: "Accounts",
           headerBackTitle: "Back",
         }}
       />

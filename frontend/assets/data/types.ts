@@ -21,6 +21,7 @@ export interface Account {
   balance: number; // float8 / numeric
   account_status: string | null; // text (e.g., 'Active', 'Dormant', 'Closed')
   created_at: string; // timestamptz
+  nickname: string | null;
 }
 
 export interface Transaction {
