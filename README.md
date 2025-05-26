@@ -33,7 +33,7 @@ git pull https://github.com/Snezora/fyp.git
 
 
 5. After downloading Expo Go and signing in, use your mobile phone to scan the QR code shown in Command Prompt.
-![Image showing QR Code for scanning on phone](expoLoad.png)
+![Image showing QR Code for scanning on phone](/frontend/assets/images/expoLoad.png)
 
 > ### Focus on Second Command Prompt
 
@@ -46,7 +46,7 @@ git pull https://github.com/Snezora/fyp.git
 ```
 
 7. Proceed to Step 8 once this running message shows
-![FastAPI loaded successfully](fastApiLoad.png)
+![FastAPI loaded successfully](/frontend/assets/images/fastApiLoad.png)
 
 > ### Focus on Third Command Prompt
 
