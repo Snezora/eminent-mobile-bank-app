@@ -4,18 +4,22 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useThemeColor } from "@/src/components/Themed";
 import DropdownComponent from "@/src/components/Dropdown";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { Stack } from "expo-router";
+import { Redirect, Stack } from "expo-router";
 import QuickActions from "@/src/components/QuickActions";
 import { AccountBasicInfoWithEye } from "@/src/components/AccountBasicInfo";
 import { useEffect, useState } from "react";
 import { StatusBar } from "expo-status-bar";
 import AdvertisementsCarousel from "@/src/components/AdvertisementsCarousel";
 import SettingsLogOut from "@/src/components/SettingsLogOut";
-import {useAuth} from "@/src/providers/AuthProvider";
+import { useAuth } from "@/src/providers/AuthProvider";
 
 export default function TabOneScreen() {
   const colorScheme = useColorScheme();
   const { session, user } = useAuth();
+
+  if (!session) {
+    return <Redirect href="/(auth)/home-page" />;
+  }
 
   const accounts = [
     { name: "Account 1", balance: 1000, accountNo: "2039 0929 2837" },

@@ -1,26 +1,71 @@
-import { Link } from "expo-router";
-import { StyleSheet, View } from "react-native";
+import { Link, Redirect, useRouter } from "expo-router";
+import { StyleSheet, View, Image } from "react-native";
 import { Button } from "react-native-ui-lib";
 import { Dimensions } from "react-native";
 import { useAuth } from "../providers/AuthProvider";
+import { useEffect, useState } from "react";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withRepeat,
+  withTiming,
+  Easing,
+} from "react-native-reanimated";
+import { supabase } from "../lib/supabase";
 
-var width = Dimensions.get('window').width; //full width
-var height = Dimensions.get('window').height; //full height
+var width = Dimensions.get("window").width; //full width
+var height = Dimensions.get("window").height; //full height
 
 const IndexPage = () => {
-  const { session, user } = useAuth();
+  const { session, isAdmin, loading } = useAuth();
+  const router = useRouter();
+  const [showSplash, setShowSplash] = useState(true);
+
+  useEffect(() => {
+    //sign out user
+    // supabase.auth.signOut()
+    const timer = setTimeout(() => setShowSplash(false), 1000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    if (!showSplash && !loading) {
+      if (!session) {
+        router.replace("/(auth)/home-page");
+      } else if (isAdmin) {
+        router.replace("/(admin)");
+      } else {
+        router.replace("/(user)");
+      }
+    }
+  }, [session, isAdmin, loading, showSplash]);
+
+  const rotation = useSharedValue(0);
+
+  useEffect(() => {
+    rotation.value = withRepeat(
+      withTiming(360, { duration: 1200, easing: Easing.linear }),
+      -1 // infinite
+    );
+  }, []);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ rotate: `${rotation.value}deg` }],
+  }));
 
   return (
     <View style={styles.container}>
-      <Link href={"/(user)"} asChild>
-        <Button label="User" />
-      </Link>
-      <Link href={'/(admin)'} asChild>
-        <Button label="Admin" />
-      </Link>
-      <Link href={'/(auth)/home-page'} asChild>
-        <Button label="Auth" />
-      </Link>
+      <Animated.View
+        style={[
+          { flex: 1, justifyContent: "center", alignItems: "center" },
+          animatedStyle,
+        ]}
+      >
+        <Image
+          source={require("@/assets/images/EWBLogo.png")}
+          style={{ width: 100, height: 100 }}
+        />
+      </Animated.View>
     </View>
   );
 };

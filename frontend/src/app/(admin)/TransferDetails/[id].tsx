@@ -15,18 +15,12 @@ import { Account, Customer } from "@/assets/data/types";
 import { fetchAccountDetails } from "@/src/providers/fetchAccountDetails";
 import { fetchCustomerDetails } from "@/src/providers/fetchCustomerDetails";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
+import fetchTransactionDetails from "@/src/providers/fetchTransactionDetails";
 
 const TransferDetails = () => {
   const { transferID } = useLocalSearchParams();
 
-  const transaction = transactions.find(
-    (transaction) => transaction.transaction_id === transferID
-  );
-
-  if (!transaction) {
-    router.push("/+not-found");
-  }
-
+  const [transaction, setTransaction] = useState<any | null>(null);
   const [newRate, setNewRate] = useState<number | string | null>("...");
   const [loading, setLoading] = useState(true);
   const [senderAccount, setSenderAccount] = useState<Account | undefined>(
@@ -43,9 +37,16 @@ const TransferDetails = () => {
   >(undefined);
 
   useEffect(() => {
-    const fetchAccounts = async () => {
+    const fetchAllDetails = async () => {
+      const fetchedTransaction = await fetchTransactionDetails(transferID as string);
+      if (!fetchedTransaction) {
+        router.push("/+not-found");
+        return;
+      }
+      setTransaction(fetchedTransaction);
+
       const sender = await fetchAccountDetails(
-        transaction?.initiator_account_id
+        fetchedTransaction?.initiator_account_id
       );
       const senderCustomer = await fetchCustomerDetails(sender?.customer_id);
       setSenderAccount(sender);
@@ -53,28 +54,25 @@ const TransferDetails = () => {
 
       const receiver = await fetchAccountDetails(
         undefined,
-        transaction?.receiver_account_no
+        fetchedTransaction?.receiver_account_no
       );
       const receiverCustomer = await fetchCustomerDetails(
         receiver?.customer_id
       );
       setReceiverAccount(receiver);
       setReceiverCustomer(receiverCustomer);
-    };
-    fetchAccounts().then(() => {
-      const fetchNewRate = async () => {
-        const rate = await convertCurrency(
-          transaction!.amount,
-          "usd",
-          "myr",
-          dayjs(transaction!.transfer_datetime).format("YYYY-MM-DD")
-        );
-        setNewRate(rate!);
-      };
-      fetchNewRate().then(() => {});
+
+      const rate = await convertCurrency(
+        fetchedTransaction.amount,
+        "usd",
+        "myr",
+        dayjs(fetchedTransaction.transfer_datetime).format("YYYY-MM-DD")
+      );
+      setNewRate(rate!);
       setLoading(false);
-    });
-  }, []);
+    };
+    fetchAllDetails();
+  }, [transferID]);
 
   return (
     <SafeAreaView
@@ -156,7 +154,10 @@ const TransferDetails = () => {
                       width: "100%",
                     }}
                   ></View>
-                  <Text>RM {typeof newRate == "number" ? newRate.toFixed(2) : newRate}</Text>
+                  <Text>
+                    RM{" "}
+                    {typeof newRate == "number" ? newRate.toFixed(2) : newRate}
+                  </Text>
                 </View>
               </View>
               <View style={styles.formContainer}>
@@ -272,14 +273,16 @@ const TransferDetails = () => {
               <View style={styles.formContainer}>
                 <Text style={styles.title}>Receiver Account Nickname:</Text>
                 <Text>
-                  {receiverAccount?.account_type} 
+                  {receiverAccount?.account_type}
                   {/* Please replace this with nickname later on from Supabase */}
                 </Text>
               </View>
               <View style={styles.formContainer}>
                 <Text style={styles.title}>Receiver Name:</Text>
                 <Text>
-                  {receiverCustomer?.first_name + " " + receiverCustomer?.last_name}
+                  {receiverCustomer?.first_name +
+                    " " +
+                    receiverCustomer?.last_name}
                 </Text>
               </View>
               <View style={styles.formContainer}>

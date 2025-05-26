@@ -28,6 +28,7 @@ import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { Dropdown } from "react-native-element-dropdown";
 import { supabase } from "@/src/lib/supabase";
+import { useAuth } from "@/src/providers/AuthProvider";
 
 const editableForm = yup.object({
   creditHistory: yup.number().required("Credit history is required"),
@@ -63,6 +64,7 @@ const LoanDetails = () => {
   }>({});
   const [shouldPredict, setShouldPredict] = useState(false);
   const [loanPredicting, setLoanPredicting] = useState(false);
+  const { user } = useAuth();
 
   const loanGrade = [
     {
@@ -442,7 +444,9 @@ const LoanDetails = () => {
                   },
                 ]}
               >
-                <Text style={styles.buttonText}>{loanPredicting ? "Please Wait" : "View AI Decision"}</Text>
+                <Text style={styles.buttonText}>
+                  {loanPredicting ? "Please Wait" : "View AI Decision"}
+                </Text>
               </View>
             </TouchableOpacity>
           </View>
@@ -466,6 +470,21 @@ const LoanDetails = () => {
                     .update({ final_approval: false })
                     .eq("loan_id", id)
                     .select();
+
+                  const { data: adminLoanData, error: adminLoanError } =
+                    await supabase
+                      .from("Admin_Loan")
+                      .insert([
+                        {
+                          admin_id:
+                            user && "admin_id" in user
+                              ? (user as any).admin_id
+                              : null,
+                          loan_id: id,
+                          admin_approve: false,
+                        },
+                      ])
+                      .select();
 
                   // Refetch loan, which will update state and trigger useEffect
                   const fetchedLoan = await fetchLoanDetails(id as string);
@@ -499,6 +518,22 @@ const LoanDetails = () => {
                     .update({ final_approval: true })
                     .eq("loan_id", id)
                     .select();
+
+                  const { data: adminLoanData, error: adminLoanError } =
+                    await supabase
+                      .from("Admin_Loan")
+                      .insert([
+                        {
+                          admin_id:
+                            user && "admin_id" in user
+                              ? (user as any).admin_id
+                              : null,
+                          loan_id: id,
+                          admin_approve: true,
+                        },
+                      ])
+                      .select();
+
                   // Refetch loan, which will update state and trigger useEffect
                   const fetchedLoan = await fetchLoanDetails(id as string);
                   setLoan(

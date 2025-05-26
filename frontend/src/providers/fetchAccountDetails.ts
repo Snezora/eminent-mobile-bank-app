@@ -1,20 +1,34 @@
-import { accounts } from "@/assets/data/dummyAccounts";
 import { Account } from "@/assets/data/types";
-import { useState } from "react";
 import { supabase } from "../lib/supabase";
 
 export const fetchAccountDetails = async (
   accountID?: string,
   accountNo?: string
-) => {
-  const [account, setAccount] = useState<Account | null>(null);
+): Promise<Account | null> => {
+  let account: Account | null = null;
+  let error;
+
   if (accountID) {
-    let { data: Account, error } = await supabase.from("Account").select("*").eq("account_id", accountID).single();
-    setAccount(Account);
+    const { data, error: err } = await supabase
+      .from("Account")
+      .select("*")
+      .eq("account_id", accountID)
+      .single();
+    account = data ?? null;
+    error = err;
+  } else if (accountNo) {
+    const { data, error: err } = await supabase
+      .from("Account")
+      .select("*")
+      .eq("account_no", accountNo)
+      .single();
+    account = data ?? null;
+    error = err;
   }
-  if (accountNo) {
-    let { data: Account, error } = await supabase.from("Account").select("*").eq("account_no", accountNo).single();
-    setAccount(Account);
+
+  if (error) {
+    console.error("Error fetching account:", error);
   }
+
   return account;
 };

@@ -2,8 +2,15 @@ import { Account, Customer } from "@/assets/data/types";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { fetchCustomerDetails } from "../providers/fetchCustomerDetails";
 import { useEffect, useState } from "react";
+import dayjs from "dayjs";
 
-const AdminAccountsBlock = ({ account, onPress }: { account: Account; onPress: () => void }) => {
+const AdminAccountsBlock = ({
+  account,
+  onPress,
+}: {
+  account: Account;
+  onPress: () => void;
+}) => {
   const [customerDetails, setCustomerDetails] = useState<Customer>();
   const [open, setOpen] = useState(false);
 
@@ -41,14 +48,16 @@ const AdminAccountsBlock = ({ account, onPress }: { account: Account; onPress: (
           <Text style={styles.nameText}>Account ID:</Text>
           <Text style={styles.normalText}>{account.account_no}</Text>
         </View>
-        <Text
-          style={[
-            styles.nameText,
-            { color: account.account_status === "Active" ? "green" : "red" },
-          ]}
-        >
-          {account.account_status}
-        </Text>
+        {account.approved_at && (
+          <Text
+            style={[
+              styles.nameText,
+              { color: account.account_status === "Active" ? "green" : "red" },
+            ]}
+          >
+            {account.account_status}
+          </Text>
+        )}
       </View>
       <View style={styles.textContainer}>
         <Text style={styles.nameText}>Account Name:</Text>
@@ -56,12 +65,23 @@ const AdminAccountsBlock = ({ account, onPress }: { account: Account; onPress: (
           {account.nickname ?? "No nickname set"}
         </Text>
       </View>
-      <View style={styles.textContainer}>
-        <Text style={styles.nameText}>
-          Name: 
-        </Text>
+      <View
+        style={{
+          justifyContent: "space-between",
+          flexDirection: "row",
+          marginRight: 5,
+        }}
+      >
+        <View style={styles.textContainer}>
+          <Text style={styles.nameText}>Name:</Text>
+          <Text style={styles.normalText}>
+            {customerDetails
+              ? `${customerDetails.first_name} ${customerDetails.last_name}`
+              : "Loading..."}
+          </Text>
+        </View>
         <Text style={styles.normalText}>
-          {customerDetails ? `${customerDetails.first_name} ${customerDetails.last_name}` : "Loading..."}
+          {dayjs(account.created_at).format("DD/MM/YYYY")}
         </Text>
       </View>
     </TouchableOpacity>

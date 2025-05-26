@@ -5,14 +5,16 @@ import {
   ThemeProvider,
 } from "@react-navigation/native";
 import { useFonts } from "expo-font";
-import { Stack } from "expo-router";
+import { Redirect, Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import "react-native-reanimated";
 import { useColorScheme } from "@/src/components/useColorScheme";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import AuthProvider from "../providers/AuthProvider";
+import AuthProvider, { useAuth } from "../providers/AuthProvider";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { useAutoSignOut } from "../providers/useAutoSignOut";
+import { Keyboard, TouchableWithoutFeedback } from "react-native";
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -48,16 +50,22 @@ export default function RootLayout() {
     return null;
   }
 
-  return <RootLayoutNav />;
+  return (
+    <AuthProvider>
+      <RootLayoutNav />
+    </AuthProvider>
+  );
 }
 
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
+  const { session, isAdmin } = useAuth();
 
   return (
-    <GestureHandlerRootView>
-      <SafeAreaProvider>
-        <AuthProvider>
+    <TouchableWithoutFeedback
+    >
+      <GestureHandlerRootView>
+        <SafeAreaProvider>
           <ThemeProvider
             value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
           >
@@ -70,8 +78,8 @@ function RootLayoutNav() {
               <Stack.Screen name="modal" options={{ presentation: "modal" }} />
             </Stack>
           </ThemeProvider>
-        </AuthProvider>
-      </SafeAreaProvider>
-    </GestureHandlerRootView>
+        </SafeAreaProvider>
+      </GestureHandlerRootView>
+    </TouchableWithoutFeedback>
   );
 }

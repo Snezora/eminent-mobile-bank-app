@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from 'expo-router';
+import { useRouter } from "expo-router";
 import { navigate } from "expo-router/build/global-state/routing";
 import { TouchableOpacity, View } from "react-native";
 import { supabase } from "../lib/supabase";
@@ -14,11 +14,9 @@ const SettingsLogOut = () => {
     if (error) {
       console.log("Error signing out:", error.message);
     } else {
-      router.dismissAll();
-      router.push("/(auth)/sign-in");
+      router.replace("/(auth)/home-page"); // Explicitly navigate to login/home
     }
   };
-
 
   return (
     <View style={{ flexDirection: "row", gap: 15, alignContent: "center" }}>
@@ -28,10 +26,7 @@ const SettingsLogOut = () => {
       >
         <Ionicons name="cog" size={30} color="white" style={{}} />
       </TouchableOpacity>
-      <TouchableOpacity
-        onPress={handleLogout}
-        activeOpacity={1}
-      >
+      <TouchableOpacity onPress={handleLogout} activeOpacity={1}>
         <Ionicons name="log-out-outline" size={30} color="white" style={{}} />
       </TouchableOpacity>
     </View>

@@ -10,6 +10,8 @@ import {
   ViewStyle,
   Dimensions,
   Image,
+  TextInput,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { transactions } from "@/assets/data/dummyTransactions";
@@ -27,10 +29,15 @@ import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { DateSort, DateSortComponent } from "@/src/components/DateSort";
 import Button from "@/src/components/Button";
 import Animated, {
+  FadeOut,
   LinearTransition,
   SequencedTransition,
   SlideInLeft,
 } from "react-native-reanimated";
+import fetchListofTransactions from "@/src/providers/fetchListofTransactions";
+import { useAuth } from "@/src/providers/AuthProvider";
+import { supabase } from "@/src/lib/supabase";
+import { useLocalSearchParams } from "expo-router";
 
 const dateSort = [
   { label: "Ascending", value: "ascending" },
@@ -47,6 +54,9 @@ const transferTypes = [
 ];
 
 const TransferAdminPage = () => {
+  const { searchIDExternal } = useLocalSearchParams();
+  // Now you can use searchIDExternal in your logic
+
   const colorScheme = useColorScheme();
   const [open, setOpen] = useState(false);
   const [dateOrder, setDateOrder] = useState("ascending");
@@ -58,40 +68,71 @@ const TransferAdminPage = () => {
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [updateTime, setUpdateTime] = useState(new Date());
+  const { isAdmin } = useAuth();
+  const [searchID, setSearchID] = useState(searchIDExternal || "");
+  const [pageLoading, setPageLoading] = useState(true);
 
   const isBetween = require("dayjs/plugin/isBetween");
   dayjs.extend(isBetween);
   const deviceWidth = Dimensions.get("window").width; //full width
 
   useEffect(() => {
-    let filtered = transactions;
+    const fetchAndFilterTransactions = async () => {
+      setPageLoading(true);
+      let filtered: Transaction[] = [];
+      const result = await fetchListofTransactions({ isAdmin });
+      if (result && Array.isArray(result)) {
+        filtered = result;
+      }
 
-    if (selectedTransferTypes.length > 0) {
-      filtered = transactions.filter((transaction) => {
-        return selectedTransferTypes.includes(
-          transaction.type_of_transfer ?? ""
-        );
-      });
+      if (selectedTransferTypes.length > 0) {
+        filtered = filtered.filter((transaction) => {
+          return selectedTransferTypes.includes(
+            transaction.type_of_transfer ?? ""
+          );
+        });
+      }
+
+      if (startDate && endDate) {
+        filtered = filtered.filter((transaction) => {
+          const transactionDate = dayjs(transaction.transfer_datetime);
+          return dayjs(transactionDate).isBetween(
+            startDate,
+            endDate,
+            "day",
+            "[]"
+          );
+        });
+      }
+
+      filtered = DateSort(dateOrder, filtered);
+
+      if (searchID) {
+        // 1. Fetch the account with this account_no to get its account_id
+        const { data: account, error } = await supabase
+          .from("Account")
+          .select("account_id, account_no")
+          .eq("account_no", searchID)
+          .single();
+
+        const accountId = account?.account_id ?? null;
+
+        filtered = filtered.filter((transaction) => {
+          const initiatorMatch =
+            accountId && transaction.initiator_account_id === accountId;
+          const receiverMatch =
+            transaction.receiver_account_no &&
+            transaction.receiver_account_no === searchID;
+
+          return initiatorMatch ?? receiverMatch;
+        });
+      }
 
       setTransactions(filtered);
-    }
+    };
 
-    if (startDate && endDate) {
-      filtered = transactions.filter((transaction) => {
-        const transactionDate = dayjs(transaction.transfer_datetime);
-        return dayjs(transactionDate).isBetween(
-          startDate,
-          endDate,
-          "day",
-          "[]"
-        );
-      });
-    }
-
-    filtered = DateSort(dateOrder, filtered);
-
-    setTransactions(filtered);
-  }, [dateOrder, selectedTransferTypes, startDate, endDate]);
+    fetchAndFilterTransactions().then(() => setPageLoading(false));
+  }, [dateOrder, selectedTransferTypes, startDate, endDate, searchID, isAdmin]);
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -322,6 +363,67 @@ const TransferAdminPage = () => {
                       alignItems: "center",
                     }}
                   />
+
+                  {/* Account ID */}
+                  <Text
+                    style={[
+                      styles.filterSubtitle,
+                      { marginTop: 10, marginBottom: 10 },
+                    ]}
+                  >
+                    Search by Account
+                  </Text>
+                  <View
+                    style={{
+                      flex: 1,
+                      justifyContent: "space-between",
+                    }}
+                  >
+                    <View style={{ flexDirection: "row", gap: 10, justifyContent: "space-between" }}>
+                      <Text style={[styles.filterOption]}>
+                        Initiator Account ID
+                      </Text>
+                      {searchID && (
+                        <TouchableOpacity
+                          onPress={() => {
+                            setSearchID("");
+                          }}
+                        >
+                          <Text
+                            style={{
+                              textAlign: "center",
+                              fontSize: 16,
+                              color: Colors.light.themeColor,
+                              fontWeight: "bold",
+                            }}
+                          >
+                            Clear
+                          </Text>
+                        </TouchableOpacity>
+                      )}
+                    </View>
+
+                    <View style={styles.filterTextContainer}>
+                      <TextInput
+                        style={styles.filterInput}
+                        value={searchID}
+                        onChangeText={(text) => setSearchID(text)}
+                        placeholder="Search by Account ID"
+                        placeholderTextColor="#6b6b6b"
+                      />
+                    </View>
+                    <Text
+                      style={{
+                        fontSize: 12,
+                        color: "#6b6b6b",
+                        marginTop: 5,
+                        textAlign: "justify",
+                        marginHorizontal: 5,
+                      }}
+                    >
+                      *Note: It is recommended to search through Accounts
+                    </Text>
+                  </View>
                 </ScrollView>
                 <View style={{ gap: 20 }}>
                   <Text style={{ fontSize: 12, color: "#6b6b6b" }}>
@@ -342,6 +444,7 @@ const TransferAdminPage = () => {
                         setStartDate(null);
                         setEndDate(null);
                         setTransferTypes([]);
+                        setSearchID("");
                         setDateOrder("ascending");
                       }}
                       type="reject"
@@ -371,169 +474,210 @@ const TransferAdminPage = () => {
             backgroundColor: "rgba(0, 0, 0, 0.25)",
           }}
         >
-          <View
-            style={{
-              paddingHorizontal: 10,
-              paddingBottom: 10,
-              paddingTop: 10,
-              backgroundColor: Colors.light.themeColor,
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 10,
-            }}
-          >
-            <TouchableOpacity activeOpacity={0} onPress={() => router.back()}>
-              <Ionicons name="chevron-back-outline" size={24} color="white" />
-            </TouchableOpacity>
-            <Text style={{ fontSize: 24, fontWeight: "bold", color: "white" }}>
-              Transfers
-            </Text>
-          </View>
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              backgroundColor: Colors.light.background,
-              alignItems: "center",
-              padding: 10,
-            }}
-          >
-            <View style={{ flexDirection: "column" }}>
-              <Text style={{ fontSize: 14, fontWeight: "bold" }}>
-                Last Updated On:{" "}
-              </Text>
-              <Text style={{ fontSize: 14, color: Colors.light.themeColor }}>
-                {dayjs(updateTime).format("DD/MM/YYYY HH:mm:ss")}
-              </Text>
-            </View>
-            <TouchableOpacity
-              style={{
-                padding: 10,
-                borderRadius: 10,
-                borderColor: Colors.light.themeColor,
-                borderWidth: 1,
-                flexDirection: "row",
-                gap: 10,
-                backgroundColor: Colors.light.themeColorSecondary,
-              }}
-              onPress={() => setOpen(true)}
-            >
-              <Text style={{ color: "white" }}>Filter</Text>
-              <Ionicons name="filter" size={16} color={"white"}></Ionicons>
-            </TouchableOpacity>
-          </View>
-          <View
-            style={{ borderColor: Colors.light.themeColor, borderWidth: 1 }}
-          ></View>
-          {!newTransactions.length && (
-            <View
+          {pageLoading && (
+            <Animated.View
+              exiting={FadeOut.duration(1000)}
               style={{
                 flex: 1,
-                // justifyContent: "center",
+                justifyContent: "center",
                 alignItems: "center",
                 backgroundColor: Colors.light.background,
-                paddingTop: 100,
               }}
             >
-              <Image
-                source={require("@/assets/images/laptop.gif")}
-                style={{ width: 150, height: 150 }}
+              <ActivityIndicator
+                size="large"
+                color={Colors.light.themeColor}
+                style={{ marginBottom: 20 }}
               />
-              <Text style={{ fontSize: 18, fontWeight: "bold" }}>
-                No transactions found
-              </Text>
-              <TouchableOpacity
-                onPress={() => {
-                  setOpen(true);
+            </Animated.View>
+          )}
+          {!pageLoading && (
+            <>
+              <View
+                style={{
+                  paddingHorizontal: 10,
+                  paddingBottom: 10,
+                  paddingTop: 10,
+                  backgroundColor: Colors.light.themeColor,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 10,
                 }}
               >
+                <TouchableOpacity
+                  activeOpacity={0}
+                  onPress={() => router.back()}
+                >
+                  <Ionicons
+                    name="chevron-back-outline"
+                    size={24}
+                    color="white"
+                  />
+                </TouchableOpacity>
                 <Text
+                  style={{ fontSize: 24, fontWeight: "bold", color: "white" }}
+                >
+                  Transfers
+                </Text>
+              </View>
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  backgroundColor: Colors.light.background,
+                  alignItems: "center",
+                  padding: 10,
+                }}
+              >
+                <View style={{ flexDirection: "column" }}>
+                  <Text style={{ fontSize: 14, fontWeight: "bold" }}>
+                    Last Updated On:{" "}
+                  </Text>
+                  <Text
+                    style={{ fontSize: 14, color: Colors.light.themeColor }}
+                  >
+                    {dayjs(updateTime).format("DD/MM/YYYY HH:mm:ss")}
+                  </Text>
+                </View>
+                <TouchableOpacity
                   style={{
-                    fontSize: 16,
-                    color: Colors.light.themeColorSecondary,
-                    textDecorationLine: "underline",
-                    fontWeight: "bold",
-                    marginTop: 10,
+                    padding: 10,
+                    borderRadius: 10,
+                    borderColor: Colors.light.themeColor,
+                    borderWidth: 1,
+                    flexDirection: "row",
+                    gap: 10,
+                    backgroundColor: Colors.light.themeColorSecondary,
+                  }}
+                  onPress={() => setOpen(true)}
+                >
+                  <Text style={{ color: "white" }}>Filter</Text>
+                  <Ionicons name="filter" size={16} color={"white"}></Ionicons>
+                </TouchableOpacity>
+              </View>
+              <View
+                style={{ borderColor: Colors.light.themeColor, borderWidth: 1 }}
+              ></View>
+              {!newTransactions.length && (
+                <View
+                  style={{
+                    flex: 1,
+                    // justifyContent: "center",
+                    alignItems: "center",
+                    backgroundColor: Colors.light.background,
+                    paddingTop: 100,
                   }}
                 >
-                  Filter Again
-                </Text>
-              </TouchableOpacity>
-            </View>
-          )}
-          {newTransactions.length > 0 && (
-            <Animated.FlatList
-              data={newTransactions}
-              // renderItem={({ item }) => <AdminTransfersBlock {...item} />}
-              renderItem={({ item, index }) => {
-                const prevItem = index > 0 ? newTransactions[index - 1] : null;
-                const showSeparator =
-                  index === 0 ||
-                  (prevItem &&
-                    dayjs(prevItem.transfer_datetime).format("YYYY-MM-DD") !==
-                      dayjs(item.transfer_datetime).format("YYYY-MM-DD"));
+                  <Image
+                    source={require("@/assets/images/laptop.gif")}
+                    style={{ width: 150, height: 150 }}
+                  />
+                  <Text style={{ fontSize: 18, fontWeight: "bold" }}>
+                    No transactions found
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => {
+                      setOpen(true);
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontSize: 16,
+                        color: Colors.light.themeColorSecondary,
+                        textDecorationLine: "underline",
+                        fontWeight: "bold",
+                        marginTop: 10,
+                      }}
+                    >
+                      Filter Again
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+              {newTransactions.length > 0 && (
+                <Animated.FlatList
+                  data={newTransactions}
+                  // renderItem={({ item }) => <AdminTransfersBlock {...item} />}
+                  renderItem={({ item, index }) => {
+                    const prevItem =
+                      index > 0 ? newTransactions[index - 1] : null;
+                    const showSeparator =
+                      index === 0 ||
+                      (prevItem &&
+                        dayjs(prevItem.transfer_datetime).format(
+                          "YYYY-MM-DD"
+                        ) !==
+                          dayjs(item.transfer_datetime).format("YYYY-MM-DD"));
 
-                return (
-                  <>
-                    {showSeparator && (
-                      <View
-                        style={{
-                          backgroundColor: Colors.light.themeColorAccent,
-                          marginBottom: 20,
-                          paddingVertical: 5,
-                          width: "30%",
-                          alignSelf: "center",
-                          borderRadius: 30,
-                        }}
-                      >
-                        <Text
-                          style={{
-                            fontSize: 14,
-                            fontWeight: "bold",
-                            textAlign: "center",
-                          }}
-                        >
-                          {dayjs(item.transfer_datetime).isSame(dayjs(), "date")
-                            ? "Today"
-                            : dayjs(item.transfer_datetime).format(
-                                "DD MMMM YYYY"
-                              )}
-                          {/* {dayjs(item.transfer_datetime).format("DD MMMM YYYY")} */}
-                        </Text>
-                      </View>
-                    )}
-                    <AdminTransfersBlock {...item} />
-                  </>
-                );
-              }}
-              keyExtractor={(item) => item.transaction_id}
-              style={{
-                paddingVertical: 10,
-                backgroundColor: Colors.light.background,
-              }}
-              contentContainerStyle={{ paddingVertical: 10, paddingBottom: 40 }}
-              showsVerticalScrollIndicator={false}
-              showsHorizontalScrollIndicator={false}
-              ItemSeparatorComponent={() => <View style={{ height: 20 }} />}
-              itemLayoutAnimation={LinearTransition}
-              onLayout={() => {
-                setTimeout(() => {
-                  setLoading(false);
-                }, 2000);
-              }}
-              refreshControl={
-                <RefreshControl
-                  refreshing={loading}
-                  onRefresh={() => {
-                    setLoading(true);
+                    return (
+                      <>
+                        {showSeparator && (
+                          <View
+                            style={{
+                              backgroundColor: Colors.light.themeColorAccent,
+                              marginBottom: 20,
+                              paddingVertical: 5,
+                              width: "30%",
+                              alignSelf: "center",
+                              borderRadius: 30,
+                            }}
+                          >
+                            <Text
+                              style={{
+                                fontSize: 14,
+                                fontWeight: "bold",
+                                textAlign: "center",
+                              }}
+                            >
+                              {dayjs(item.transfer_datetime).isSame(
+                                dayjs(),
+                                "date"
+                              )
+                                ? "Today"
+                                : dayjs(item.transfer_datetime).format(
+                                    "DD MMMM YYYY"
+                                  )}
+                              {/* {dayjs(item.transfer_datetime).format("DD MMMM YYYY")} */}
+                            </Text>
+                          </View>
+                        )}
+                        <AdminTransfersBlock {...item} />
+                      </>
+                    );
+                  }}
+                  keyExtractor={(item) => item.transaction_id}
+                  style={{
+                    paddingVertical: 10,
+                    backgroundColor: Colors.light.background,
+                  }}
+                  contentContainerStyle={{
+                    paddingVertical: 10,
+                    paddingBottom: 40,
+                  }}
+                  showsVerticalScrollIndicator={false}
+                  showsHorizontalScrollIndicator={false}
+                  ItemSeparatorComponent={() => <View style={{ height: 20 }} />}
+                  itemLayoutAnimation={LinearTransition}
+                  onLayout={() => {
                     setTimeout(() => {
                       setLoading(false);
-                      setUpdateTime(new Date());
                     }, 2000);
                   }}
+                  refreshControl={
+                    <RefreshControl
+                      refreshing={loading}
+                      onRefresh={() => {
+                        setLoading(true);
+                        setTimeout(() => {
+                          setLoading(false);
+                          setUpdateTime(new Date());
+                        }, 2000);
+                      }}
+                    />
+                  }
                 />
-              }
-            />
+              )}
+            </>
           )}
         </Drawer>
       </SafeAreaView>
@@ -570,6 +714,19 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 10,
     marginBottom: 20,
+    marginTop: 10,
+  },
+  filterInput: {
+    fontSize: 14,
+  },
+  filterTextContainer: {
+    paddingHorizontal: 10,
+    paddingVertical: 12,
+    width: "100%",
+    backgroundColor: "white",
+    borderColor: "black",
+    borderWidth: 1,
+    borderRadius: 10,
     marginTop: 10,
   },
 });

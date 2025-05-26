@@ -8,9 +8,13 @@ import fx, { convert } from "money";
 import { convertUSDToMYR } from "../providers/convertCurrency";
 import { useEffect, useState } from "react";
 import { router } from "expo-router";
+import { fetchAccountDetails } from "../providers/fetchAccountDetails";
+import { fetchCustomerDetails } from "../providers/fetchCustomerDetails";
 
 const AdminTransfersBlock = (transaction: Transaction) => {
   const [newRate, setNewRate] = useState<number | null>(null);
+  const [senderName, setSenderName] = useState<string | null>(null);
+  const [receiverName, setReceiverName] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchNewRate = async () => {
@@ -20,39 +24,60 @@ const AdminTransfersBlock = (transaction: Transaction) => {
     fetchNewRate();
   }, [transaction.amount]);
 
-  const fetchSenderName = (accountId: string) => {
-    const account = accounts.find((acc) => acc.account_id === accountId);
-    if (account) {
-      const customer = customers.find(
-        (cust) => cust.customer_id === account.customer_id
-      );
-      const lastNameParts = customer?.last_name?.split(" ");
-      const initial =
-        lastNameParts!.length > 1
-          ? lastNameParts![1].charAt(0)
-          : lastNameParts?.[0].charAt(0);
+  useEffect(() => {
+    const getSenderName = async () => {
+      try {
+        const account = await fetchAccountDetails(
+          transaction.initiator_account_id
+        );
 
-      return customer!.first_name + " " + initial + ".";
-    }
-    return null;
-  };
+        if (account) {
+          const customer = await fetchCustomerDetails(account.customer_id);
 
-  const findReceiverName = (accountNo: string) => {
-    const account = accounts.find((acc) => acc.account_no === accountNo);
-    if (account) {
-      const customer = customers.find(
-        (cust) => cust.customer_id === account.customer_id
-      );
-      const lastNameParts = customer?.last_name?.split(" ");
-      const initial =
-        lastNameParts!.length > 1
-          ? lastNameParts![1].charAt(0)
-          : lastNameParts?.[0].charAt(0);
+          const lastNameParts = customer?.last_name?.split(" ");
+          const initial =
+            lastNameParts && lastNameParts.length > 1
+              ? lastNameParts[1].charAt(0)
+              : lastNameParts?.[0]?.charAt(0);
 
-      return customer!.first_name + " " + initial + ".";
-    }
-    return null;
-  };
+          setSenderName(customer?.first_name + " " + initial + ".");
+        } else {
+          setSenderName(null);
+        }
+      } catch (error) {
+        console.error("Error in getSenderName:", error);
+        setSenderName("Unknown");
+      }
+    };
+    getSenderName();
+  }, [transaction.initiator_account_id]);
+
+  useEffect(() => {
+    const getReceiverName = async () => {
+      try {
+        const account = await fetchAccountDetails(
+          undefined,
+          transaction.receiver_account_no
+        );
+        if (account) {
+          const customer = await fetchCustomerDetails(account.customer_id);
+          const lastNameParts = customer?.last_name?.split(" ");
+          const initial =
+            lastNameParts && lastNameParts.length > 1
+              ? lastNameParts[1].charAt(0)
+              : lastNameParts?.[0]?.charAt(0);
+
+          setReceiverName(customer?.first_name + " " + initial + ".");
+        } else {
+          setReceiverName(null);
+        }
+      } catch (error) {
+        console.error("Error in getReceiverName:", error);
+        setReceiverName("Unknown");
+      }
+    };
+    getReceiverName();
+  }, [transaction.receiver_account_no]);
 
   return (
     <TouchableOpacity
@@ -68,9 +93,7 @@ const AdminTransfersBlock = (transaction: Transaction) => {
           <Text style={styles.text}>
             {dayjs(transaction.transfer_datetime).format("YYYY-MM-DD")}
           </Text>
-          <Text style={styles.text}>
-            {fetchSenderName(transaction.initiator_account_id)}
-          </Text>
+          <Text style={styles.text}>{senderName ?? "Loading..."}</Text>
         </View>
         <View style={styles.middleContainer}>
           <Text style={styles.text}>$ {transaction.amount.toFixed(2)}</Text>
@@ -82,9 +105,7 @@ const AdminTransfersBlock = (transaction: Transaction) => {
           <Text style={styles.text}>
             {dayjs(transaction.transfer_datetime).format("HH:mm")}
           </Text>
-          <Text style={styles.text}>
-            {findReceiverName(transaction.receiver_account_no)}
-          </Text>
+          <Text style={styles.text}>{receiverName ?? "Loading..."}</Text>
         </View>
       </View>
     </TouchableOpacity>
