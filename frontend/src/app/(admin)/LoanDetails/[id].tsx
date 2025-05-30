@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
   TextInput,
   Button,
+  Alert,
 } from "react-native";
 import Animated, { FadeOut } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -64,7 +65,7 @@ const LoanDetails = () => {
   }>({});
   const [shouldPredict, setShouldPredict] = useState(false);
   const [loanPredicting, setLoanPredicting] = useState(false);
-  const { user } = useAuth();
+  const { user, isMockEnabled } = useAuth();
 
   const loanGrade = [
     {
@@ -106,8 +107,6 @@ const LoanDetails = () => {
     resolver: yupResolver(editableForm),
   });
   const onSubmit = async (data) => {
-    console.log(data);
-
     const { data: response, error } = await supabase
       .from("Loan")
       .update({
@@ -122,7 +121,10 @@ const LoanDetails = () => {
     setIsAIPrediction(false);
 
     // Refetch loan, which will update state and trigger useEffect
-    const fetchedLoan = await fetchLoanDetails(id as string);
+    const fetchedLoan = await fetchLoanDetails(
+      isMockEnabled ?? false,
+      id as string
+    );
     setLoan(Array.isArray(fetchedLoan) ? fetchedLoan[0] : fetchedLoan);
 
     setShouldPredict(true);
@@ -132,7 +134,10 @@ const LoanDetails = () => {
 
   useEffect(() => {
     const fetchLoan = async () => {
-      const fetchedLoan = await fetchLoanDetails(id as string);
+      const fetchedLoan = await fetchLoanDetails(
+        isMockEnabled ?? false,
+        id as string
+      );
       setLoan(Array.isArray(fetchedLoan) ? fetchedLoan[0] : fetchedLoan);
 
       if (!fetchedLoan) {
@@ -149,7 +154,9 @@ const LoanDetails = () => {
 
   useEffect(() => {
     if (loan?.customer_id) {
-      fetchCustomerDetails(loan.customer_id).then(setCustomer);
+      fetchCustomerDetails(isMockEnabled ?? false, loan.customer_id).then(
+        setCustomer
+      );
     }
     if (loan?.final_approval === null) {
       setApproveText("Not Decided");
@@ -165,19 +172,28 @@ const LoanDetails = () => {
   }, [loan]);
 
   useEffect(() => {
-    if ((loan && customer && loan.ai_prediction === null) || shouldPredict) {
+    if (
+      (loan && customer && loan.ai_prediction === null) ||
+      shouldPredict ||
+      isMockEnabled
+    ) {
       requestAIPrediction().then(() => {
         setShouldPredict(false);
         setLoanPredicting(false);
       });
       setShouldPredict(false);
     }
-    if (loan && customer && loan.ai_prediction !== null) {
-      setLoanPrediction(loan.ai_prediction);
+    if ((loan && customer && loan.ai_prediction !== null) || !isMockEnabled) {
+      setLoanPrediction(loan && loan.ai_prediction ? loan.ai_prediction : {});
     }
   }, [shouldPredict, loan, customer]);
 
   useEffect(() => {
+    if (isMockEnabled) {
+      // Do nothing if mock mode is enabled
+      return;
+    }
+
     if (loanPrediction && loanPrediction.prediction !== undefined) {
       const updatePrediction = async () => {
         await supabase
@@ -487,7 +503,10 @@ const LoanDetails = () => {
                       .select();
 
                   // Refetch loan, which will update state and trigger useEffect
-                  const fetchedLoan = await fetchLoanDetails(id as string);
+                  const fetchedLoan = await fetchLoanDetails(
+                    isMockEnabled ?? false,
+                    id as string
+                  );
                   setLoan(
                     Array.isArray(fetchedLoan) ? fetchedLoan[0] : fetchedLoan
                   );
@@ -512,32 +531,51 @@ const LoanDetails = () => {
                     justifyContent: "center",
                   },
                 ]}
-                onPress={async () => {
-                  const { data, error } = await supabase
-                    .from("Loan")
-                    .update({ final_approval: true })
-                    .eq("loan_id", id)
-                    .select();
+                onPress={() => {
+                  Alert.alert(
+                    "Confirm Approval",
+                    "Are you sure you want to approve this loan?",
+                    [
+                      {
+                        text: "Cancel",
+                        style: "cancel",
+                      },
+                      {
+                        text: "Yes",
+                        onPress: async () => {
+                          const { data, error } = await supabase
+                            .from("Loan")
+                            .update({ final_approval: true })
+                            .eq("loan_id", id)
+                            .select();
 
-                  const { data: adminLoanData, error: adminLoanError } =
-                    await supabase
-                      .from("Admin_Loan")
-                      .insert([
-                        {
-                          admin_id:
-                            user && "admin_id" in user
-                              ? (user as any).admin_id
-                              : null,
-                          loan_id: id,
-                          admin_approve: true,
+                          const { data: adminLoanData, error: adminLoanError } =
+                            await supabase
+                              .from("Admin_Loan")
+                              .insert([
+                                {
+                                  admin_id:
+                                    user && "admin_id" in user
+                                      ? (user as any).admin_id
+                                      : null,
+                                  loan_id: id,
+                                  admin_approve: true,
+                                },
+                              ])
+                              .select();
+
+                          const fetchedLoan = await fetchLoanDetails(
+                            isMockEnabled ?? false,
+                            id as string
+                          );
+                          setLoan(
+                            Array.isArray(fetchedLoan)
+                              ? fetchedLoan[0]
+                              : fetchedLoan
+                          );
                         },
-                      ])
-                      .select();
-
-                  // Refetch loan, which will update state and trigger useEffect
-                  const fetchedLoan = await fetchLoanDetails(id as string);
-                  setLoan(
-                    Array.isArray(fetchedLoan) ? fetchedLoan[0] : fetchedLoan
+                      },
+                    ]
                   );
                 }}
               >
@@ -661,9 +699,17 @@ const LoanDetails = () => {
                     <TextInput
                       onBlur={onBlur}
                       onChangeText={onChange}
-                      value={value ?? ""}
+                      value={
+                        value !== undefined && value !== null
+                          ? String(value)
+                          : ""
+                      }
+                      editable={loan?.final_approval === null}
                       placeholderTextColor={Colors.light.themeColor}
-                      style={styles.input}
+                      style={[
+                        styles.input,
+                        loan?.final_approval !== null && { opacity: 0.7 },
+                      ]}
                       inputMode="numeric"
                       keyboardType="numeric"
                     />
@@ -671,8 +717,8 @@ const LoanDetails = () => {
                 )}
                 defaultValue={
                   typeof loan?.customer_credit_history_years === "number"
-                    ? String(loan.customer_credit_history_years)
-                    : ""
+                    ? loan.customer_credit_history_years
+                    : undefined
                 }
                 name="creditHistory"
               />
@@ -695,6 +741,7 @@ const LoanDetails = () => {
                     return true;
                   },
                 }}
+                disabled={loan?.final_approval !== null}
                 render={({ field: { onChange, onBlur, value } }) => (
                   <View style={{ gap: 5 }}>
                     <Text style={styles.inputTitle}>Credit Score</Text>
@@ -702,8 +749,12 @@ const LoanDetails = () => {
                       onBlur={onBlur}
                       onChangeText={onChange}
                       value={value ?? ""}
+                      editable={loan?.final_approval === null}
                       placeholderTextColor={Colors.light.themeColor}
-                      style={styles.input}
+                      style={[
+                        styles.input,
+                        loan?.final_approval !== null && { opacity: 0.7 },
+                      ]}
                       inputMode="numeric"
                       keyboardType="numeric"
                     />
@@ -728,11 +779,15 @@ const LoanDetails = () => {
                     <Dropdown
                       onChange={(text) => onChange(text.value)}
                       onBlur={onBlur}
+                      disable={loan?.final_approval !== null}
                       value={value}
                       data={loanGrade}
                       labelField={"label"}
                       valueField={"value"}
-                      style={styles.input}
+                      style={[
+                        styles.input,
+                        loan?.final_approval !== null && { opacity: 0.7 },
+                      ]}
                     />
                   </View>
                 )}
@@ -751,11 +806,15 @@ const LoanDetails = () => {
                     <Dropdown
                       onChange={(text) => onChange(text.value)}
                       onBlur={onBlur}
+                      disable={loan?.final_approval !== null}
                       value={value}
                       data={trueFalse}
                       labelField={"label"}
                       valueField={"value"}
-                      style={styles.input}
+                      style={[
+                        styles.input,
+                        loan?.final_approval !== null && { opacity: 0.7 },
+                      ]}
                     />
                   </View>
                 )}
@@ -787,9 +846,13 @@ const LoanDetails = () => {
                     <TextInput
                       onBlur={onBlur}
                       onChangeText={onChange}
+                      editable={loan?.final_approval === null}
                       value={value ?? ""}
                       placeholderTextColor={Colors.light.themeColor}
-                      style={styles.input}
+                      style={[
+                        styles.input,
+                        loan?.final_approval !== null && { opacity: 0.7 },
+                      ]}
                       inputMode="numeric"
                       keyboardType="numeric"
                     />
@@ -806,16 +869,18 @@ const LoanDetails = () => {
                 <Text style={styles.error}>{errors.interestRate?.message}</Text>
               )}
             </ScrollView>
-            <View
-              style={{
-                marginTop: 10,
-                backgroundColor: Colors.light.background,
-                borderRadius: 10,
-                paddingVertical: 5,
-              }}
-            >
-              <Button title="Submit" onPress={handleSubmit(onSubmit)} />
-            </View>
+            {loan?.final_approval === null && (
+              <View
+                style={{
+                  marginTop: 10,
+                  backgroundColor: Colors.light.background,
+                  borderRadius: 10,
+                  paddingVertical: 5,
+                }}
+              >
+                <Button title="Submit" onPress={handleSubmit(onSubmit)} />
+              </View>
+            )}
           </>
         )}
         {isAIPrediction && (

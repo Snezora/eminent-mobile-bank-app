@@ -1,22 +1,37 @@
 import { supabase } from "../lib/supabase";
+import { accounts } from "@/assets/data/dummyAccounts";
 
 const fetchListofAccounts = async ({
+  isMockEnabled,
   isAdmin,
-  user_id,
+  customer_id,
 } : {
+  isMockEnabled: boolean;
   isAdmin: boolean;
-  user_id?: string;
+  customer_id?: string;
 }) => {
-  if (user_id) {
+
+  if (isMockEnabled) {
+    // Mock data for development purposes
+    if (customer_id) {
+      return accounts.filter(account => account.customer_id === customer_id);
+    }
+    if (isAdmin) {
+      return accounts;
+    }
+    return [];
+  }
+
+  if (customer_id) {
     let { data, error } = await supabase
       .from("Account")
       .select("*")
-      .eq("user_uuid", user_id)
+      .eq("customer_id", customer_id)
       .order("account_no", { ascending: true });
 
     return data;
   }
-  if (isAdmin) {
+  if (isAdmin && !customer_id) {
     let { data, error } = await supabase
       .from("Account")
       .select("*")

@@ -10,11 +10,13 @@ import { useEffect, useState } from "react";
 import { router } from "expo-router";
 import { fetchAccountDetails } from "../providers/fetchAccountDetails";
 import { fetchCustomerDetails } from "../providers/fetchCustomerDetails";
+import { useAuth } from "../providers/AuthProvider";
 
 const AdminTransfersBlock = (transaction: Transaction) => {
   const [newRate, setNewRate] = useState<number | null>(null);
   const [senderName, setSenderName] = useState<string | null>(null);
   const [receiverName, setReceiverName] = useState<string | null>(null);
+  const { isMockEnabled } = useAuth();
 
   useEffect(() => {
     const fetchNewRate = async () => {
@@ -28,11 +30,15 @@ const AdminTransfersBlock = (transaction: Transaction) => {
     const getSenderName = async () => {
       try {
         const account = await fetchAccountDetails(
+          isMockEnabled ?? false,
           transaction.initiator_account_id
         );
 
         if (account) {
-          const customer = await fetchCustomerDetails(account.customer_id);
+          const customer = await fetchCustomerDetails(
+            isMockEnabled ?? false,
+            account.customer_id
+          );
 
           const lastNameParts = customer?.last_name?.split(" ");
           const initial =
@@ -56,11 +62,15 @@ const AdminTransfersBlock = (transaction: Transaction) => {
     const getReceiverName = async () => {
       try {
         const account = await fetchAccountDetails(
+          isMockEnabled ?? false,
           undefined,
           transaction.receiver_account_no
         );
         if (account) {
-          const customer = await fetchCustomerDetails(account.customer_id);
+          const customer = await fetchCustomerDetails(
+            isMockEnabled ?? false,
+            account.customer_id
+          );
           const lastNameParts = customer?.last_name?.split(" ");
           const initial =
             lastNameParts && lastNameParts.length > 1

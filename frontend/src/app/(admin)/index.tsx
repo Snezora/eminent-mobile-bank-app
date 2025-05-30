@@ -10,30 +10,89 @@ import {
   StyleSheet,
   Dimensions,
   useColorScheme,
+  Button,
 } from "react-native";
 import { LineChart } from "react-native-gifted-charts";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Card, DateTimePicker } from "react-native-ui-lib";
 import { useAuth } from "@/src/providers/AuthProvider";
+import { useEffect, useState } from "react";
+import { FontAwesome6 } from "@expo/vector-icons";
+import { Admin } from "@/assets/data/types";
 
 var width = Dimensions.get("window").width; //full width
 
 const AdminPage = () => {
   const colorScheme = useColorScheme();
-  const { session } = useAuth();
+  const { session, isAdmin } = useAuth();
+  const [data, setData] = useState<{ label: string; value: number }[]>([]);
+  const [admin, setAdmin] = useState<Admin | null>(null);
 
-  const data = [
-    { value: 50, label: "2023-10-23" },
-    { value: 80, label: "2023-10-24" },
-    { value: 90, label: "2023-10-25" },
-    { value: 70, label: "2023-10-26" },
-    { value: 10, label: "2023-10-27" },
-    { value: 40, label: "2023-10-28" },
-    { value: 20, label: "2023-10-29" },
-    { value: 30, label: "2023-10-30" },
-    { value: 60, label: "2023-10-31" },
-    { value: -50, label: "2023-11-01" },
-  ];
+  useEffect(() => {
+    //Get admin details
+    if (!session || !isAdmin) {
+      router.push("/(auth)/home-page");
+      return;
+    }
+
+    // Fetch admin details from supabase
+    const fetchAdminDetails = async () => {
+      try {
+        const { data: adminData, error } = await supabase
+          .from("Admin")
+          .select("*")
+          .eq("user_uuid", session.user.id)
+          .single();
+
+        if (error) {
+          console.error("Error fetching admin details:", error);
+          return;
+        }
+
+        // If you need to do something with adminData, you can do it here
+        setAdmin(adminData);
+      } catch (error) {
+        console.error("Error fetching admin details:", error);
+      }
+    };
+
+    fetchAdminDetails();
+
+    const fetchTodayAmountofTransactions = async () => {
+      try {
+        const today = new Date();
+        const startOfDay = new Date(today.setHours(0, 0, 0, 0)).toISOString();
+        const endOfDay = new Date(
+          today.setHours(23, 59, 59, 999)
+        ).toISOString(); // End of the day
+
+        const { data: transactions, error } = await supabase
+          .from("Transaction")
+          .select("amount, transfer_datetime")
+          .gte("transfer_datetime", startOfDay)
+          .lt("transfer_datetime", endOfDay);
+
+        if (error) {
+          console.error("Error fetching today's transactions:", error);
+          return;
+        }
+
+        // Process the fetched transactions to create data for the chart
+        const processedData = transactions.map((transaction) => ({
+          label: new Date(transaction.transfer_datetime).toLocaleDateString(),
+          value: transaction.amount,
+        }));
+
+        console.log("Processed Data: ", processedData);
+
+        setData(processedData);
+      } catch (error) {
+        console.error("Error fetching today's transactions:", error);
+      }
+    };
+
+    fetchTodayAmountofTransactions();
+  }, []);
 
   return (
     <SafeAreaView
@@ -54,10 +113,10 @@ const AdminPage = () => {
           <SettingsLogOut />
         </View>
         <Text style={[styles.headerText]}>Good Evening, </Text>
-        <Text style={[styles.headerText]}>Admin</Text>
+        <Text style={[styles.headerText]}>{admin?.username}</Text>
       </View>
       <View style={[styles.container]}>
-        <Card
+        {/* <Card
           style={{
             overflowX: "hidden",
             width: width - 25,
@@ -67,41 +126,47 @@ const AdminPage = () => {
         >
           <Text>Cumulative Amount of Transfers (RM)</Text>
           <LineChart
-            data={data}
+            data={data} // Use the fetched and processed data
             height={200}
             width={width - 100}
             spacing={100}
             isAnimated
             animateOnDataChange
             initialSpacing={50}
-            // maxValue={data.reduce((max, item) => Math.max(max, item.value), 0)}
-            // mostNegativeValue={data.reduce((min, item) => Math.min(min, item.value), 0)}
             endSpacing={30}
             yAxisLabelPrefix={"RM"}
             yAxisLabelWidth={50}
             showYAxisIndices
             scrollToEnd
           />
-        </Card>
+        </Card> */}
         <View style={[styles.lowerContainer]}>
           <Card
             style={[styles.cards]}
             onPress={() => router.push("/(admin)/transfers")}
           >
-            <Text>Transfers</Text>
+            <FontAwesome6 name="money-bill-transfer" size={36} color="black" />
+            <Text style={styles.cardText}>Transfers</Text>
           </Card>
+
           <Card
             style={[styles.cards]}
+            onPress={() => router.push("/(admin)/accounts")}
+          >
+            <FontAwesome6 name="user-group" size={36} color="black" />
+            <Text style={styles.cardText}>Accounts</Text>
+          </Card>
+          <Card
+            style={[styles.cards, { width: "100%" }]}
             onPress={() => router.push("/(admin)/loans")}
           >
-            <Text>Loans</Text>
+            <FontAwesome6 name="file-invoice-dollar" size={36} color="black" />
+            <Text style={styles.cardText}>Loans</Text>
           </Card>
-          <Card style={[styles.cards]} onPress={() => router.push("/(admin)/accounts")}>
-            <Text>Accounts</Text>
-          </Card>
-          <Card style={[styles.cards]} onPress={() => console.log(session)}>
-            <Text>Profile</Text>
-          </Card>
+          {/* <Button
+            title="Sign Up Admin"
+            onPress={() => adminSignUp("admin@ewb.com", "Xyz@1234", "John Doe")}
+          /> */}
         </View>
       </View>
       <StatusBar style="light" />
@@ -141,12 +206,21 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     backgroundColor: "#f3f3f3",
     overflowX: "hidden",
+    paddingHorizontal: 20,
+    paddingVertical: 10,
   },
   cards: {
     width: "45%",
-    height: 50,
+    height: 150,
     alignItems: "center",
     justifyContent: "center",
+    gap: 10,
+    textAlign: "center",
+  },
+  cardText: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "black",
   },
 });
 

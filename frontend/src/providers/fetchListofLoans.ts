@@ -1,9 +1,23 @@
 import { supabase } from "../lib/supabase";
 import { useAuth } from "./AuthProvider";
-import { Loan } from "@/assets/data/types";
+import { Admin, Customer, Loan } from "@/assets/data/types";
+import { loans } from "@/assets/data/dummyLoans";
 
-const fetchLoans = async (user, isAdmin) => {
+const fetchLoans = async (isMockEnabled: boolean, isAdmin: boolean, customer_id?: string) => {
   let response;
+
+  if (isMockEnabled) {
+    // Return mock data if the mock is enabled
+    if (isAdmin) {
+      return { data: loans, error: null };
+    } else {
+      return {
+        data: loans.filter((loan) => loan.customer_id === customer_id),
+        error: null,
+      };
+    }
+  }
+
   if (isAdmin) {
     response = await supabase
       .from("Loan")
@@ -13,7 +27,7 @@ const fetchLoans = async (user, isAdmin) => {
     response = await supabase
       .from("Loan")
       .select("*")
-      .eq("user_uuid", user?.user_uuid)
+      .eq("customer_id", customer_id)
       .order("application_date", { ascending: false });
   }
   if (response.error) {

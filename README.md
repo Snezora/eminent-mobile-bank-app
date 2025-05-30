@@ -23,6 +23,7 @@ git pull https://github.com/Snezora/fyp.git
 
 ```ps
 > cd frontend 
+> npm install
 > npm start
 ```
 
@@ -64,4 +65,6 @@ Note: *Switch the port to the port that you have got from Step 7.*
 
 10. Start using the application on your mobile phone through Expo Go.
 
-
+### Frequently Asked Questions
+1. I received ```Prediction error: [SyntaxError: JSON Parse error: Unexpected character in number: -]``` when I was testing, what is the issue?  
+> The issue is with the closing of localtunnel. Please restart your 3rd command prompt with the localtunnel, aka repeat Step 9.

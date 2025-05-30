@@ -16,6 +16,7 @@ import { fetchAccountDetails } from "@/src/providers/fetchAccountDetails";
 import { fetchCustomerDetails } from "@/src/providers/fetchCustomerDetails";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import fetchTransactionDetails from "@/src/providers/fetchTransactionDetails";
+import { useAuth } from "@/src/providers/AuthProvider";
 
 const TransferDetails = () => {
   const { transferID } = useLocalSearchParams();
@@ -35,10 +36,13 @@ const TransferDetails = () => {
   const [receiverCustomer, setReceiverCustomer] = useState<
     Customer | undefined
   >(undefined);
+  const { isMockEnabled } = useAuth();
 
   useEffect(() => {
     const fetchAllDetails = async () => {
-      const fetchedTransaction = await fetchTransactionDetails(transferID as string);
+      const fetchedTransaction = await fetchTransactionDetails(
+        transferID as string
+      );
       if (!fetchedTransaction) {
         router.push("/+not-found");
         return;
@@ -46,17 +50,23 @@ const TransferDetails = () => {
       setTransaction(fetchedTransaction);
 
       const sender = await fetchAccountDetails(
+        isMockEnabled ?? false,
         fetchedTransaction?.initiator_account_id
       );
-      const senderCustomer = await fetchCustomerDetails(sender?.customer_id);
+      const senderCustomer = await fetchCustomerDetails(
+        isMockEnabled ?? false,
+        sender?.customer_id
+      );
       setSenderAccount(sender);
       setSenderCustomer(senderCustomer);
 
       const receiver = await fetchAccountDetails(
+        isMockEnabled ?? false,
         undefined,
         fetchedTransaction?.receiver_account_no
       );
       const receiverCustomer = await fetchCustomerDetails(
+        isMockEnabled ?? false,
         receiver?.customer_id
       );
       setReceiverAccount(receiver);

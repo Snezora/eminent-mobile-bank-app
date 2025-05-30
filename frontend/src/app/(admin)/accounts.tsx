@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   Alert,
   Image,
+  Touchable,
 } from "react-native";
 import {
   GestureHandlerRootView,
@@ -16,7 +17,7 @@ import {
 } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Colors from "@/src/constants/Colors";
-import { Ionicons } from "@expo/vector-icons";
+import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import fetchListofAccounts from "@/src/providers/fetchListofAccounts";
 import { Account, Customer } from "@/assets/data/types";
@@ -42,7 +43,7 @@ import { set } from "react-hook-form";
 
 const Accounts = () => {
   const [accounts, setAccounts] = useState<Account[]>([]);
-  const { isAdmin } = useAuth();
+  const { isAdmin, isMockEnabled } = useAuth();
   const [open, setOpen] = useState(false);
   const [updateTime, setUpdateTime] = useState(new Date());
   const [searchName, setSearchName] = useState("");
@@ -59,12 +60,11 @@ const Accounts = () => {
     { label: "Blocked", value: "Blocked" },
     { label: "Inactive", value: "Inactive" },
     { label: "Pending", value: "Pending" },
-    { label: "None", value: null },
   ];
 
   useEffect(() => {
     setUpdateTime(new Date());
-    fetchListofAccounts({ isAdmin })
+    fetchListofAccounts({ isMockEnabled: isMockEnabled ?? false, isAdmin })
       .then(async (data) => {
         if (searchName) {
           // fetch customers with searchName
@@ -97,6 +97,15 @@ const Accounts = () => {
           return a.approved_at ? 1 : -1;
         });
 
+        if (selectedStatus) {
+          // filter accounts by selected status
+          sortedAccounts = sortedAccounts.filter(
+            (account) => account.account_status === selectedStatus
+          );
+
+          console.log("Filtered accounts by status:", selectedStatus);
+        }
+
         if (accountName) {
           // filter accounts by account name
           sortedAccounts = sortedAccounts.filter((account) =>
@@ -112,7 +121,7 @@ const Accounts = () => {
         }, 2000);
       });
 
-    if (!searchName || !accountName) {
+    if (!searchName && !accountName) {
       const channel = supabase
         .channel("custom-all-channel")
         .on(
@@ -120,16 +129,44 @@ const Accounts = () => {
           { event: "*", schema: "public", table: "Account" },
           (payload) => {
             setLoading(true);
-            fetchListofAccounts({ isAdmin }).then((data) => {
-              const sortedAccounts = [...(data ?? [])].sort((a, b) => {
+            fetchListofAccounts({
+              isMockEnabled: isMockEnabled ?? false,
+              isAdmin,
+            }).then((data) => {
+              // Only filter if payload.new exists and accountName is not blank
+              if (payload.new && payload.new.customer_id && accountName) {
+                data = data?.filter(
+                  (account) => account.customer_id === payload.new.customer_id
+                );
+              }
+
+              let sortedAccounts = [...(data ?? [])].sort((a, b) => {
                 if (!!a.approved_at === !!b.approved_at) {
                   return (
                     new Date(b.created_at).getTime() -
                     new Date(a.created_at).getTime()
                   );
                 }
+                // Not approved comes first
                 return a.approved_at ? 1 : -1;
               });
+
+              if (selectedStatus) {
+                // Filter accounts by selected status
+                sortedAccounts = sortedAccounts.filter(
+                  (account) => account.account_status === selectedStatus
+                );
+              }
+
+              if (accountName) {
+                // Filter accounts by account name
+                sortedAccounts = sortedAccounts.filter((account) =>
+                  account.nickname
+                    ?.toLowerCase()
+                    .includes(accountName.toLowerCase())
+                );
+              }
+
               setAccounts(sortedAccounts);
               setUpdateTime(new Date());
               setLoading(false);
@@ -139,7 +176,7 @@ const Accounts = () => {
         )
         .subscribe();
     }
-  }, [isAdmin, searchName, accountName]);
+  }, [isAdmin, searchName, accountName, selectedStatus]);
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -266,10 +303,10 @@ const Accounts = () => {
                         }}
                       >
                         <Text style={styles.filterOption}>Account Status</Text>
-                        {searchName && (
+                        {selectedStatus && (
                           <TouchableOpacity
                             onPress={() => {
-                              setSearchName("");
+                              setSelectedStatus("");
                             }}
                           >
                             <Text
@@ -289,7 +326,7 @@ const Accounts = () => {
                         <Dropdown
                           value={selectedStatus}
                           onChange={(value) => {
-                            setSelectedStatus(value);
+                            setSelectedStatus(value.value);
                           }}
                           data={accountStatus}
                           placeholder="Search by account status"
@@ -317,6 +354,7 @@ const Accounts = () => {
                           setOpen(false);
                           setSearchName("");
                           setAccountName("");
+                          setSelectedStatus("");
                         }}
                         type="reject"
                       />
@@ -354,24 +392,44 @@ const Accounts = () => {
                   backgroundColor: Colors.light.themeColor,
                   flexDirection: "row",
                   alignItems: "center",
-                  gap: 10,
                 }}
               >
-                <TouchableOpacity
-                  activeOpacity={0}
-                  onPress={() => router.back()}
+                <View
+                  style={{
+                    flexDirection: "row",
+                    gap: 10,
+                    flex: 1,
+                    alignItems: "center",
+                  }}
                 >
-                  <Ionicons
-                    name="chevron-back-outline"
-                    size={24}
+                  <TouchableOpacity
+                    activeOpacity={0}
+                    onPress={() => router.back()}
+                  >
+                    <Ionicons
+                      name="chevron-back-outline"
+                      size={24}
+                      color="white"
+                    />
+                  </TouchableOpacity>
+                  <Text
+                    style={{ fontSize: 24, fontWeight: "bold", color: "white" }}
+                  >
+                    Accounts
+                  </Text>
+                </View>
+
+                <TouchableOpacity
+                  activeOpacity={0.7}
+                  onPress={() => router.push("/(admin)/addAccount")}
+                >
+                  <FontAwesome
+                    name="plus-square"
+                    size={28}
                     color="white"
+                    style={{ marginRight: 10 }}
                   />
                 </TouchableOpacity>
-                <Text
-                  style={{ fontSize: 24, fontWeight: "bold", color: "white" }}
-                >
-                  Accounts
-                </Text>
               </View>
               <View
                 style={{
@@ -487,7 +545,10 @@ const Accounts = () => {
                           onPress={() => {
                             setChosenAccount(item); // Set chosenAccount immediately
                             // Fetch customer details
-                            fetchCustomerDetails(item.customer_id)
+                            fetchCustomerDetails(
+                              isMockEnabled ?? false,
+                              item.customer_id
+                            )
                               .then((details) => {
                                 setCustomerDetails(details); // Set customer details
                                 setModalVisible(true); // ONLY show modal AFTER both are set

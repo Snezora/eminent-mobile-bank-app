@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { fetchCustomerDetails } from "../providers/fetchCustomerDetails";
 import { useEffect, useState } from "react";
 import dayjs from "dayjs";
+import { useAuth } from "@/src/providers/AuthProvider";
 
 const AdminAccountsBlock = ({
   account,
@@ -13,6 +14,7 @@ const AdminAccountsBlock = ({
 }) => {
   const [customerDetails, setCustomerDetails] = useState<Customer>();
   const [open, setOpen] = useState(false);
+  const { isMockEnabled } = useAuth();
 
   if (!account) {
     return null; // Handle case where account is not provided
@@ -21,7 +23,7 @@ const AdminAccountsBlock = ({
   useEffect(() => {
     const fetchDetails = async () => {
       try {
-        const details = await fetchCustomerDetails(account.customer_id);
+        const details = await fetchCustomerDetails(isMockEnabled ?? false, account.customer_id);
         setCustomerDetails(details);
       } catch (error) {
         console.error("Error fetching customer details:", error);

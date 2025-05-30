@@ -1,6 +1,6 @@
 import { supabase } from "../lib/supabase";
 
-const activated = false;
+const activated = false; // Set to true if admin sign-up is activated
 
 const adminSignUp = async (
   email: string,
@@ -8,6 +8,7 @@ const adminSignUp = async (
   username?: string
 ) => {
   if (!activated) {
+    console.log("Admin sign-up is not activated.");
     return;
   }
   try {

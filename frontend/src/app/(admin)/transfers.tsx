@@ -68,7 +68,7 @@ const TransferAdminPage = () => {
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [updateTime, setUpdateTime] = useState(new Date());
-  const { isAdmin } = useAuth();
+  const { isAdmin, isMockEnabled } = useAuth();
   const [searchID, setSearchID] = useState(searchIDExternal || "");
   const [pageLoading, setPageLoading] = useState(true);
 
@@ -77,62 +77,81 @@ const TransferAdminPage = () => {
   const deviceWidth = Dimensions.get("window").width; //full width
 
   useEffect(() => {
-    const fetchAndFilterTransactions = async () => {
-      setPageLoading(true);
-      let filtered: Transaction[] = [];
-      const result = await fetchListofTransactions({ isAdmin });
-      if (result && Array.isArray(result)) {
-        filtered = result;
-      }
+  const fetchTransactions = async () => {
+    setPageLoading(true); // Set loading only for the initial fetch
+    const result = await fetchListofTransactions({
+      isMockEnabled: !!isMockEnabled,
+      isAdmin: !!isAdmin,
+    });
 
-      if (selectedTransferTypes.length > 0) {
-        filtered = filtered.filter((transaction) => {
-          return selectedTransferTypes.includes(
-            transaction.type_of_transfer ?? ""
-          );
-        });
-      }
+    if (result && Array.isArray(result)) {
+      setTransactions(result); // Store the fetched transactions
+    }
 
-      if (startDate && endDate) {
-        filtered = filtered.filter((transaction) => {
-          const transactionDate = dayjs(transaction.transfer_datetime);
-          return dayjs(transactionDate).isBetween(
-            startDate,
-            endDate,
-            "day",
-            "[]"
-          );
-        });
-      }
+    setPageLoading(false); // Stop loading after fetching
+  };
 
-      filtered = DateSort(dateOrder, filtered);
+  fetchTransactions();
+}, [isMockEnabled, isAdmin]); // Fetch data only once when the component mounts
 
-      if (searchID) {
-        // 1. Fetch the account with this account_no to get its account_id
-        const { data: account, error } = await supabase
-          .from("Account")
-          .select("account_id, account_no")
-          .eq("account_no", searchID)
-          .single();
 
-        const accountId = account?.account_id ?? null;
+  // Move fetchAndFilterTransactions to component scope so it can be reused
+  const fetchAndFilterTransactions = async () => {
+    let filtered: Transaction[] = [];
+    const result = await fetchListofTransactions({ isMockEnabled: !!isMockEnabled, isAdmin: !!isAdmin });
+    if (result && Array.isArray(result)) {
+      filtered = result;
+    }
 
-        filtered = filtered.filter((transaction) => {
-          const initiatorMatch =
-            accountId && transaction.initiator_account_id === accountId;
-          const receiverMatch =
-            transaction.receiver_account_no &&
-            transaction.receiver_account_no === searchID;
+    if (selectedTransferTypes.length > 0) {
+      filtered = filtered.filter((transaction) => {
+        return selectedTransferTypes.includes(
+          transaction.type_of_transfer ?? ""
+        );
+      });
+    }
 
-          return initiatorMatch ?? receiverMatch;
-        });
-      }
+    if (startDate && endDate) {
+      filtered = filtered.filter((transaction) => {
+        const transactionDate = dayjs(transaction.transfer_datetime);
+        return dayjs(transactionDate).isBetween(
+          startDate,
+          endDate,
+          "day",
+          "[]"
+        );
+      });
+    }
 
-      setTransactions(filtered);
-    };
+    filtered = DateSort(dateOrder, filtered);
 
+    if (searchID) {
+      // 1. Fetch the account with this account_no to get its account_id
+      const { data: account, error } = await supabase
+        .from("Account")
+        .select("account_id, account_no")
+        .eq("account_no", searchID)
+        .single();
+
+      const accountId = account?.account_id ?? null;
+
+      filtered = filtered.filter((transaction) => {
+        const initiatorMatch =
+          accountId && transaction.initiator_account_id === accountId;
+        const receiverMatch =
+          transaction.receiver_account_no &&
+          transaction.receiver_account_no === searchID;
+
+        return initiatorMatch ?? receiverMatch;
+      });
+    }
+
+    setTransactions(filtered);
+  };
+
+  useEffect(() => {
     fetchAndFilterTransactions().then(() => setPageLoading(false));
-  }, [dateOrder, selectedTransferTypes, startDate, endDate, searchID, isAdmin]);
+  }, [dateOrder, selectedTransferTypes, startDate, endDate, searchID]);
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -669,6 +688,7 @@ const TransferAdminPage = () => {
                       onRefresh={() => {
                         setLoading(true);
                         setTimeout(() => {
+                          fetchAndFilterTransactions();
                           setLoading(false);
                           setUpdateTime(new Date());
                         }, 2000);

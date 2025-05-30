@@ -7,6 +7,7 @@ import { fetchCustomerDetails } from "../providers/fetchCustomerDetails";
 import { useEffect, useState } from "react";
 import dayjs from "dayjs";
 import { router } from "expo-router";
+import { useAuth } from "@/src/providers/AuthProvider";
 
 const ColorMap = {
   true: "green",
@@ -20,10 +21,11 @@ const AdminLoansBlock = ({ loan }: { loan: Loan }) => {
     finalResult === null ? "null" : finalResult ? "true" : "false";
 
   const [customer, setCustomer] = useState<Customer | undefined>(undefined);
+  const { isMockEnabled } = useAuth();
 
   useEffect(() => {
     const fetchCustomer = async () => {
-      const fetchedCustomer = await fetchCustomerDetails(loan.customer_id);
+      const fetchedCustomer = await fetchCustomerDetails(isMockEnabled ?? false, loan.customer_id);
       setCustomer(fetchedCustomer);
     };
     fetchCustomer();

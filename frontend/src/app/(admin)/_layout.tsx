@@ -75,6 +75,30 @@ export default function TabLayout() {
           headerBackTitle: "Back",
         }}
       />
+      <Stack.Screen
+        name="profile"
+        options={{
+          headerShown: false,
+          headerTitle: "Profile",
+          headerBackTitle: "Back",
+        }}
+      />
+      <Stack.Screen
+        name="addAccount"
+        options={{
+          headerShown: false,
+          headerTitle: "Add Account",
+          headerBackTitle: "Back",
+        }}
+      />
+      <Stack.Screen
+        name="addLoan"
+        options={{
+          headerShown: false,
+          headerTitle: "Add Loan",
+          headerBackTitle: "Back",
+        }}
+      />
     </Stack>
   );
 }

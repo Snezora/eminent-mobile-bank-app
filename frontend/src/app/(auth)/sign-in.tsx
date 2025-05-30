@@ -47,9 +47,26 @@ const SignInScreen = () => {
   } = useForm({
     resolver: yupResolver(scheme),
   });
-  const { session, isAdmin, loading } = useAuth();
+  const { session, isAdmin, loading, isMockEnabled } = useAuth();
 
   const onSubmit = async (data: any) => {
+    let mockEmail = "admin@ewb.com";
+    let mockPassword = "abcd1234";
+
+    console.log(session, isAdmin, loading, isMockEnabled);
+    
+
+    if (
+      isMockEnabled &&
+      data.email === mockEmail &&
+      data.password === mockPassword
+    ) {
+      console.log(
+        "Mock sign-in successful. Waiting for AuthProvider to update..."
+      );
+      return; // AuthProvider will handle the mock session
+    }
+
     try {
       // Sign in the user
       const { error } = await supabase.auth.signInWithPassword({
