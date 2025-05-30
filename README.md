@@ -33,7 +33,7 @@ git pull https://github.com/Snezora/fyp.git
 > **iOS**: [Apple App Store Link](https://itunes.apple.com/app/apple-store/id982107779)
 
 
-5. After downloading Expo Go and signing in, use your mobile phone to scan the QR code shown in Command Prompt.
+5. After downloading Expo Go and signing in, use your mobile phone to scan the QR code shown in Command Prompt.  
 ![Image showing QR Code for scanning on phone](/frontend/assets/images/expoLoad.png)
 
 > ### Focus on Second Command Prompt
@@ -43,6 +43,7 @@ git pull https://github.com/Snezora/fyp.git
 ```ps
 > cd backend 
 > venv\Scripts\activate
+> pip install
 > fastapi dev main.py
 ```
 
