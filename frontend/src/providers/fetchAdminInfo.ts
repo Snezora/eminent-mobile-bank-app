@@ -9,7 +9,6 @@ const fetchAdminInfo = async ({
   isMockEnabled: boolean;
 }) => {
   if (isMockEnabled) {
-    // Mock data for development purposes
     const admin = admins.find((admin) => admin.user_uuid === user_uuid);
     if (!admin) {
       console.warn("Admin not found in mock data:", user_uuid);

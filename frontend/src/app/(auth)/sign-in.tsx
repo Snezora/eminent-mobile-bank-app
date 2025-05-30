@@ -64,11 +64,10 @@ const SignInScreen = () => {
       console.log(
         "Mock sign-in successful. Waiting for AuthProvider to update..."
       );
-      return; // AuthProvider will handle the mock session
+      return; 
     }
 
     try {
-      // Sign in the user
       const { error } = await supabase.auth.signInWithPassword({
         email: data.email,
         password: data.password,
@@ -86,11 +85,9 @@ const SignInScreen = () => {
     }
   };
 
-  // Redirect based on the user's role after AuthProvider updates
   useEffect(() => {
     if (!loading && session) {
       console.log("AuthProvider updated. Redirecting...");
-      //wait for few ms to let the session update
       console.log("Redirecting to the appropriate screen...");
       router.dismissAll();
       isAdmin ? router.push("/(admin)") : router.push("/(user)");

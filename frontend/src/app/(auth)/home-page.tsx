@@ -23,20 +23,7 @@ import BlobHaikei from "@/assets/images/backgroundBlobs/blob-haikei.svg";
 import Button from "@/src/components/Button";
 
 const HomePageScreen = () => {
-  const [loading, setLoading] = useState(false);
 
-  const width = useSharedValue(100);
-
-  async function signUpWithEmail() {
-    setLoading(true);
-    // const { error } = await supabase.auth.signUp({
-    //   email: email,
-    //   password: password,
-    // });
-
-    // if (error) Alert.alert(error.message);
-    setLoading(false);
-  }
   return (
     <SafeAreaView
       style={[{ flex: 1, backgroundColor: Colors.light.background }]}

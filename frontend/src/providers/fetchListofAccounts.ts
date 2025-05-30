@@ -12,7 +12,6 @@ const fetchListofAccounts = async ({
 }) => {
 
   if (isMockEnabled) {
-    // Mock data for development purposes
     if (customer_id) {
       return accounts.filter(account => account.customer_id === customer_id);
     }

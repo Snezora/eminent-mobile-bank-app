@@ -1,0 +1,157 @@
+### LICENSE
+
+This project is licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at:
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+
+---
+
+### Third-Party Libraries and Dependencies
+
+This project uses the following third-party libraries and dependencies. Each library is licensed under its respective license, as outlined below:
+
+---
+
+#### **Backend Dependencies**
+
+1. **FastAPI** - MIT License  
+   https://github.com/tiangolo/fastapi
+
+2. **Pydantic** - MIT License  
+   https://github.com/pydantic/pydantic
+
+3. **SHAP** - MIT License  
+   https://github.com/slundberg/shap
+
+4. **NumPy** - BSD 3-Clause License  
+   https://github.com/numpy/numpy
+
+5. **Pandas** - BSD 3-Clause License  
+   https://github.com/pandas-dev/pandas
+
+6. **Joblib** - BSD 3-Clause License  
+   https://github.com/joblib/joblib
+
+7. **Scikit-learn** - BSD 3-Clause License  
+   https://github.com/scikit-learn/scikit-learn
+
+8. **CatBoost** - Apache 2.0 License  
+   https://github.com/catboost/catboost
+
+9. **LightGBM** - MIT License  
+   https://github.com/microsoft/LightGBM
+
+10. **XGBoost** - Apache 2.0 License  
+    https://github.com/dmlc/xgboost
+
+11. **SHAP KernelExplainer** - MIT License  
+    https://github.com/slundberg/shap
+
+---
+
+#### **Frontend Dependencies**
+
+1. **React** - MIT License  
+   https://github.com/facebook/react
+
+2. **React Native** - MIT License  
+   https://github.com/facebook/react-native
+
+3. **Expo** - MIT License  
+   https://github.com/expo/expo
+
+4. **React Hook Form** - MIT License  
+   https://github.com/react-hook-form/react-hook-form
+
+5. **Yup** - MIT License  
+   https://github.com/jquense/yup
+
+6. **React Navigation** - MIT License  
+   https://github.com/react-navigation/react-navigation
+
+7. **React Native Gesture Handler** - MIT License  
+   https://github.com/software-mansion/react-native-gesture-handler
+
+8. **React Native Reanimated** - MIT License  
+   https://github.com/software-mansion/react-native-reanimated
+
+9. **React Native Safe Area Context** - MIT License  
+   https://github.com/th3rdwave/react-native-safe-area-context
+
+10. **React Native Dropdown** - MIT License  
+    https://github.com/hoaphantn7604/react-native-element-dropdown
+
+11. **Supabase** - Apache 2.0 License  
+    https://github.com/supabase/supabase
+
+12. **Day.js** - MIT License  
+    https://github.com/iamkun/dayjs
+
+13. **React Native Gifted Charts** - MIT License  
+    https://github.com/Abhinandan-Kushwaha/react-native-gifted-charts
+
+14. **React Native Async Storage** - MIT License  
+    https://github.com/react-native-async-storage/async-storage
+
+15. **React Native DateTimePicker** - MIT License  
+    https://github.com/react-native-datetimepicker/datetimepicker
+
+16. **React Native Picker** - MIT License  
+    https://github.com/react-native-picker/picker
+
+17. **React Native Modal** - MIT License  
+    https://github.com/react-native-modal/react-native-modal
+
+18. **React Native Modal DateTime Picker** - MIT License  
+    https://github.com/mmazzarolo/react-native-modal-datetime-picker
+
+19. **React Native Network Info** - MIT License  
+    https://github.com/pusherman/react-native-network-info
+
+20. **React Native Snap Carousel** - MIT License  
+    https://github.com/archriss/react-native-snap-carousel
+
+21. **React Native UI Lib** - MIT License  
+    https://github.com/wix/react-native-ui-lib
+
+22. **React Native Keyboard Aware Scroll View** - MIT License  
+    https://github.com/APSL/react-native-keyboard-aware-scroll-view
+
+23. **React Native Keyboard Manager** - MIT License  
+    https://github.com/zoontek/react-native-keyboard-manager
+
+24. **React Native Reanimated Carousel** - MIT License  
+    https://github.com/dohooo/react-native-reanimated-carousel
+
+25. **React Native SVG** - MIT License  
+    https://github.com/react-native-svg/react-native-svg
+
+26. **Readable Stream** - MIT License  
+    https://github.com/nodejs/readable-stream
+
+---
+
+#### **Dev Dependencies**
+
+1. **Jest** - MIT License  
+   https://github.com/facebook/jest
+
+2. **Expo Router** - MIT License  
+   https://github.com/expo/router
+
+3. **TypeScript** - Apache 2.0 License  
+   https://github.com/microsoft/TypeScript
+
+4. **ESLint** - MIT License  
+   https://github.com/eslint/eslint
+
+5. **Metro React Native Babel Transformer** - MIT License  
+   https://github.com/facebook/metro
+
+6. **React Native Dotenv** - MIT License  
+   https://github.com/goatandsheep/react-native-dotenv
+
+7. **React Test Renderer** - MIT License  
+   https://github.com/facebook/react

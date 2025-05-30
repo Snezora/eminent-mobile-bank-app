@@ -29,13 +29,10 @@ const AdminPage = () => {
   const [admin, setAdmin] = useState<Admin | null>(null);
 
   useEffect(() => {
-    //Get admin details
     if (!session || !isAdmin) {
       router.push("/(auth)/home-page");
       return;
     }
-
-    // Fetch admin details from supabase
     const fetchAdminDetails = async () => {
       try {
         const { data: adminData, error } = await supabase
@@ -49,7 +46,6 @@ const AdminPage = () => {
           return;
         }
 
-        // If you need to do something with adminData, you can do it here
         setAdmin(adminData);
       } catch (error) {
         console.error("Error fetching admin details:", error);
@@ -64,7 +60,7 @@ const AdminPage = () => {
         const startOfDay = new Date(today.setHours(0, 0, 0, 0)).toISOString();
         const endOfDay = new Date(
           today.setHours(23, 59, 59, 999)
-        ).toISOString(); // End of the day
+        ).toISOString();
 
         const { data: transactions, error } = await supabase
           .from("Transaction")
@@ -77,7 +73,6 @@ const AdminPage = () => {
           return;
         }
 
-        // Process the fetched transactions to create data for the chart
         const processedData = transactions.map((transaction) => ({
           label: new Date(transaction.transfer_datetime).toLocaleDateString(),
           value: transaction.amount,
@@ -116,30 +111,6 @@ const AdminPage = () => {
         <Text style={[styles.headerText]}>{admin?.username}</Text>
       </View>
       <View style={[styles.container]}>
-        {/* <Card
-          style={{
-            overflowX: "hidden",
-            width: width - 25,
-            paddingHorizontal: 10,
-            paddingVertical: 10,
-          }}
-        >
-          <Text>Cumulative Amount of Transfers (RM)</Text>
-          <LineChart
-            data={data} // Use the fetched and processed data
-            height={200}
-            width={width - 100}
-            spacing={100}
-            isAnimated
-            animateOnDataChange
-            initialSpacing={50}
-            endSpacing={30}
-            yAxisLabelPrefix={"RM"}
-            yAxisLabelWidth={50}
-            showYAxisIndices
-            scrollToEnd
-          />
-        </Card> */}
         <View style={[styles.lowerContainer]}>
           <Card
             style={[styles.cards]}
@@ -163,10 +134,6 @@ const AdminPage = () => {
             <FontAwesome6 name="file-invoice-dollar" size={36} color="black" />
             <Text style={styles.cardText}>Loans</Text>
           </Card>
-          {/* <Button
-            title="Sign Up Admin"
-            onPress={() => adminSignUp("admin@ewb.com", "Xyz@1234", "John Doe")}
-          /> */}
         </View>
       </View>
       <StatusBar style="light" />

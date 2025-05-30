@@ -93,12 +93,10 @@ const Accounts = () => {
               new Date(a.created_at).getTime()
             );
           }
-          // Not approved comes first
           return a.approved_at ? 1 : -1;
         });
 
         if (selectedStatus) {
-          // filter accounts by selected status
           sortedAccounts = sortedAccounts.filter(
             (account) => account.account_status === selectedStatus
           );
@@ -107,7 +105,6 @@ const Accounts = () => {
         }
 
         if (accountName) {
-          // filter accounts by account name
           sortedAccounts = sortedAccounts.filter((account) =>
             account.nickname?.toLowerCase().includes(accountName.toLowerCase())
           );
@@ -133,7 +130,6 @@ const Accounts = () => {
               isMockEnabled: isMockEnabled ?? false,
               isAdmin,
             }).then((data) => {
-              // Only filter if payload.new exists and accountName is not blank
               if (payload.new && payload.new.customer_id && accountName) {
                 data = data?.filter(
                   (account) => account.customer_id === payload.new.customer_id
@@ -147,19 +143,16 @@ const Accounts = () => {
                     new Date(a.created_at).getTime()
                   );
                 }
-                // Not approved comes first
                 return a.approved_at ? 1 : -1;
               });
 
               if (selectedStatus) {
-                // Filter accounts by selected status
                 sortedAccounts = sortedAccounts.filter(
                   (account) => account.account_status === selectedStatus
                 );
               }
 
               if (accountName) {
-                // Filter accounts by account name
                 sortedAccounts = sortedAccounts.filter((account) =>
                   account.nickname
                     ?.toLowerCase()
@@ -533,32 +526,21 @@ const Accounts = () => {
                         )}
                         <AdminAccountsBlock
                           account={item}
-                          // onPress={() => {
-                          //   setChosenAccount(item);
-                          //   fetchCustomerDetails(item.customer_id).then(
-                          //     (details) => {
-                          //       setCustomerDetails(details);
-                          //     }
-                          //   );
-                          //   setModalVisible(true);
-                          // }}
                           onPress={() => {
-                            setChosenAccount(item); // Set chosenAccount immediately
-                            // Fetch customer details
+                            setChosenAccount(item); 
                             fetchCustomerDetails(
                               isMockEnabled ?? false,
                               item.customer_id
                             )
                               .then((details) => {
-                                setCustomerDetails(details); // Set customer details
-                                setModalVisible(true); // ONLY show modal AFTER both are set
+                                setCustomerDetails(details);
+                                setModalVisible(true);
                               })
                               .catch((error) => {
                                 console.error(
                                   "Error fetching customer details for modal:",
                                   error
                                 );
-                                // Optionally, show an alert or handle the error gracefully
                                 Alert.alert(
                                   "Error",
                                   "Could not load account details."

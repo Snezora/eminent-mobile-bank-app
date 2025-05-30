@@ -10,7 +10,6 @@ import React from "react";
 import { Session } from "@supabase/supabase-js";
 import { Admin, Customer } from "@/assets/data/types";
 
-// Define the AuthData type
 interface AuthData {
   session: Session | null;
   loading: boolean;
@@ -19,7 +18,6 @@ interface AuthData {
   isMockEnabled?: boolean;
 }
 
-// Create the AuthContext with a default value
 const AuthContext = createContext<AuthData>({
   session: null,
   loading: true,
@@ -32,16 +30,13 @@ export default function AuthProvider({ children }: PropsWithChildren) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<Customer | Admin | null>(null);
-  // Set this to true during mock testing to simulate admin user
   const [isAdmin, setIsAdmin] = useState(false);
-  // Change this to true to enable no user authentication and mock data
   const [isMockEnabled, setIsMockEnabled] = useState(false);
 
   useEffect(() => {
     const fetchSession = async () => {
       setLoading(true);
 
-      // Mock session for testing
       if (isMockEnabled) {
         const mockSession: Session = {
           user: {
@@ -74,7 +69,6 @@ export default function AuthProvider({ children }: PropsWithChildren) {
       }
 
       try {
-        // Fetch the current session
         const { data, error } = await supabase.auth.getSession();
 
         if (error) {
@@ -118,18 +112,15 @@ export default function AuthProvider({ children }: PropsWithChildren) {
       }
     };
 
-    // Call fetchSession on component mount
     fetchSession();
 
-    // Listen for auth state changes
     const { data: subscription } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         setLoading(true);
-        fetchSession(); // Re-fetch session and user data on auth state change
+        fetchSession(); 
       }
     );
 
-    // Cleanup subscription on unmount
     return () => {
       subscription.subscription.unsubscribe();
     };

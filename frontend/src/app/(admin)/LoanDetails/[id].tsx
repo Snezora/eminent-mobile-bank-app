@@ -119,8 +119,6 @@ const LoanDetails = () => {
       .eq("loan_id", id)
       .select();
     setIsAIPrediction(false);
-
-    // Refetch loan, which will update state and trigger useEffect
     const fetchedLoan = await fetchLoanDetails(
       isMockEnabled ?? false,
       id as string
@@ -168,7 +166,6 @@ const LoanDetails = () => {
       setApproveText("Rejected");
       setApproveColor(Colors.light.themeColorReject);
     }
-    // Optionally, setLoading(false) here if customer is not needed for loading
   }, [loan]);
 
   useEffect(() => {
@@ -211,12 +208,10 @@ const LoanDetails = () => {
     if (!loan || !customer) return;
     setLoanPredicting(true);
 
-    // Calculate age from date_of_birth
     const person_age = customer.date_of_birth
       ? dayjs().diff(dayjs(customer.date_of_birth), "year")
-      : 30; // fallback
+      : 30;
 
-    // Build the request body
     const body = {
       person_age,
       person_income: loan.customer_annual_income,
@@ -953,26 +948,6 @@ const LoanDetails = () => {
           </View>
         )}
       </Modal>
-      {/* <Modal
-        style={[styles.modal, { justifyContent: "flex-end", margin: 0 }]}
-        isVisible={decisionModalVisible}
-        onBackdropPress={() => setDecisionModalVisible(false)}
-        useNativeDriver={false}
-        backdropTransitionOutTiming={0}
-        animationIn={"slideInUp"}
-        animationOut={"slideOutDown"}
-      >
-        <View
-          style={{
-            marginTop: 10,
-            backgroundColor: Colors.light.background,
-            borderRadius: 10,
-            paddingVertical: 5,
-          }}
-        >
-          <Text>Testing</Text>
-        </View>
-      </Modal> */}
     </SafeAreaView>
   );
 };

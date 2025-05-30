@@ -16,7 +16,6 @@ const fetchListofTransactions = async ({
     initiator_account_id: string | undefined,
     receiver_account_no: string | undefined
   ) => {
-    // Mock data for development purposes
     if (isMockEnabled) {
       return transactions.filter(
         (transaction) =>
@@ -42,7 +41,6 @@ const { data, error } = await supabase
   };
 
   const fetchAllTransactions = async () => {
-    // Mock data for development purposes
     if (isMockEnabled) {
       return transactions.filter(
         (transaction) =>

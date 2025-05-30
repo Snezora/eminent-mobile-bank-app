@@ -74,31 +74,32 @@ const TransferAdminPage = () => {
 
   const isBetween = require("dayjs/plugin/isBetween");
   dayjs.extend(isBetween);
-  const deviceWidth = Dimensions.get("window").width; //full width
+  const deviceWidth = Dimensions.get("window").width;
 
   useEffect(() => {
-  const fetchTransactions = async () => {
-    setPageLoading(true); // Set loading only for the initial fetch
+    const fetchTransactions = async () => {
+      setPageLoading(true);
+      const result = await fetchListofTransactions({
+        isMockEnabled: !!isMockEnabled,
+        isAdmin: !!isAdmin,
+      });
+
+      if (result && Array.isArray(result)) {
+        setTransactions(result);
+      }
+
+      setPageLoading(false);
+    };
+
+    fetchTransactions();
+  }, [isMockEnabled, isAdmin]);
+
+  const fetchAndFilterTransactions = async () => {
+    let filtered: Transaction[] = [];
     const result = await fetchListofTransactions({
       isMockEnabled: !!isMockEnabled,
       isAdmin: !!isAdmin,
     });
-
-    if (result && Array.isArray(result)) {
-      setTransactions(result); // Store the fetched transactions
-    }
-
-    setPageLoading(false); // Stop loading after fetching
-  };
-
-  fetchTransactions();
-}, [isMockEnabled, isAdmin]); // Fetch data only once when the component mounts
-
-
-  // Move fetchAndFilterTransactions to component scope so it can be reused
-  const fetchAndFilterTransactions = async () => {
-    let filtered: Transaction[] = [];
-    const result = await fetchListofTransactions({ isMockEnabled: !!isMockEnabled, isAdmin: !!isAdmin });
     if (result && Array.isArray(result)) {
       filtered = result;
     }
@@ -126,7 +127,6 @@ const TransferAdminPage = () => {
     filtered = DateSort(dateOrder, filtered);
 
     if (searchID) {
-      // 1. Fetch the account with this account_no to get its account_id
       const { data: account, error } = await supabase
         .from("Account")
         .select("account_id, account_no")
@@ -398,7 +398,13 @@ const TransferAdminPage = () => {
                       justifyContent: "space-between",
                     }}
                   >
-                    <View style={{ flexDirection: "row", gap: 10, justifyContent: "space-between" }}>
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        gap: 10,
+                        justifyContent: "space-between",
+                      }}
+                    >
                       <Text style={[styles.filterOption]}>
                         Initiator Account ID
                       </Text>
@@ -616,7 +622,6 @@ const TransferAdminPage = () => {
               {newTransactions.length > 0 && (
                 <Animated.FlatList
                   data={newTransactions}
-                  // renderItem={({ item }) => <AdminTransfersBlock {...item} />}
                   renderItem={({ item, index }) => {
                     const prevItem =
                       index > 0 ? newTransactions[index - 1] : null;
@@ -656,7 +661,6 @@ const TransferAdminPage = () => {
                                 : dayjs(item.transfer_datetime).format(
                                     "DD MMMM YYYY"
                                   )}
-                              {/* {dayjs(item.transfer_datetime).format("DD MMMM YYYY")} */}
                             </Text>
                           </View>
                         )}

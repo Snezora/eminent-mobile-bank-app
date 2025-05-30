@@ -7,7 +7,6 @@ const fetchLoans = async (isMockEnabled: boolean, isAdmin: boolean, customer_id?
   let response;
 
   if (isMockEnabled) {
-    // Return mock data if the mock is enabled
     if (isAdmin) {
       return { data: loans, error: null };
     } else {

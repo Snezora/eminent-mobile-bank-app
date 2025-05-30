@@ -116,13 +116,12 @@ const AddLoanPage = () => {
 
   const customerId = useWatch({
     control,
-    name: "customer_id", // Watch the "customer_id" field
+    name: "customer_id",
   });
 
   useEffect(() => {
     const fetchCustomers = async () => {
       const customerList = await fetchListofCustomers();
-      // Add a full_name field combining first_name and last_name
       const updatedCustomers = customerList.map((customer) => ({
         ...customer,
         full_name: `${customer.first_name} ${customer.last_name} (${customer.customer_id})`,
@@ -658,7 +657,7 @@ useEffect(() => {
                         },
                       ]
                     );
-                  })} // Use handleSubmit to validate the form
+                  })} 
                 >
                   <Text
                     style={{

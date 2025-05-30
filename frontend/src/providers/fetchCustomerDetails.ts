@@ -6,7 +6,6 @@ export const fetchCustomerDetails = async (
   customerID?: string
 ) => {
   if (isMockEnabled) {
-    // Mock data for development purposes
     if (!customerID) {
       console.warn("Customer ID is required for mock data");
       return undefined;
@@ -27,6 +26,5 @@ export const fetchCustomerDetails = async (
     .eq("customer_id", customerID)
     .single();
 
-  // Return the found account or undefined if not found
   return data;
 };

@@ -39,8 +39,8 @@ const loanStatus = [
 ];
 
 const LoansPage = () => {
-  const [allLoans, setAllLoans] = useState<Loan[]>([]); // Full list of loans
-  const [filteredLoans, setFilteredLoans] = useState<Loan[]>([]); // Filtered list of loans
+  const [allLoans, setAllLoans] = useState<Loan[]>([]);
+  const [filteredLoans, setFilteredLoans] = useState<Loan[]>([]); 
   const [loading, setLoading] = useState(false);
   const [pageLoading, setPageLoading] = useState(false);
   const [updateTime, setUpdateTime] = useState(new Date());
@@ -49,7 +49,6 @@ const LoansPage = () => {
   const { isAdmin, isMockEnabled } = useAuth();
   const [open, setOpen] = useState(false);
 
-  // Sort loans by type
   const sortByType = (loans: Loan[]) => {
     return [...loans].sort((a, b) => {
       if (a.final_approval === b.final_approval) {
@@ -58,23 +57,22 @@ const LoansPage = () => {
           new Date(a.application_date).getTime()
         );
       }
-      if (a.final_approval === null) return -1; // Pending loans come first
+      if (a.final_approval === null) return -1;
       if (b.final_approval === null) return 1;
-      if (a.final_approval === true) return -1; // Approved loans come before Rejected
+      if (a.final_approval === true) return -1;
       if (b.final_approval === true) return 1;
       return 0;
     });
   };
 
-  // Fetch loans from the server
   const fetchAndSetLoans = async () => {
     setPageLoading(true);
     try {
       const fetchedLoans = await fetchLoans(!!isMockEnabled, !!isAdmin);
       if (fetchedLoans && Array.isArray(fetchedLoans.data)) {
         const sortedLoans = sortByType(fetchedLoans.data);
-        setAllLoans(sortedLoans); // Store the full list of loans
-        setFilteredLoans(sortedLoans); // Initially, filtered list is the same as the full list
+        setAllLoans(sortedLoans); 
+        setFilteredLoans(sortedLoans);
       } else {
         console.error("Failed to fetch loans");
         setAllLoans([]);
@@ -88,12 +86,10 @@ const LoansPage = () => {
     }
   };
 
-  // Apply filters locally
   const applyFilters = async () => {
     let filtered = [...allLoans];
 
     if (searchName) {
-      // Fetch customers matching the search name
       const { data: customers, error } = await supabase
         .from("Customer")
         .select("*")
@@ -111,40 +107,35 @@ const LoansPage = () => {
     }
 
     if (selectedStatus) {
-      // Filter loans by status
       filtered = filtered.filter((loan) => {
         if (selectedStatus === "Approved") return loan.final_approval === true;
         if (selectedStatus === "Rejected") return loan.final_approval === false;
-        return loan.final_approval === null; // Pending
+        return loan.final_approval === null;
       });
     }
 
-    setFilteredLoans(filtered); // Update the filtered list
+    setFilteredLoans(filtered); 
   };
 
-  // Fetch loans on component mount
   useEffect(() => {
     fetchAndSetLoans();
 
-    // Real-time subscription to loan changes
     const channel = supabase
       .channel("loan-changes-channel")
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "Loan" },
         async () => {
-          await fetchAndSetLoans(); // Re-fetch loans on database changes
+          await fetchAndSetLoans();
         }
       )
       .subscribe();
 
-    // Cleanup subscription on unmount
     return () => {
       supabase.removeChannel(channel);
     };
   }, [isMockEnabled, isAdmin]);
 
-  // Apply filters whenever searchName or selectedStatus changes
   useEffect(() => {
     applyFilters();
   }, [searchName, selectedStatus, allLoans]);
@@ -464,10 +455,7 @@ const LoansPage = () => {
                       refreshing={loading}
                       onRefresh={() => {
                         setLoading(true);
-                        //wait for 5 seconds
-                        setTimeout(() => {
-                          fetchAndSetLoans().then(() => setLoading(false));
-                        }, 2000);
+                        fetchAndSetLoans().then(() => setLoading(false));
                       }}
                     />
                   }

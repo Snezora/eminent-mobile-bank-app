@@ -230,7 +230,7 @@ const TransferDetails = () => {
                     maxWidth: "50%",
                   }}
                 >
-                  {senderAccount?.account_type}
+                  {senderAccount?.nickname}
                 </Text>
               </View>
               <View style={styles.formContainer}>
@@ -283,8 +283,7 @@ const TransferDetails = () => {
               <View style={styles.formContainer}>
                 <Text style={styles.title}>Receiver Account Nickname:</Text>
                 <Text>
-                  {receiverAccount?.account_type}
-                  {/* Please replace this with nickname later on from Supabase */}
+                  {receiverAccount?.nickname}
                 </Text>
               </View>
               <View style={styles.formContainer}>

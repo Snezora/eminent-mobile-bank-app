@@ -17,7 +17,7 @@ const AdminAccountsBlock = ({
   const { isMockEnabled } = useAuth();
 
   if (!account) {
-    return null; // Handle case where account is not provided
+    return null;
   }
 
   useEffect(() => {
@@ -34,7 +34,7 @@ const AdminAccountsBlock = ({
   }, [account]);
 
   if (!account) {
-    return null; // Handle case where account is not provided
+    return null;
   }
 
   return (

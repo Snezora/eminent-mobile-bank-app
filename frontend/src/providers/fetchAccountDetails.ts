@@ -11,7 +11,6 @@ export const fetchAccountDetails = async (
   let error;
 
   if (isMockEnabled) {
-    // Mock data for development purposes
     if (accountID) {
       account = accounts.find((acc) => acc.account_id === accountID) ?? null;
     } else if (accountNo) {

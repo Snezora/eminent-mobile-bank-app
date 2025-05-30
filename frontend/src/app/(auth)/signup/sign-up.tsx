@@ -32,13 +32,6 @@ import * as yup from "yup";
 const scheme = yup.object({
   firstName: yup.string().required("First Name is required"),
   lastName: yup.string().required("Last Name is required"),
-  // phoneNumber: yup
-  //   .string()
-  //   .matches(
-  //     /^(\+?6?01)[0-46-9]-*[0-9]{7,8}$/,
-  //     "Phone number must be valid and registered in Malaysia"
-  //   )
-  //   .required("Phone number is required"),
   email: yup.string().email("Invalid email").required("Email is required"),
   password: yup
     .string()
@@ -77,7 +70,6 @@ const SignUpScreen = () => {
         return;
       }
 
-      // Get the user UUID from the sign-up response
       const userUuid = signUpData.user?.id;
 
       if (!userUuid) {
@@ -85,7 +77,6 @@ const SignUpScreen = () => {
         return;
       }
 
-      // Insert the user data into the "Customer" table
       const { error: insertError } = await supabase
         .from("Customer")
         .insert([
@@ -103,7 +94,6 @@ const SignUpScreen = () => {
         return;
       }
 
-      // Notify the user to verify their email
       Alert.alert("Please check your inbox for email verification!");
       router.push("/(auth)/sign-in");
     } catch (error) {

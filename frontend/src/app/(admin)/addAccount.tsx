@@ -99,7 +99,6 @@ const AddAccountScreen = () => {
   useEffect(() => {
     const fetchCustomers = async () => {
       const customerList = await fetchListofCustomers();
-      // Add a full_name field combining first_name and last_name
       const updatedCustomers = customerList.map((customer) => ({
         ...customer,
         full_name: `${customer.first_name} ${customer.last_name} (${customer.customer_id})`,
@@ -312,13 +311,12 @@ const AddAccountScreen = () => {
                 backgroundColor: Colors.light.themeColor,
                 borderRadius: 10,
                 paddingVertical: 10,
-                paddingHorizontal: 20, // Add horizontal padding for better spacing
+                paddingHorizontal: 20,
                 justifyContent: "center",
                 alignItems: "center",
-                alignSelf: "center", // Center the button and make it fit the text
+                alignSelf: "center", 
               }}
               onPress={handleSubmit((data) => {
-                // If the form is valid, show the confirmation alert
                 Alert.alert(
                   "Confirm Submission",
                   "Are you sure you want to add this account?",
@@ -335,7 +333,7 @@ const AddAccountScreen = () => {
                     },
                   ]
                 );
-              })} // Use handleSubmit to validate the form
+              })} 
             >
               <Text
                 style={{
