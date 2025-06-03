@@ -7,6 +7,7 @@ import {
   StyleSheet,
   Button,
   Alert,
+  useColorScheme,
 } from "react-native";
 import {
   GestureHandlerRootView,
@@ -48,6 +49,7 @@ const editableForm = yup.object({
 const AccountStatusOptions = [
   { label: "Pending", value: "Pending" },
   { label: "Active", value: "Active" },
+  { label: "Deactivated", value: "Deactivated" },
   { label: "Blocked", value: "Blocked" },
   { label: "None", value: null },
 ];
@@ -60,6 +62,8 @@ const AccountTypeOptions = [
 
 const AddAccountScreen = () => {
   const [customers, setCustomers] = useState<Customer[]>([]);
+  const colorScheme = useColorScheme();
+  const isDarkMode = colorScheme === "dark";
 
   const {
     control,
@@ -112,10 +116,22 @@ const AddAccountScreen = () => {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaView
-        style={{ flex: 1, backgroundColor: Colors.light.themeColor }}
+        style={{
+          flex: 1,
+          backgroundColor: isDarkMode
+            ? Colors.dark.themeColor
+            : Colors.light.themeColor,
+        }}
         edges={["top"]}
       >
-        <View style={{ flex: 1, backgroundColor: Colors.light.background }}>
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: isDarkMode
+              ? Colors.dark.background
+              : Colors.light.background,
+          }}
+        >
           <View
             style={{
               paddingHorizontal: 10,
@@ -144,7 +160,17 @@ const AddAccountScreen = () => {
               </Text>
             </View>
           </View>
-          <Animated.ScrollView style={styles.mainPage}>
+          <Animated.ScrollView
+            style={[
+              styles.mainPage,
+              {
+                paddingTop: 40,
+                backgroundColor: isDarkMode
+                  ? Colors.dark.background
+                  : Colors.light.background,
+              },
+            ]}
+          >
             <View style={styles.mainContainer}>
               <Controller
                 control={control}
@@ -153,13 +179,32 @@ const AddAccountScreen = () => {
                 }}
                 render={({ field: { onChange, onBlur, value } }) => (
                   <View style={{ gap: 5 }}>
-                    <Text style={styles.inputTitle}>Account Number</Text>
+                    <Text
+                      style={[
+                        styles.inputTitle,
+                        {
+                          color: isDarkMode
+                            ? Colors.dark.text
+                            : Colors.light.themeColor,
+                        },
+                      ]}
+                    >
+                      Account Number
+                    </Text>
                     <TextInput
                       onBlur={onBlur}
                       onChangeText={onChange}
                       value={value ?? ""}
+                      placeholder="Enter Account Number"
                       placeholderTextColor={Colors.light.themeColor}
-                      style={styles.input}
+                      style={[
+                        styles.input,
+                        {
+                          backgroundColor: isDarkMode
+                            ? Colors.light.background
+                            : "white",
+                        },
+                      ]}
                       inputMode="numeric"
                       keyboardType="numeric"
                     />
@@ -179,14 +224,32 @@ const AddAccountScreen = () => {
                 }}
                 render={({ field: { onChange, onBlur, value } }) => (
                   <View style={{ gap: 5 }}>
-                    <Text style={styles.inputTitle}>Customer</Text>
+                    <Text
+                      style={[
+                        styles.inputTitle,
+                        {
+                          color: isDarkMode
+                            ? Colors.dark.text
+                            : Colors.light.themeColor,
+                        },
+                      ]}
+                    >
+                      Customer
+                    </Text>
                     <Dropdown
                       onBlur={onBlur}
                       value={value}
                       onChange={(item) => {
                         onChange(item.customer_id);
                       }}
-                      style={styles.input}
+                      style={[
+                        styles.input,
+                        {
+                          backgroundColor: isDarkMode
+                            ? Colors.light.background
+                            : "white",
+                        },
+                      ]}
                       data={customers}
                       labelField={"full_name"}
                       valueField={"customer_id"}
@@ -208,12 +271,30 @@ const AddAccountScreen = () => {
                 }}
                 render={({ field: { onChange, onBlur, value } }) => (
                   <View style={{ gap: 5 }}>
-                    <Text style={styles.inputTitle}>Account Type</Text>
+                    <Text
+                      style={[
+                        styles.inputTitle,
+                        {
+                          color: isDarkMode
+                            ? Colors.dark.text
+                            : Colors.light.themeColor,
+                        },
+                      ]}
+                    >
+                      Account Type
+                    </Text>
                     <Dropdown
                       onBlur={onBlur}
                       value={value}
                       onChange={(item) => onChange(item.value)}
-                      style={styles.inputContainer}
+                      style={[
+                        styles.inputContainer,
+                        {
+                          backgroundColor: isDarkMode
+                            ? Colors.light.background
+                            : "white",
+                        },
+                      ]}
                       data={AccountTypeOptions}
                       labelField="label"
                       valueField="value"
@@ -235,13 +316,35 @@ const AddAccountScreen = () => {
                 }}
                 render={({ field: { onChange, onBlur, value } }) => (
                   <View style={{ gap: 5 }}>
-                    <Text style={styles.inputTitle}>Balance</Text>
+                    <Text
+                      style={[
+                        styles.inputTitle,
+                        {
+                          color: isDarkMode
+                            ? Colors.dark.text
+                            : Colors.light.themeColor,
+                        },
+                      ]}
+                    >
+                      Balance
+                    </Text>
                     <TextInput
                       onBlur={onBlur}
                       onChangeText={onChange}
                       value={value?.toString() ?? ""}
-                      placeholderTextColor={Colors.light.themeColor}
-                      style={styles.input}
+                      placeholderTextColor={
+                        isDarkMode
+                          ? Colors.dark.themeColor
+                          : Colors.light.themeColor
+                      }
+                      style={[
+                        styles.input,
+                        {
+                          backgroundColor: isDarkMode
+                            ? Colors.light.background
+                            : "white",
+                        },
+                      ]}
                       inputMode="numeric"
                       keyboardType="numeric"
                     />
@@ -262,7 +365,18 @@ const AddAccountScreen = () => {
                 }}
                 render={({ field: { onChange, onBlur, value } }) => (
                   <View style={{ gap: 5 }}>
-                    <Text style={styles.inputTitle}>Account Status</Text>
+                    <Text
+                      style={[
+                        styles.inputTitle,
+                        {
+                          color: isDarkMode
+                            ? Colors.dark.text
+                            : Colors.light.themeColor,
+                        },
+                      ]}
+                    >
+                      Account Status
+                    </Text>
                     <Dropdown
                       onBlur={onBlur}
                       value={value}
@@ -270,7 +384,14 @@ const AddAccountScreen = () => {
                       labelField="label"
                       valueField="value"
                       onChange={(item) => onChange(item.value)}
-                      style={styles.input}
+                      style={[
+                        styles.input,
+                        {
+                          backgroundColor: isDarkMode
+                            ? Colors.light.background
+                            : "white",
+                        },
+                      ]}
                     />
                   </View>
                 )}
@@ -292,13 +413,36 @@ const AddAccountScreen = () => {
                 control={control}
                 render={({ field: { onChange, onBlur, value } }) => (
                   <View style={{ gap: 5 }}>
-                    <Text style={styles.inputTitle}>Nickname</Text>
+                    <Text
+                      style={[
+                        styles.inputTitle,
+                        {
+                          color: isDarkMode
+                            ? Colors.dark.text
+                            : Colors.light.themeColor,
+                        },
+                      ]}
+                    >
+                      Nickname
+                    </Text>
                     <TextInput
                       onBlur={onBlur}
                       onChangeText={onChange}
                       value={value ?? ""}
-                      placeholderTextColor={Colors.light.themeColor}
-                      style={styles.input}
+                      placeholderTextColor={
+                        isDarkMode
+                          ? Colors.dark.themeColor
+                          : Colors.light.themeColor
+                      }
+                      placeholder="Enter Nickname (optional)"
+                      style={[
+                        styles.input,
+                        {
+                          backgroundColor: isDarkMode
+                            ? Colors.light.background
+                            : "white",
+                        },
+                      ]}
                     />
                   </View>
                 )}
@@ -314,7 +458,7 @@ const AddAccountScreen = () => {
                 paddingHorizontal: 20,
                 justifyContent: "center",
                 alignItems: "center",
-                alignSelf: "center", 
+                alignSelf: "center",
               }}
               onPress={handleSubmit((data) => {
                 Alert.alert(
@@ -333,7 +477,7 @@ const AddAccountScreen = () => {
                     },
                   ]
                 );
-              })} 
+              })}
             >
               <Text
                 style={{

@@ -10,11 +10,12 @@ import { AccountBasicInfoProps } from "../types";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useState } from "react";
 import * as LocalAuthentication from "expo-local-authentication";
+import { Account } from "@/assets/data/types";
 
 export const AccountBasicInfoWithEye = ({
   account,
 }: {
-  account: AccountBasicInfoProps;
+  account: Account;
 }) => {
   const colorScheme = useColorScheme();
   const [isEyeOpen, setIsEyeOpen] = useState(true);
@@ -38,7 +39,7 @@ export const AccountBasicInfoWithEye = ({
   return (
     <View>
       <Text style={[styles.accNo]}>
-        {isEyeOpen ? "**** **** ****" : account.accountNo}
+        {isEyeOpen ? "**** **** ****" : account.account_no}
       </Text>
       <View
         style={{

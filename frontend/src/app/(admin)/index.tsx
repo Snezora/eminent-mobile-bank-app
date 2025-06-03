@@ -18,15 +18,36 @@ import { Card, DateTimePicker } from "react-native-ui-lib";
 import { useAuth } from "@/src/providers/AuthProvider";
 import { useEffect, useState } from "react";
 import { FontAwesome6 } from "@expo/vector-icons";
-import { Admin } from "@/assets/data/types";
+import { Account, Admin, Loan } from "@/assets/data/types";
+import { opacity } from "react-native-reanimated/lib/typescript/Colors";
+import dayjs from "dayjs";
 
 var width = Dimensions.get("window").width; //full width
 
 const AdminPage = () => {
   const colorScheme = useColorScheme();
+  const isDarkMode = colorScheme === "dark";
   const { session, isAdmin } = useAuth();
   const [data, setData] = useState<{ label: string; value: number }[]>([]);
   const [admin, setAdmin] = useState<Admin | null>(null);
+  const [pendingAccounts, setPendingAccounts] = useState<Account[]>([]);
+  const [pendingLoans, setPendingLoans] = useState<Loan[]>([]);
+
+  const cardContainerStyle = isDarkMode
+    ? {
+        backgroundColor: "rgba(255, 255, 255, 0.09)",
+        elevation: 16,
+      }
+    : { backgroundColor: "white" };
+
+  const bottomCardContainerStyle = isDarkMode
+    ? {
+        backgroundColor: "rgba(255, 255, 255, 0.16)",
+        elevation: 16,
+      }
+    : {
+        backgroundColor: "white",
+      };
 
   useEffect(() => {
     if (!session || !isAdmin) {
@@ -78,7 +99,7 @@ const AdminPage = () => {
           value: transaction.amount,
         }));
 
-        console.log("Processed Data: ", processedData);
+        // console.log("Processed Data: ", processedData
 
         setData(processedData);
       } catch (error) {
@@ -87,6 +108,52 @@ const AdminPage = () => {
     };
 
     fetchTodayAmountofTransactions();
+
+    // Fetch pending accounts
+    const fetchPendingAccounts = async () => {
+      try {
+        const { data: pendingAccounts, error } = await supabase
+          .from("Account")
+          .select("*")
+          .eq("account_status", "pending");
+
+        if (error) {
+          console.error("Error fetching pending accounts:", error);
+          return;
+        }
+
+        // Process pending accounts if needed
+        // console.log("Pending Accounts: ", pendingAccounts);
+        setPendingAccounts(pendingAccounts);
+      } catch (error) {
+        console.error("Error fetching pending accounts:", error);
+      }
+    };
+
+    fetchPendingAccounts();
+
+    // Fetch pending loans
+    const fetchPendingLoans = async () => {
+      try {
+        const { data: pendingLoans, error } = await supabase
+          .from("Loan")
+          .select("*")
+          .is("final_approval", null);
+
+        if (error) {
+          console.error("Error fetching pending loans:", error);
+          return;
+        }
+
+        // Process pending loans if needed
+        // console.log("Pending Loans: ", pendingLoans);
+        setPendingLoans(pendingLoans);
+      } catch (error) {
+        console.error("Error fetching pending loans:", error);
+      }
+    };
+
+    fetchPendingLoans();
   }, []);
 
   return (
@@ -110,29 +177,193 @@ const AdminPage = () => {
         <Text style={[styles.headerText]}>Good Evening, </Text>
         <Text style={[styles.headerText]}>{admin?.username}</Text>
       </View>
-      <View style={[styles.container]}>
-        <View style={[styles.lowerContainer]}>
+      <View
+        style={[
+          styles.container,
+          {
+            backgroundColor: isDarkMode
+              ? Colors.dark.background
+              : Colors.light.background,
+          },
+        ]}
+      >
+        <Text
+          style={{
+            color: isDarkMode ? Colors.dark.text : Colors.light.text,
+            fontSize: 24,
+            fontWeight: "bold",
+          }}
+        >
+          {dayjs().format("MMMM D, YYYY")}
+        </Text>
+        <View
+          style={{
+            width: "100%",
+            flexDirection: "row",
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+            borderRadius: 10,
+            paddingVertical: 10,
+            paddingHorizontal: 20,
+            backgroundColor: isDarkMode
+              ? Colors.dark.background
+              : Colors.light.themeColorTertiary,
+          }}
+        >
+          <Card style={[styles.upperCard, cardContainerStyle]}>
+            <FontAwesome6
+              name="money-bill-transfer"
+              size={24}
+              color={
+                isDarkMode
+                  ? Colors.light.themeColorSecondary
+                  : Colors.light.themeColor
+              }
+            />
+            <Text
+              style={{
+                fontSize: 20,
+                fontWeight: "bold",
+                color: isDarkMode ? Colors.light.background : "black",
+                textAlign: "center",
+              }}
+            >
+              {data.length}
+            </Text>
+            <Text
+              style={{
+                fontSize: 16,
+                color: isDarkMode ? Colors.light.background : "black",
+                textAlign: "center",
+              }}
+            >
+              Transfers Today
+            </Text>
+          </Card>
+          <Card style={[styles.upperCard, cardContainerStyle]}>
+            <FontAwesome6
+              name="user-clock"
+              size={24}
+              color={
+                isDarkMode
+                  ? Colors.light.themeColorSecondary
+                  : Colors.light.themeColor
+              }
+            />
+            <Text
+              style={{
+                fontSize: 20,
+                fontWeight: "bold",
+                color: isDarkMode ? Colors.light.background : "black",
+                textAlign: "center",
+              }}
+            >
+              {pendingAccounts.length}
+            </Text>
+            <Text
+              style={{
+                fontSize: 16,
+                color: isDarkMode ? Colors.light.background : "black",
+                textAlign: "center",
+              }}
+            >
+              Pending Accounts
+            </Text>
+          </Card>
+          <Card style={[styles.upperCard, cardContainerStyle]}>
+            <FontAwesome6
+              name="file-invoice-dollar"
+              size={24}
+              color={
+                isDarkMode
+                  ? Colors.light.themeColorSecondary
+                  : Colors.light.themeColor
+              }
+            />
+            <Text
+              style={{
+                fontSize: 20,
+                fontWeight: "bold",
+                color: isDarkMode ? Colors.light.background : "black",
+                textAlign: "center",
+              }}
+            >
+              {pendingLoans.length}
+            </Text>
+            <Text
+              style={{
+                fontSize: 16,
+                color: isDarkMode ? Colors.light.background : "black",
+                textAlign: "center",
+              }}
+            >
+              Pending Loans
+            </Text>
+          </Card>
+        </View>
+        <View
+          style={[
+            styles.lowerContainer,
+            {
+              backgroundColor: isDarkMode
+                ? Colors.dark.background
+                : Colors.light.background,
+            },
+          ]}
+        >
           <Card
-            style={[styles.cards]}
+            style={[styles.cards, bottomCardContainerStyle]}
             onPress={() => router.push("/(admin)/transfers")}
           >
-            <FontAwesome6 name="money-bill-transfer" size={36} color="black" />
-            <Text style={styles.cardText}>Transfers</Text>
+            <FontAwesome6
+              name="money-bill-transfer"
+              size={36}
+              color={isDarkMode ? "white" : "black"}
+            />
+            <Text
+              style={[
+                styles.cardText,
+                { color: isDarkMode ? "white" : "black" },
+              ]}
+            >
+              Transfers
+            </Text>
           </Card>
-
           <Card
-            style={[styles.cards]}
+            style={[styles.cards, bottomCardContainerStyle]}
             onPress={() => router.push("/(admin)/accounts")}
           >
-            <FontAwesome6 name="user-group" size={36} color="black" />
-            <Text style={styles.cardText}>Accounts</Text>
+            <FontAwesome6
+              name="user-group"
+              size={36}
+              color={isDarkMode ? "white" : "black"}
+            />
+            <Text
+              style={[
+                styles.cardText,
+                { color: isDarkMode ? "white" : "black" },
+              ]}
+            >
+              Accounts
+            </Text>
           </Card>
           <Card
-            style={[styles.cards, { width: "100%" }]}
+            style={[styles.cards, { width: "100%" }, bottomCardContainerStyle]}
             onPress={() => router.push("/(admin)/loans")}
           >
-            <FontAwesome6 name="file-invoice-dollar" size={36} color="black" />
-            <Text style={styles.cardText}>Loans</Text>
+            <FontAwesome6
+              name="file-invoice-dollar"
+              size={36}
+              color={isDarkMode ? "white" : "black"}
+            />
+            <Text
+              style={[
+                styles.cardText,
+                { color: isDarkMode ? "white" : "black" },
+              ]}
+            >
+              Loans
+            </Text>
           </Card>
         </View>
       </View>
@@ -160,6 +391,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.light.background,
     paddingHorizontal: 10,
     paddingVertical: 15,
+    paddingTop: 35,
     overflowX: "hidden",
     gap: 20,
   },
@@ -188,6 +420,15 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
     color: "black",
+  },
+  upperCard: {
+    paddingHorizontal: 10,
+    backgroundColor: "white",
+    maxWidth: "30%",
+    alignItems: "center",
+    gap: 3,
+    paddingVertical: 20,
+    justifyContent: "center",
   },
 });
 

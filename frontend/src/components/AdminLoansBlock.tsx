@@ -1,5 +1,11 @@
 import { loans } from "@/assets/data/dummyLoans";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  useColorScheme,
+} from "react-native";
 import { Customer, Loan } from "@/assets/data/types";
 import Colors from "../constants/Colors";
 import { customers } from "@/assets/data/dummyCustomers";
@@ -9,14 +15,18 @@ import dayjs from "dayjs";
 import { router } from "expo-router";
 import { useAuth } from "@/src/providers/AuthProvider";
 
-const ColorMap = {
-  true: "green",
-  false: Colors.light.themeColorReject,
-  null: Colors.light.themeColor,
-};
-
 const AdminLoansBlock = ({ loan }: { loan: Loan }) => {
+  const colorScheme = useColorScheme();
+  const isDarkMode = colorScheme === "dark";
   const finalResult = loan.final_approval;
+  const ColorMap = {
+    true: isDarkMode ? "lightgreen" : "green",
+    false: Colors.light.themeColorReject,
+    null: isDarkMode
+      ? Colors.dark.themeColorSecondary
+      : Colors.light.themeColor, 
+  };
+
   const colorKey =
     finalResult === null ? "null" : finalResult ? "true" : "false";
 
@@ -25,7 +35,10 @@ const AdminLoansBlock = ({ loan }: { loan: Loan }) => {
 
   useEffect(() => {
     const fetchCustomer = async () => {
-      const fetchedCustomer = await fetchCustomerDetails(isMockEnabled ?? false, loan.customer_id);
+      const fetchedCustomer = await fetchCustomerDetails(
+        isMockEnabled ?? false,
+        loan.customer_id
+      );
       setCustomer(fetchedCustomer);
     };
     fetchCustomer();
@@ -42,21 +55,51 @@ const AdminLoansBlock = ({ loan }: { loan: Loan }) => {
       }
     >
       <View
-        style={[styles.blockContainer, { borderColor: ColorMap[colorKey] }]}
+        style={[
+          styles.blockContainer,
+          {
+            borderColor: ColorMap[colorKey],
+            backgroundColor: isDarkMode ? "rgba(255, 255, 255, 0.25)" : "white",
+          },
+        ]}
       >
         <View style={styles.textContainer}>
-          <Text style={styles.nameText}># {loan.loan_id}</Text>
-          <Text style={styles.nameText}>
+          <Text
+            style={[
+              styles.nameText,
+              { color: isDarkMode ? Colors.dark.text : "black" },
+            ]}
+          >
+            # {loan.loan_id}
+          </Text>
+          <Text
+            style={[
+              styles.nameText,
+              { color: isDarkMode ? Colors.dark.text : "black" },
+            ]}
+          >
             {dayjs(loan.application_date).format("DD/MM/YYYY")}
           </Text>
         </View>
         <View style={styles.textContainer}>
-          <Text style={styles.nameText}>
+          <Text
+            style={[
+              styles.nameText,
+              { color: isDarkMode ? Colors.dark.text : "black" },
+            ]}
+          >
             {customer?.first_name} {customer?.last_name}
           </Text>
         </View>
         <View style={styles.textContainer}>
-          <Text style={styles.nameText}>USD {loan.loan_amount.toFixed(2)}</Text>
+          <Text
+            style={[
+              styles.nameText,
+              { color: isDarkMode ? Colors.dark.text : "black" },
+            ]}
+          >
+            USD {loan.loan_amount.toFixed(2)}
+          </Text>
           <Text style={[styles.nameText, { color: ColorMap[colorKey] }]}>
             {finalResult === null
               ? "Pending"

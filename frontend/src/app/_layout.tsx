@@ -7,14 +7,21 @@ import {
 import { useFonts } from "expo-font";
 import { Redirect, Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import "react-native-reanimated";
 import { useColorScheme } from "@/src/components/useColorScheme";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import AuthProvider, { useAuth } from "../providers/AuthProvider";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useAutoSignOut } from "../providers/useAutoSignOut";
-import { Keyboard, TouchableWithoutFeedback } from "react-native";
+import {
+  AppState,
+  AppStateStatus,
+  Keyboard,
+  TouchableWithoutFeedback,
+  StyleSheet,
+} from "react-native";
+import { BlurView } from "expo-blur";
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -30,6 +37,24 @@ export const unstable_settings = {
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
+  const [appState, setAppState] = useState<AppStateStatus>("active");
+  const [isBlurred, setIsBlurred] = useState(false);
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", (nextAppState) => {
+      setAppState(nextAppState);
+      if (nextAppState === "background" || nextAppState === "inactive") {
+        setIsBlurred(true);
+      } else {
+        setIsBlurred(false);
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, []);
+
   const [loaded, error] = useFonts({
     SpaceMono: require("@/assets/fonts/SpaceMono-Regular.ttf"),
     ...FontAwesome.font,
@@ -53,6 +78,12 @@ export default function RootLayout() {
   return (
     <AuthProvider>
       <RootLayoutNav />
+      {/* Blur overlay */}
+      {isBlurred && (
+        <BlurView intensity={70} style={StyleSheet.absoluteFill}>
+          {/* Optional: Add a message or visual indicator */}
+        </BlurView>
+      )}
     </AuthProvider>
   );
 }
@@ -62,8 +93,7 @@ function RootLayoutNav() {
   const { session, isAdmin } = useAuth();
 
   return (
-    <TouchableWithoutFeedback
-    >
+    <TouchableWithoutFeedback>
       <GestureHandlerRootView>
         <SafeAreaProvider>
           <ThemeProvider

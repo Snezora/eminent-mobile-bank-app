@@ -12,6 +12,7 @@ import {
   ScrollView,
   Keyboard,
   TextInput,
+  useColorScheme,
 } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import Animated, {
@@ -40,7 +41,7 @@ const loanStatus = [
 
 const LoansPage = () => {
   const [allLoans, setAllLoans] = useState<Loan[]>([]);
-  const [filteredLoans, setFilteredLoans] = useState<Loan[]>([]); 
+  const [filteredLoans, setFilteredLoans] = useState<Loan[]>([]);
   const [loading, setLoading] = useState(false);
   const [pageLoading, setPageLoading] = useState(false);
   const [updateTime, setUpdateTime] = useState(new Date());
@@ -48,6 +49,24 @@ const LoansPage = () => {
   const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
   const { isAdmin, isMockEnabled } = useAuth();
   const [open, setOpen] = useState(false);
+  const colorScheme = useColorScheme();
+  const isDarkMode = colorScheme === "dark";
+
+  const filterSubtitleStyle = isDarkMode
+    ? {
+        color: Colors.dark.themeColorTertiary,
+      }
+    : {
+        color: Colors.light.themeColor,
+      };
+
+  const filterOptionStyle = isDarkMode
+    ? {
+        color: Colors.light.background,
+      }
+    : {
+        color: "#6b6b6b",
+      };
 
   const sortByType = (loans: Loan[]) => {
     return [...loans].sort((a, b) => {
@@ -71,7 +90,7 @@ const LoansPage = () => {
       const fetchedLoans = await fetchLoans(!!isMockEnabled, !!isAdmin);
       if (fetchedLoans && Array.isArray(fetchedLoans.data)) {
         const sortedLoans = sortByType(fetchedLoans.data);
-        setAllLoans(sortedLoans); 
+        setAllLoans(sortedLoans);
         setFilteredLoans(sortedLoans);
       } else {
         console.error("Failed to fetch loans");
@@ -81,7 +100,9 @@ const LoansPage = () => {
     } catch (error) {
       console.error("Error fetching loans:", error);
     } finally {
-      setPageLoading(false);
+      setTimeout(() => {
+        setPageLoading(false);
+      }, 1000);
       setUpdateTime(new Date());
     }
   };
@@ -114,7 +135,7 @@ const LoansPage = () => {
       });
     }
 
-    setFilteredLoans(filtered); 
+    setFilteredLoans(filtered);
   };
 
   useEffect(() => {
@@ -158,9 +179,9 @@ const LoansPage = () => {
             return (
               <>
                 <ScrollView scrollEnabled={false}>
-                  <Text style={styles.filterTitle}>Sort & Filter</Text>
-                  <Text style={styles.filterSubtitle}>Search By:</Text>
-                  <View style={styles.filterItem}>
+                  <Text style={[styles.filterTitle, filterSubtitleStyle]}>Sort & Filter</Text>
+                  <Text style={[styles.filterSubtitle, filterSubtitleStyle]}>Search By:</Text>
+                  <View style={[styles.filterItem]}>
                     <View
                       style={{
                         flexDirection: "row",
@@ -168,7 +189,7 @@ const LoansPage = () => {
                         justifyContent: "space-between",
                       }}
                     >
-                      <Text style={styles.filterOption}>Customer Name</Text>
+                      <Text style={[styles.filterOption, filterOptionStyle]}>Customer Name</Text>
                       {searchName && (
                         <TouchableOpacity
                           onPress={() => {
@@ -179,7 +200,7 @@ const LoansPage = () => {
                             style={{
                               textAlign: "center",
                               fontSize: 16,
-                              color: Colors.light.themeColor,
+                              color: isDarkMode ? Colors.dark.themeColorSecondary : Colors.light.themeColor,
                               fontWeight: "bold",
                             }}
                           >
@@ -200,7 +221,7 @@ const LoansPage = () => {
                     </View>
                   </View>
 
-                  <Text style={styles.filterSubtitle}>Filter By:</Text>
+                  <Text style={[styles.filterSubtitle, filterSubtitleStyle]}>Filter By:</Text>
                   <View style={styles.filterItem}>
                     <View
                       style={{
@@ -209,7 +230,7 @@ const LoansPage = () => {
                         justifyContent: "space-between",
                       }}
                     >
-                      <Text style={styles.filterOption}>Loan Status</Text>
+                      <Text style={[styles.filterOption, filterOptionStyle]}>Loan Status</Text>
                       {selectedStatus && (
                         <TouchableOpacity
                           onPress={() => {
@@ -220,7 +241,7 @@ const LoansPage = () => {
                             style={{
                               textAlign: "center",
                               fontSize: 16,
-                              color: Colors.light.themeColor,
+                              color: isDarkMode ? Colors.dark.themeColorSecondary : Colors.light.themeColor,
                               fontWeight: "bold",
                             }}
                           >
@@ -279,17 +300,21 @@ const LoansPage = () => {
           drawerType="front"
           drawerPosition="right"
           drawerStyle={{
-            backgroundColor: Colors.light.background,
+            backgroundColor: isDarkMode
+              ? "rgba(60, 60, 60, 1)" // Black background with a subtle white overlay
+              : Colors.light.background,
             width: "70%",
             padding: 20,
             borderTopLeftRadius: 50,
             borderBottomLeftRadius: 50,
           }}
           overlayStyle={{
-            backgroundColor: "rgba(0, 0, 0, 0.25)",
+            backgroundColor: isDarkMode
+              ? "rgba(0, 0, 0, 0.5)"
+              : "rgba(0, 0, 0, 0.25)",
           }}
         >
-          <View style={{ flex: 1, backgroundColor: Colors.light.background }}>
+          <View style={{ flex: 1, backgroundColor: isDarkMode ? Colors.dark.background : Colors.light.background }}>
             <View
               style={{
                 paddingHorizontal: 10,
@@ -341,16 +366,16 @@ const LoansPage = () => {
               style={{
                 flexDirection: "row",
                 justifyContent: "space-between",
-                backgroundColor: Colors.light.background,
+                backgroundColor: isDarkMode ? Colors.dark.background : Colors.light.background,
                 alignItems: "center",
                 padding: 10,
               }}
             >
               <View style={{ flexDirection: "column" }}>
-                <Text style={{ fontSize: 14, fontWeight: "bold" }}>
+                <Text style={{ fontSize: 14, fontWeight: "bold", color: isDarkMode ? "white" : Colors.light.themeColor }}>
                   Last Updated On:{" "}
                 </Text>
-                <Text style={{ fontSize: 14, color: Colors.light.themeColor }}>
+                <Text style={{ fontSize: 14, color: isDarkMode ? "white" : Colors.light.themeColor }}>
                   {dayjs(updateTime).format("DD/MM/YYYY HH:mm:ss")}
                 </Text>
               </View>
@@ -381,12 +406,12 @@ const LoansPage = () => {
                     flex: 1,
                     justifyContent: "center",
                     alignItems: "center",
-                    backgroundColor: Colors.light.background,
+                    backgroundColor: isDarkMode ? Colors.dark.background : Colors.light.background,
                   }}
                 >
                   <ActivityIndicator
                     size="large"
-                    color={Colors.light.themeColor}
+                    color={isDarkMode ? "white" : Colors.light.themeColor}
                     style={{ marginBottom: 20 }}
                   />
                 </Animated.View>
@@ -394,6 +419,7 @@ const LoansPage = () => {
               {!pageLoading && (
                 <Animated.FlatList
                   data={filteredLoans}
+                  entering={FadeIn.duration(1000)}
                   itemLayoutAnimation={LinearTransition}
                   keyExtractor={(item) => item.loan_id.toString()}
                   renderItem={({ item, index }) => {

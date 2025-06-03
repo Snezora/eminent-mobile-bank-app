@@ -1,6 +1,6 @@
 import React from "react";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
-import { Link, Tabs } from "expo-router";
+import { Link, Stack, Tabs } from "expo-router";
 import { Pressable } from "react-native";
 
 import Colors from "@/src/constants/Colors";
@@ -15,38 +15,25 @@ function TabBarIcon(props: {
   return <FontAwesome size={28} style={{ marginBottom: -3 }} {...props} />;
 }
 
-export default function TabLayout() {
-  const colorScheme = useColorScheme();
-
+export default function Layout() {
   return (
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: Colors.light.tint,
-        headerShown: false,
-      }}
-    >
-      <Tabs.Screen
-        name="index"
+    <Stack>
+      {/* Tabs as a screen in the Stack */}
+      <Stack.Screen
+        name="(tabs)"
         options={{
-          title: "Tab One",
-          tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
-          headerShown: false,
-          headerRight: () => (
-            <Link href="/modal" asChild>
-              <Pressable>
-                {({ pressed }) => (
-                  <FontAwesome
-                    name="info-circle"
-                    size={25}
-                    color={Colors[colorScheme ?? "light"].text}
-                    style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
-                  />
-                )}
-              </Pressable>
-            </Link>
-          ),
+          headerShown: false, // Hide the header for the tabs
         }}
       />
-    </Tabs>
+      {/* Camera screen as a separate Stack screen */}
+      <Stack.Screen
+        name="camera"
+        options={{
+          title: "Camera",
+          gestureEnabled: true, // Enable swipe back gesture
+          headerShown: false, // Optional: Hide the header for the camera screen
+        }}
+      />
+    </Stack>
   );
 }

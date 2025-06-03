@@ -20,12 +20,12 @@ const SettingsLogOut = () => {
 
   return (
     <View style={{ flexDirection: "row", gap: 15, alignContent: "center" }}>
-      <TouchableOpacity
+      {/* <TouchableOpacity
         onPress={() => console.log("IsAdmin: ", isAdmin)}
         activeOpacity={1}
       >
         <Ionicons name="cog" size={30} color="white" style={{}} />
-      </TouchableOpacity>
+      </TouchableOpacity> */}
       <TouchableOpacity onPress={handleLogout} activeOpacity={1}>
         <Ionicons name="log-out-outline" size={30} color="white" style={{}} />
       </TouchableOpacity>

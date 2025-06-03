@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, useColorScheme } from "react-native";
 import { Transaction } from "@/assets/data/types";
 import { accounts } from "@/assets/data/dummyAccounts";
 import { customers } from "@/assets/data/dummyCustomers";
@@ -16,6 +16,8 @@ const AdminTransfersBlock = (transaction: Transaction) => {
   const [newRate, setNewRate] = useState<number | null>(null);
   const [senderName, setSenderName] = useState<string | null>(null);
   const [receiverName, setReceiverName] = useState<string | null>(null);
+  const colorScheme = useColorScheme();
+  const isDarkMode = colorScheme === "dark";
   const { isMockEnabled } = useAuth();
 
   useEffect(() => {
@@ -98,24 +100,28 @@ const AdminTransfersBlock = (transaction: Transaction) => {
         })
       }
     >
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: isDarkMode ? "rgba(255, 255, 255, 0.25)" : "#fff" }]}>
         <View style={styles.leftContainer}>
-          <Text style={styles.text}>
+          <Text style={[styles.text, { color: isDarkMode ? "#d0d0c0" : "#000" }]}>
             {dayjs(transaction.transfer_datetime).format("YYYY-MM-DD")}
           </Text>
-          <Text style={styles.text}>{senderName ?? "Loading..."}</Text>
+          <Text style={[styles.text, { color: isDarkMode ? "#d0d0c0" : "#000" }]}>
+            {senderName ?? "Loading..."}
+          </Text>
         </View>
         <View style={styles.middleContainer}>
-          <Text style={styles.text}>$ {transaction.amount.toFixed(2)}</Text>
+          <Text style={[styles.text, { color: isDarkMode ? "#d0d0c0" : "#000" }]}>$ {transaction.amount.toFixed(2)}</Text>
           {/* <Text style={styles.text}>RM {newRate?.toFixed(2)}</Text> */}
-          <FontAwesome name="long-arrow-right" color="black" size={32} />
-          <Text style={styles.text}>{transaction.type_of_transfer}</Text>
+          <FontAwesome name="long-arrow-right" color={isDarkMode ? "white" : "#000"} size={32} />
+          <Text style={[styles.text, { color: isDarkMode ? "#d0d0c0" : "#000" }]}>{transaction.type_of_transfer}</Text>
         </View>
         <View style={styles.rightContainer}>
-          <Text style={styles.text}>
+          <Text style={[styles.text, { color: isDarkMode ? "#d0d0c0" : "#000" }]}>
             {dayjs(transaction.transfer_datetime).format("HH:mm")}
           </Text>
-          <Text style={styles.text}>{receiverName ?? "Loading..."}</Text>
+          <Text style={[styles.text, { color: isDarkMode ? "#d0d0c0" : "#000" }]}>
+            {receiverName ?? "Loading..."}
+          </Text>
         </View>
       </View>
     </TouchableOpacity>

@@ -1,15 +1,18 @@
 import React from "react";
-import { Dimensions, StyleSheet, Text, View } from "react-native";
+import { Dimensions, StyleSheet, Text, useColorScheme, View } from "react-native";
 import { useSharedValue } from "react-native-reanimated";
 import Carousel, {
   ICarouselInstance,
   Pagination,
 } from "react-native-reanimated-carousel";
+import Colors from "../constants/Colors";
 
 // https://rn-carousel.dev/
 
 const AdvertisementsCarousel = () => {
   const progress = useSharedValue<number>(0);
+    const colorScheme = useColorScheme();
+    const isDarkMode = colorScheme === "dark";
 
   const data = [
     { id: 1, title: "First Item" },
@@ -41,8 +44,8 @@ const AdvertisementsCarousel = () => {
         data={data}
         renderItem={({ item, index }) => {
           return (
-            <View style={styles.card}>
-              <Text>{item.title} test</Text>
+            <View style={[styles.card, { backgroundColor: isDarkMode ? Colors.dark.firstButton : "white" }]}>
+              <Text style={{ color: isDarkMode ? Colors.dark.text : Colors.light.text }}>{item.title} test</Text>
             </View>
           );
         }}

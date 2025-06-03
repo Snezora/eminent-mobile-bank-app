@@ -12,33 +12,74 @@ import { StatusBar } from "expo-status-bar";
 import AdvertisementsCarousel from "@/src/components/AdvertisementsCarousel";
 import SettingsLogOut from "@/src/components/SettingsLogOut";
 import { useAuth } from "@/src/providers/AuthProvider";
+import fetchListofAccounts from "@/src/providers/fetchListofAccounts";
+import { Account } from "@/assets/data/types";
+import Colors from "@/src/constants/Colors";
+import * as LocalAuthentication from "expo-local-authentication";
 
 export default function TabOneScreen() {
   const colorScheme = useColorScheme();
+  const isDarkMode = colorScheme === "dark";
   const { session, user } = useAuth();
+  const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
+  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [isEyeOpen, setIsEyeOpen] = useState(true);
+  const [hasAuthenticated, setHasAuthenticated] = useState(false);
 
-  if (!session) {
-    return <Redirect href="/(auth)/home-page" />;
-  }
+  const handleEyePress = async () => {
+    if (!hasAuthenticated) {
+      const hasAuthenticated = await LocalAuthentication.authenticateAsync();
+      if (hasAuthenticated.success) {
+        setHasAuthenticated(true);
+        setIsEyeOpen(!isEyeOpen);
+      } else {
+        console.log("Authentication failed");
+        return;
+      }
+    } else {
+      setIsEyeOpen(!isEyeOpen);
+    }
+  };
 
-  const accounts = [
-    { name: "Account 1", balance: 1000, accountNo: "2039 0929 2837" },
-    { name: "Account 2", balance: 2000, accountNo: "2039 0929 2451" },
-    { name: "Account 3", balance: 3000, accountNo: "2039 2345 6743" },
-    { name: "Account 4", balance: 4000, accountNo: "2039 0929 2345" },
-  ];
+  useEffect(() => {
+    if (!user) {
+      console.log("User is null, skipping fetchListofAccounts");
+      return;
+    }
+    
+    const accounts = fetchListofAccounts({
+      isMockEnabled: false,
+      isAdmin: false,
+      customer_id: user!.customer_id,
+    });
 
-  const [selectedAccount, setSelectedAccount] = useState(accounts[0]);
+    if (!accounts) {
+      return;
+    }
+
+    accounts.then((data) => {
+      const processedAccounts = data!.map((account) => ({
+        ...account,
+        nickname: account.nickname ?? account.account_no,
+      }));
+
+      setAccounts(processedAccounts);
+      setSelectedAccount(processedAccounts[0]);
+    });
+  }, [user]);
 
   const handleSelect = (item: any) => {
     setSelectedAccount(item);
-    console.log(session);
   };
 
   const centerTextStyle =
     colorScheme === "light" ? styles.lightThemeText : styles.darkThemeText;
   const centerContainerStyle =
     colorScheme === "light" ? styles.lightContainer : styles.darkContainer;
+
+  if (!session) {
+    return <Redirect href="/(auth)/home-page" />;
+  }
 
   return (
     <SafeAreaView
@@ -51,7 +92,7 @@ export default function TabOneScreen() {
           style={{
             flexDirection: "row",
             justifyContent: "space-between",
-            alignItems: "center",
+            // alignItems: "center",
           }}
         >
           <View>
@@ -64,8 +105,8 @@ export default function TabOneScreen() {
         <View style={{ marginTop: 20, maxWidth: 200 }}>
           <DropdownComponent
             data={accounts}
-            labelField={"name"}
-            valueField={"accountNo"}
+            labelField={"nickname"}
+            valueField={"account_no"}
             onSelect={handleSelect}
           />
         </View>
@@ -132,7 +173,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#eeeeee",
   },
   darkContainer: {
-    backgroundColor: "#4A4A4A",
+    backgroundColor: Colors.dark.background,
   },
   lightThemeText: {
     color: "black",

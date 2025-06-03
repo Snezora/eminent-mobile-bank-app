@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Dropdown } from "react-native-element-dropdown";
+import { useColorScheme } from "react-native";
 
 const dateSort = [
   { label: "Ascending", value: "ascending" },
@@ -41,6 +42,8 @@ const DateSortComponent = ({
   dateOrder: string;
   setDateOrder: any;
 }) => {
+  const colorScheme = useColorScheme();
+  const isDarkMode = colorScheme === "dark";
   return (
     <Dropdown
       value={dateOrder}
@@ -53,8 +56,12 @@ const DateSortComponent = ({
       containerStyle={{
         marginBottom: 20,
         borderRadius: 10,
+        // backgroundColor: isDarkMode ? "#121212" : "white",
         backgroundColor: "white",
         padding: 10,
+      }}
+      itemContainerStyle={{
+        backgroundColor: "white",
       }}
       style={{
         borderRadius: 10,

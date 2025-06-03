@@ -58,8 +58,9 @@ const TransferAdminPage = () => {
   // Now you can use searchIDExternal in your logic
 
   const colorScheme = useColorScheme();
+  const isDarkMode = colorScheme === "dark";
   const [open, setOpen] = useState(false);
-  const [dateOrder, setDateOrder] = useState("ascending");
+  const [dateOrder, setDateOrder] = useState("descending");
   const [loading, setLoading] = useState(false);
   const [newTransactions, setTransactions] = useState<Transaction[]>([]);
   const [selectedTransferTypes, setTransferTypes] = useState<string[]>([]);
@@ -75,6 +76,22 @@ const TransferAdminPage = () => {
   const isBetween = require("dayjs/plugin/isBetween");
   dayjs.extend(isBetween);
   const deviceWidth = Dimensions.get("window").width;
+
+  const filterSubtitleStyle = isDarkMode
+    ? {
+        color: Colors.dark.themeColorTertiary,
+      }
+    : {
+        color: Colors.light.themeColor,
+      };
+
+  const filterOptionStyle = isDarkMode
+    ? {
+        color: Colors.light.background,
+      }
+    : {
+        color: "#6b6b6b",
+      };
 
   useEffect(() => {
     const fetchTransactions = async () => {
@@ -165,16 +182,47 @@ const TransferAdminPage = () => {
           onClose={() => setOpen(false)}
           renderDrawerContent={() => {
             return (
-              <View style={styles.filterContainer}>
-                <Text style={styles.filterTitle}>Sort & Filter</Text>
+              <View
+                style={[
+                  styles.filterContainer,
+                  {
+                    backgroundColor: isDarkMode
+                      ? "rgba(60, 60, 60, 1)"
+                      : Colors.light.background,
+                    flex: 1,
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.filterTitle,
+                    {
+                      color: isDarkMode
+                        ? Colors.dark.themeColorTertiary
+                        : Colors.light.themeColor,
+                    },
+                  ]}
+                >
+                  Sort & Filter
+                </Text>
                 <ScrollView style={{ height: "80%" }}>
-                  <Text style={styles.filterSubtitle}>Sort</Text>
-                  <Text style={styles.filterOption}>Date Order</Text>
+                  <Text style={[styles.filterSubtitle, filterSubtitleStyle]}>
+                    Sort
+                  </Text>
+                  <Text style={[styles.filterOption, filterOptionStyle]}>
+                    Date Order
+                  </Text>
                   <DateSortComponent
                     dateOrder={dateOrder}
                     setDateOrder={setDateOrder}
                   />
-                  <Text style={[styles.filterSubtitle, { marginTop: 10 }]}>
+                  <Text
+                    style={[
+                      styles.filterSubtitle,
+                      { marginTop: 10 },
+                      filterSubtitleStyle,
+                    ]}
+                  >
                     Filter by
                   </Text>
                   <View
@@ -184,7 +232,9 @@ const TransferAdminPage = () => {
                       justifyContent: "space-between",
                     }}
                   >
-                    <Text style={styles.filterOption}>Transfer Type</Text>
+                    <Text style={[styles.filterOption, filterOptionStyle]}>
+                      Transfer Type
+                    </Text>
                     {selectedTransferTypes.length > 0 && (
                       <TouchableOpacity
                         onPress={() => {
@@ -195,7 +245,7 @@ const TransferAdminPage = () => {
                           style={{
                             textAlign: "center",
                             fontSize: 16,
-                            color: Colors.light.themeColor,
+                            color: isDarkMode ? Colors.dark.themeColorTertiary : Colors.light.themeColor,
                             fontWeight: "bold",
                           }}
                         >
@@ -266,7 +316,9 @@ const TransferAdminPage = () => {
                       marginTop: 20,
                     }}
                   >
-                    <Text style={[styles.filterOption]}>Date Range</Text>
+                    <Text style={[styles.filterOption, filterOptionStyle]}>
+                      Date Range
+                    </Text>
                     {(endDate || startDate) && (
                       <TouchableOpacity
                         onPress={() => {
@@ -278,7 +330,7 @@ const TransferAdminPage = () => {
                           style={{
                             textAlign: "center",
                             fontSize: 16,
-                            color: Colors.light.themeColor,
+                            color: isDarkMode ? Colors.dark.themeColorTertiary : Colors.light.themeColor,
                             fontWeight: "bold",
                           }}
                         >
@@ -300,13 +352,15 @@ const TransferAdminPage = () => {
                       }}
                     >
                       <Text
-                        style={{
-                          textAlign: "center",
-                          fontSize: 16,
-                          paddingVertical: 10,
-                          color: Colors.light.themeColor,
-                          fontWeight: "bold",
-                        }}
+                        style={[
+                          {
+                            textAlign: "center",
+                            fontSize: 16,
+                            paddingVertical: 10,
+                            color: Colors.light.themeColor,
+                            fontWeight: "bold",
+                          },
+                        ]}
                       >
                         {startDate
                           ? dayjs(startDate).format("DD/MM/YY")
@@ -314,7 +368,15 @@ const TransferAdminPage = () => {
                       </Text>
                     </TouchableOpacity>
 
-                    <Text style={{ fontWeight: "bold", fontSize: 20 }}>-</Text>
+                    <Text
+                      style={{
+                        fontWeight: "bold",
+                        fontSize: 20,
+                        color: isDarkMode ? "white" : "black",
+                      }}
+                    >
+                      -
+                    </Text>
                     <TouchableOpacity
                       onPress={() => setShowEndDatePicker(true)}
                       style={{
@@ -388,6 +450,7 @@ const TransferAdminPage = () => {
                     style={[
                       styles.filterSubtitle,
                       { marginTop: 10, marginBottom: 10 },
+                      filterSubtitleStyle,
                     ]}
                   >
                     Search by Account
@@ -405,7 +468,7 @@ const TransferAdminPage = () => {
                         justifyContent: "space-between",
                       }}
                     >
-                      <Text style={[styles.filterOption]}>
+                      <Text style={[styles.filterOption, filterOptionStyle]}>
                         Initiator Account ID
                       </Text>
                       {searchID && (
@@ -414,16 +477,16 @@ const TransferAdminPage = () => {
                             setSearchID("");
                           }}
                         >
-                          <Text
-                            style={{
-                              textAlign: "center",
-                              fontSize: 16,
-                              color: Colors.light.themeColor,
-                              fontWeight: "bold",
-                            }}
-                          >
-                            Clear
-                          </Text>
+                        <Text
+                          style={{
+                            textAlign: "center",
+                            fontSize: 16,
+                            color: isDarkMode ? Colors.dark.themeColorTertiary : Colors.light.themeColor,
+                            fontWeight: "bold",
+                          }}
+                        >
+                          Clear
+                        </Text>
                         </TouchableOpacity>
                       )}
                     </View>
@@ -440,7 +503,7 @@ const TransferAdminPage = () => {
                     <Text
                       style={{
                         fontSize: 12,
-                        color: "#6b6b6b",
+                        color: isDarkMode ? "white" : "#6b6b6b",
                         marginTop: 5,
                         textAlign: "justify",
                         marginHorizontal: 5,
@@ -451,7 +514,12 @@ const TransferAdminPage = () => {
                   </View>
                 </ScrollView>
                 <View style={{ gap: 20 }}>
-                  <Text style={{ fontSize: 12, color: "#6b6b6b" }}>
+                  <Text
+                    style={{
+                      fontSize: 12,
+                      color: isDarkMode ? "white" : "#6b6b6b",
+                    }}
+                  >
                     *Note: The date range filter will only work if both dates
                     are selected.
                   </Text>
@@ -489,14 +557,16 @@ const TransferAdminPage = () => {
           drawerType="front"
           drawerPosition="right"
           drawerStyle={{
-            backgroundColor: Colors.light.background,
+            backgroundColor: isDarkMode
+              ? "rgba(60, 60, 60, 1)" // Black background with a subtle white overlay
+              : Colors.light.background,
             width: "70%",
             padding: 20,
             borderTopLeftRadius: 50,
             borderBottomLeftRadius: 50,
           }}
           overlayStyle={{
-            backgroundColor: "rgba(0, 0, 0, 0.25)",
+            backgroundColor: isDarkMode ? "rgba(0, 0, 0, 0.5)" : "rgba(0, 0, 0, 0.25)",
           }}
         >
           {pageLoading && (
@@ -506,12 +576,14 @@ const TransferAdminPage = () => {
                 flex: 1,
                 justifyContent: "center",
                 alignItems: "center",
-                backgroundColor: Colors.light.background,
+                backgroundColor: isDarkMode
+                  ? Colors.dark.background
+                  : Colors.light.background,
               }}
             >
               <ActivityIndicator
                 size="large"
-                color={Colors.light.themeColor}
+                color={isDarkMode ? "white" : Colors.light.themeColor}
                 style={{ marginBottom: 20 }}
               />
             </Animated.View>
@@ -549,17 +621,19 @@ const TransferAdminPage = () => {
                 style={{
                   flexDirection: "row",
                   justifyContent: "space-between",
-                  backgroundColor: Colors.light.background,
+                  backgroundColor: isDarkMode
+                    ? Colors.dark.background
+                    : Colors.light.background,
                   alignItems: "center",
                   padding: 10,
                 }}
               >
                 <View style={{ flexDirection: "column" }}>
-                  <Text style={{ fontSize: 14, fontWeight: "bold" }}>
+                  <Text style={{ fontSize: 14, fontWeight: "bold", color: isDarkMode ? "white" : Colors.light.themeColor }}>
                     Last Updated On:{" "}
                   </Text>
                   <Text
-                    style={{ fontSize: 14, color: Colors.light.themeColor }}
+                    style={{ fontSize: 14, color: isDarkMode ? "white" : Colors.light.themeColor }}
                   >
                     {dayjs(updateTime).format("DD/MM/YYYY HH:mm:ss")}
                   </Text>
@@ -568,7 +642,7 @@ const TransferAdminPage = () => {
                   style={{
                     padding: 10,
                     borderRadius: 10,
-                    borderColor: Colors.light.themeColor,
+                    borderColor: isDarkMode ? "white" : Colors.light.themeColor,
                     borderWidth: 1,
                     flexDirection: "row",
                     gap: 10,
@@ -589,7 +663,7 @@ const TransferAdminPage = () => {
                     flex: 1,
                     // justifyContent: "center",
                     alignItems: "center",
-                    backgroundColor: Colors.light.background,
+                    backgroundColor: isDarkMode ? Colors.dark.background : Colors.light.background,
                     paddingTop: 100,
                   }}
                 >
@@ -597,7 +671,7 @@ const TransferAdminPage = () => {
                     source={require("@/assets/images/laptop.gif")}
                     style={{ width: 150, height: 150 }}
                   />
-                  <Text style={{ fontSize: 18, fontWeight: "bold" }}>
+                  <Text style={{ fontSize: 18, fontWeight: "bold", color: isDarkMode ? "white" : Colors.light.themeColor }}>
                     No transactions found
                   </Text>
                   <TouchableOpacity
@@ -671,7 +745,7 @@ const TransferAdminPage = () => {
                   keyExtractor={(item) => item.transaction_id}
                   style={{
                     paddingVertical: 10,
-                    backgroundColor: Colors.light.background,
+                    backgroundColor: isDarkMode ? Colors.dark.background : Colors.light.background,
                   }}
                   contentContainerStyle={{
                     paddingVertical: 10,

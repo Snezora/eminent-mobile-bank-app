@@ -1,8 +1,10 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { Dropdown } from "react-native-element-dropdown";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { AccountBasicInfoProps } from "../types";
+import { Account } from "@/assets/data/types";
+import Animated from "react-native-reanimated";
 
 // https://www.npmjs.com/package/react-native-element-dropdown
 
@@ -12,20 +14,29 @@ const DropdownComponent = ({
   labelField,
   valueField,
   onSelect,
+  selectedValue,
 }: {
   data: any;
   style?: any;
   labelField?: string | number | symbol;
   valueField?: string | number | symbol;
-  onSelect?: (item: AccountBasicInfoProps) => void;
+  onSelect?: (item: Account) => void;
+  selectedValue?: Account;
 }) => {
-  const [value, setValue] = useState(data[0]);
-  const [isFocus, setIsFocus] = useState(false);
+  const [value, setValue] = useState(data[0]?.[valueField ?? "value"] || null)
+
+  useEffect(() => {
+    if (selectedValue) {
+      setValue(selectedValue[(valueField ?? "value") as keyof Account]);
+    } else {
+      setValue(data[0]?.[valueField ?? "value"]);
+    }
+  }, [data, selectedValue]);
 
   return (
     <View style={styles.container}>
       <Dropdown
-        style={[styles.dropdown, isFocus && { borderColor: "blue" }]}
+        style={[styles.dropdown, { borderColor: "blue" }]}
         placeholderStyle={styles.placeholderStyle}
         selectedTextStyle={styles.selectedTextStyle}
         inputSearchStyle={styles.inputSearchStyle}
@@ -34,22 +45,17 @@ const DropdownComponent = ({
         maxHeight={300}
         labelField={labelField ?? "label"}
         valueField={valueField ?? "value"}
-        placeholder={!isFocus ? "Select Account" : "..."}
+        placeholder={"Select Account"}
         searchPlaceholder="Search..."
         value={value}
-        onFocus={() => {
-          setIsFocus(true);
-        }}
-        onBlur={() => setIsFocus(false)}
         onChange={(item) => {
           setValue(item);
           onSelect?.(item);
-          setIsFocus(false);
         }}
         renderLeftIcon={() => (
           <MaterialIcons
             style={styles.icon}
-            color={isFocus ? "blue" : "black"}
+            color={"black"}
             name="account-balance"
             size={20}
           />

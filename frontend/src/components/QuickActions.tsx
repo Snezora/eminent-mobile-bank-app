@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, FlatList, Pressable } from "react-native";
+import { View, Text, StyleSheet, FlatList, Pressable, useColorScheme, TouchableOpacity } from "react-native";
 import Colors from "../constants/Colors";
 import { useThemeColor } from "./Themed";
 
@@ -14,16 +14,20 @@ const actions = [
 ];
 
 const QuickActions = () => {
+  const colorScheme = useColorScheme();
+  const isDarkMode = colorScheme === "dark";
+
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container]}>
       <FlatList
         data={actions}
         renderItem={({ item }) => (
-          <Pressable onPress={() => console.log("Pressed", item.title)}>
-            <View style={styles.card}>
-              <Text>{item.title}</Text>
+          <TouchableOpacity onPress={() => console.log("Pressed", item.title)}>
+            <View style={[styles.card, { backgroundColor: isDarkMode ? Colors.dark.firstButton : "white" }]}>
+              <Text style={{ color: isDarkMode ? Colors.dark.text : Colors.light.text }}>{item.title}</Text>
             </View>
-          </Pressable>
+          </TouchableOpacity>
         )}
         contentContainerStyle={{ gap: 20, paddingLeft: 20, paddingRight: 20 }}
         horizontal

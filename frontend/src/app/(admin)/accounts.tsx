@@ -9,6 +9,7 @@ import {
   Alert,
   Image,
   Touchable,
+  useColorScheme,
 } from "react-native";
 import {
   GestureHandlerRootView,
@@ -54,6 +55,24 @@ const Accounts = () => {
   const [pageLoading, setPageLoading] = useState(true);
   const [accountName, setAccountName] = useState("");
   const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
+  const colorScheme = useColorScheme();
+  const isDarkMode = colorScheme === "dark";
+
+  const filterSubtitleStyle = isDarkMode
+    ? {
+        color: Colors.dark.themeColorTertiary,
+      }
+    : {
+        color: Colors.light.themeColor,
+      };
+
+  const filterOptionStyle = isDarkMode
+    ? {
+        color: Colors.light.background,
+      }
+    : {
+        color: "#6b6b6b",
+      };
 
   const accountStatus = [
     { label: "Active", value: "Active" },
@@ -184,12 +203,14 @@ const Accounts = () => {
               flex: 1,
               justifyContent: "center",
               alignItems: "center",
-              backgroundColor: Colors.light.background,
+              backgroundColor: isDarkMode
+                ? Colors.dark.background
+                : Colors.light.background,
             }}
           >
             <ActivityIndicator
               size="large"
-              color={Colors.light.themeColor}
+              color={isDarkMode ? "white" : Colors.light.themeColor}
               style={{ marginBottom: 20 }}
             />
           </Animated.View>
@@ -207,8 +228,21 @@ const Accounts = () => {
               return (
                 <>
                   <ScrollView scrollEnabled={false}>
-                    <Text style={styles.filterTitle}>Sort & Filter</Text>
-                    <Text style={styles.filterSubtitle}>Search By:</Text>
+                    <Text
+                      style={[
+                        styles.filterTitle,
+                        {
+                          color: isDarkMode
+                            ? Colors.dark.themeColorTertiary
+                            : Colors.dark.themeColor,
+                        },
+                      ]}
+                    >
+                      Sort & Filter
+                    </Text>
+                    <Text style={[styles.filterSubtitle, filterSubtitleStyle]}>
+                      Search By:
+                    </Text>
                     <View style={styles.filterItem}>
                       <View
                         style={{
@@ -217,7 +251,9 @@ const Accounts = () => {
                           justifyContent: "space-between",
                         }}
                       >
-                        <Text style={styles.filterOption}>Customer Name</Text>
+                        <Text style={[styles.filterOption, filterOptionStyle]}>
+                          Customer Name
+                        </Text>
                         {searchName && (
                           <TouchableOpacity
                             onPress={() => {
@@ -256,7 +292,9 @@ const Accounts = () => {
                           justifyContent: "space-between",
                         }}
                       >
-                        <Text style={styles.filterOption}>Account Name</Text>
+                        <Text style={[styles.filterOption, filterOptionStyle]}>
+                          Account Name
+                        </Text>
                         {accountName && (
                           <TouchableOpacity
                             onPress={() => {
@@ -286,7 +324,9 @@ const Accounts = () => {
                         />
                       </View>
                     </View>
-                    <Text style={styles.filterSubtitle}>Filter By:</Text>
+                    <Text style={[styles.filterSubtitle, filterSubtitleStyle]}>
+                      Filter By:
+                    </Text>
                     <View style={styles.filterItem}>
                       <View
                         style={{
@@ -295,7 +335,9 @@ const Accounts = () => {
                           justifyContent: "space-between",
                         }}
                       >
-                        <Text style={styles.filterOption}>Account Status</Text>
+                        <Text style={[styles.filterOption, filterOptionStyle]}>
+                          Account Status
+                        </Text>
                         {selectedStatus && (
                           <TouchableOpacity
                             onPress={() => {
@@ -366,23 +408,36 @@ const Accounts = () => {
             drawerType="front"
             drawerPosition="right"
             drawerStyle={{
-              backgroundColor: Colors.light.background,
+              backgroundColor: isDarkMode
+                ? "rgba(60, 60, 60, 1)" // Black background with a subtle white overlay
+                : Colors.light.background,
               width: "70%",
               padding: 20,
               borderTopLeftRadius: 50,
               borderBottomLeftRadius: 50,
             }}
             overlayStyle={{
-              backgroundColor: "rgba(0, 0, 0, 0.25)",
+              backgroundColor: isDarkMode
+                ? "rgba(0, 0, 0, 0.5)"
+                : "rgba(0, 0, 0, 0.25)",
             }}
           >
-            <View style={{ flex: 1, backgroundColor: Colors.light.background }}>
+            <View
+              style={{
+                flex: 1,
+                backgroundColor: isDarkMode
+                  ? Colors.dark.background
+                  : Colors.light.background,
+              }}
+            >
               <View
                 style={{
                   paddingHorizontal: 10,
                   paddingBottom: 10,
                   paddingTop: 10,
-                  backgroundColor: Colors.light.themeColor,
+                  backgroundColor: isDarkMode
+                    ? Colors.dark.themeColor
+                    : Colors.light.themeColor,
                   flexDirection: "row",
                   alignItems: "center",
                 }}
@@ -428,17 +483,28 @@ const Accounts = () => {
                 style={{
                   flexDirection: "row",
                   justifyContent: "space-between",
-                  backgroundColor: Colors.light.background,
+                  backgroundColor: isDarkMode
+                    ? Colors.dark.background
+                    : Colors.light.background,
                   alignItems: "center",
                   padding: 10,
                 }}
               >
                 <View style={{ flexDirection: "column" }}>
-                  <Text style={{ fontSize: 14, fontWeight: "bold" }}>
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      fontWeight: "bold",
+                      color: isDarkMode ? "white" : Colors.light.themeColor,
+                    }}
+                  >
                     Last Updated On:{" "}
                   </Text>
                   <Text
-                    style={{ fontSize: 14, color: Colors.light.themeColor }}
+                    style={{
+                      fontSize: 14,
+                      color: isDarkMode ? "white" : Colors.light.themeColor,
+                    }}
                   >
                     {dayjs(updateTime).format("DD/MM/YYYY HH:mm:ss")}
                   </Text>
@@ -469,15 +535,34 @@ const Accounts = () => {
                     flex: 1,
                     justifyContent: "center",
                     alignItems: "center",
-                    backgroundColor: Colors.light.background,
+                    backgroundColor: isDarkMode
+                      ? Colors.dark.background
+                      : Colors.light.background,
                   }}
                 >
                   <Image
                     source={require("@/assets/images/laptop.gif")}
                     style={{ width: 150, height: 150 }}
                   />
-                  <Text style={{ fontSize: 18, fontWeight: "bold" }}>
+                  <Text
+                    style={{
+                      fontSize: 18,
+                      fontWeight: "bold",
+                      color: isDarkMode ? "white" : Colors.light.themeColor,
+                    }}
+                  >
                     No accounts found
+                  </Text>
+                  <Text
+                    style={{
+                      fontSize: 16,
+                      color: isDarkMode
+                        ? Colors.dark.themeColorTertiary
+                        : Colors.light.themeColorSecondary,
+                      marginTop: 10,
+                    }}
+                  >
+                    Try changing the filters or adding a new account.
                   </Text>
                 </Animated.View>
               )}
@@ -527,7 +612,7 @@ const Accounts = () => {
                         <AdminAccountsBlock
                           account={item}
                           onPress={() => {
-                            setChosenAccount(item); 
+                            setChosenAccount(item);
                             fetchCustomerDetails(
                               isMockEnabled ?? false,
                               item.customer_id
@@ -583,57 +668,173 @@ const Accounts = () => {
           animationOut={"slideOutDown"}
         >
           <View
-            style={{ backgroundColor: "white", borderRadius: 20, padding: 20 }}
+            style={{
+              backgroundColor: isDarkMode ? "#121212" : "white",
+              borderRadius: 20,
+              padding: 20,
+              borderWidth: 5,
+              borderColor: isDarkMode ? Colors.dark.themeColor : "white",
+            }}
           >
-            <Text style={[styles.filterTitle, { fontSize: 20 }]}>
+            <Text
+              style={[
+                styles.filterTitle,
+                {
+                  fontSize: 20,
+                  color: isDarkMode
+                    ? Colors.dark.themeColorTertiary
+                    : Colors.light.themeColor,
+                },
+              ]}
+            >
               Account Details
             </Text>
             <View style={styles.textContainer}>
-              <Text style={styles.nameText}>Account Number: </Text>
-              <Text style={styles.normalText}>{chosenAccount?.account_no}</Text>
+              <Text
+                style={[
+                  styles.nameText,
+                  { color: isDarkMode ? Colors.dark.text : "#000" },
+                ]}
+              >
+                Account Number:{" "}
+              </Text>
+              <Text
+                style={[
+                  styles.normalText,
+                  { color: isDarkMode ? Colors.dark.text : "#000" },
+                ]}
+              >
+                {chosenAccount?.account_no}
+              </Text>
             </View>
             <View style={styles.textContainer}>
-              <Text style={styles.nameText}>Account Name: </Text>
-              <Text style={styles.normalText}>
+              <Text
+                style={[
+                  styles.nameText,
+                  { color: isDarkMode ? Colors.dark.text : "#000" },
+                ]}
+              >
+                Account Name:{" "}
+              </Text>
+              <Text
+                style={[
+                  styles.normalText,
+                  { color: isDarkMode ? Colors.dark.text : "#000" },
+                ]}
+              >
                 {chosenAccount?.nickname ?? "N/A"}
               </Text>
             </View>
             <View style={styles.textContainer}>
-              <Text style={styles.nameText}>Account Holder: </Text>
-              <Text style={styles.normalText}>
+              <Text
+                style={[
+                  styles.nameText,
+                  { color: isDarkMode ? Colors.dark.text : "#000" },
+                ]}
+              >
+                Account Holder:{" "}
+              </Text>
+              <Text
+                style={[
+                  styles.normalText,
+                  { color: isDarkMode ? Colors.dark.text : "#000" },
+                ]}
+              >
                 {customerDetails?.first_name ?? "N/A"}{" "}
                 {customerDetails?.last_name ?? "N/A"}
               </Text>
             </View>
             <View style={styles.textContainer}>
-              <Text style={styles.nameText}>Account Status: </Text>
-              <Text style={styles.normalText}>
+              <Text
+                style={[
+                  styles.nameText,
+                  { color: isDarkMode ? Colors.dark.text : "#000" },
+                ]}
+              >
+                Account Status:{" "}
+              </Text>
+              <Text
+                style={[
+                  styles.normalText,
+                  { color: isDarkMode ? Colors.dark.text : "#000" },
+                ]}
+              >
                 {chosenAccount?.account_status ?? "N/A"}
               </Text>
             </View>
             <View style={styles.textContainer}>
-              <Text style={styles.nameText}>Account Type: </Text>
-              <Text style={styles.normalText}>
+              <Text
+                style={[
+                  styles.nameText,
+                  { color: isDarkMode ? Colors.dark.text : "#000" },
+                ]}
+              >
+                Account Type:{" "}
+              </Text>
+              <Text
+                style={[
+                  styles.normalText,
+                  { color: isDarkMode ? Colors.dark.text : "#000" },
+                ]}
+              >
                 {chosenAccount?.account_type ?? "N/A"}
               </Text>
             </View>
             <View style={styles.textContainer}>
-              <Text style={styles.nameText}>Account Balance: </Text>
-              <Text style={styles.normalText}>
+              <Text
+                style={[
+                  styles.nameText,
+                  { color: isDarkMode ? Colors.dark.text : "#000" },
+                ]}
+              >
+                Account Balance:{" "}
+              </Text>
+              <Text
+                style={[
+                  styles.normalText,
+                  { color: isDarkMode ? Colors.dark.text : "#000" },
+                ]}
+              >
                 USD {chosenAccount?.balance.toFixed(2) ?? "N/A"}
               </Text>
             </View>
             <View style={styles.textContainer}>
-              <Text style={styles.nameText}>Created On: </Text>
-              <Text style={styles.normalText}>
+              <Text
+                style={[
+                  styles.nameText,
+                  { color: isDarkMode ? Colors.dark.text : "#000" },
+                ]}
+              >
+                Created On:{" "}
+              </Text>
+              <Text
+                style={[
+                  styles.normalText,
+                  { color: isDarkMode ? Colors.dark.text : "#000" },
+                ]}
+              >
                 {dayjs(chosenAccount?.created_at).format("DD/MM/YYYY")}
               </Text>
             </View>
             {!chosenAccount?.approved_at && (
               <>
                 <View style={styles.textContainer}>
-                  <Text style={styles.nameText}>Approval Status: </Text>
-                  <Text style={styles.normalText}>Not Approved</Text>
+                  <Text
+                    style={[
+                      styles.nameText,
+                      { color: isDarkMode ? Colors.dark.text : "#000" },
+                    ]}
+                  >
+                    Approval Status:{" "}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.normalText,
+                      { color: isDarkMode ? Colors.dark.text : "#000" },
+                    ]}
+                  >
+                    Not Approved
+                  </Text>
                 </View>
 
                 <TouchableOpacity

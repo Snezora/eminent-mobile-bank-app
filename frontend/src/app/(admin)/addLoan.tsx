@@ -9,6 +9,7 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  useColorScheme,
 } from "react-native";
 import {
   GestureHandlerRootView,
@@ -70,6 +71,8 @@ const AccountTypeOptions = [
 const AddLoanPage = () => {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
+  const colorScheme = useColorScheme();
+  const isDarkMode = colorScheme === "dark";
 
   const {
     control,
@@ -132,28 +135,28 @@ const AddLoanPage = () => {
     fetchCustomers();
   }, []);
 
-useEffect(() => {
-  if (!customerId) return;
+  useEffect(() => {
+    if (!customerId) return;
 
-  const fetchAccounts = fetchListofAccounts({
-    isMockEnabled: false, 
-    isAdmin: true,
-    customer_id: customerId,
-  });
-
-  fetchAccounts
-    .then((fetchedAccounts) => {
-      const updatedAccounts = (fetchedAccounts ?? []).map((account) => ({
-        ...account,
-        full_name: `${account.account_no} ${account.nickname || ""}`.trim(),
-      }));
-      
-      setAccounts(updatedAccounts);
-    })
-    .catch((error) => {
-      console.error("Error fetching accounts:", error);
+    const fetchAccounts = fetchListofAccounts({
+      isMockEnabled: false,
+      isAdmin: true,
+      customer_id: customerId,
     });
-}, [customerId]);
+
+    fetchAccounts
+      .then((fetchedAccounts) => {
+        const updatedAccounts = (fetchedAccounts ?? []).map((account) => ({
+          ...account,
+          full_name: `${account.account_no} ${account.nickname || ""}`.trim(),
+        }));
+
+        setAccounts(updatedAccounts);
+      })
+      .catch((error) => {
+        console.error("Error fetching accounts:", error);
+      });
+  }, [customerId]);
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -204,15 +207,24 @@ useEffect(() => {
             <View
               style={{
                 flex: 1,
-                backgroundColor: Colors.light.background,
+                backgroundColor: isDarkMode
+                  ? Colors.dark.background
+                  : Colors.light.background,
               }}
             >
               <Animated.ScrollView
-                style={styles.mainPage}
+                style={[
+                  styles.mainPage,
+                  {
+                    backgroundColor: isDarkMode
+                      ? Colors.dark.background
+                      : Colors.light.background,
+                  },
+                ]}
                 showsVerticalScrollIndicator
                 contentContainerStyle={{ paddingBottom: 50, paddingTop: 20 }}
                 scrollsToTop
-                indicatorStyle="black"
+                indicatorStyle={isDarkMode ? "white" : "black"}
                 keyboardShouldPersistTaps="handled"
                 keyboardDismissMode="on-drag"
                 bounces={false}
@@ -226,7 +238,18 @@ useEffect(() => {
                     }}
                     render={({ field: { onChange, onBlur, value } }) => (
                       <View style={{ gap: 5 }}>
-                        <Text style={styles.inputTitle}>Customer</Text>
+                        <Text
+                          style={[
+                            styles.inputTitle,
+                            {
+                              color: isDarkMode
+                                ? Colors.dark.text
+                                : Colors.light.themeColor,
+                            },
+                          ]}
+                        >
+                          Customer
+                        </Text>
                         <Dropdown
                           style={styles.inputContainer}
                           data={customers}
@@ -247,7 +270,7 @@ useEffect(() => {
                       {errors.customer_id.message}
                     </Text>
                   )}
-                                    {customerId && (
+                  {customerId && (
                     <>
                       <Controller
                         control={control}
@@ -256,7 +279,17 @@ useEffect(() => {
                         }}
                         render={({ field: { onChange, onBlur, value } }) => (
                           <View style={{ gap: 5 }}>
-                            <Text style={styles.inputTitle}>
+                            <Text
+                              style={[
+                                styles.inputTitle,
+                                {
+                                  color: isDarkMode
+                                    ? Colors.dark.text
+                                    : Colors.light.themeColor,
+                                },
+                              ]}
+                            >
+                              {" "}
                               Account Number
                             </Text>
                             <Dropdown
@@ -287,7 +320,18 @@ useEffect(() => {
                     }}
                     render={({ field: { onChange, onBlur, value } }) => (
                       <View style={{ gap: 5 }}>
-                        <Text style={styles.inputTitle}>Annual Income</Text>
+                        <Text
+                          style={[
+                            styles.inputTitle,
+                            {
+                              color: isDarkMode
+                                ? Colors.dark.text
+                                : Colors.light.themeColor,
+                            },
+                          ]}
+                        >
+                          Annual Income
+                        </Text>
                         <TextInput
                           onBlur={onBlur}
                           onChangeText={onChange}
@@ -311,7 +355,18 @@ useEffect(() => {
                     control={control}
                     render={({ field: { onChange, onBlur, value } }) => (
                       <View style={{ gap: 5 }}>
-                        <Text style={styles.inputTitle}>Company Name</Text>
+                        <Text
+                          style={[
+                            styles.inputTitle,
+                            {
+                              color: isDarkMode
+                                ? Colors.dark.text
+                                : Colors.light.themeColor,
+                            },
+                          ]}
+                        >
+                          Company Name
+                        </Text>
                         <TextInput
                           onBlur={onBlur}
                           onChangeText={onChange}
@@ -333,7 +388,18 @@ useEffect(() => {
                     control={control}
                     render={({ field: { onChange, onBlur, value } }) => (
                       <View style={{ gap: 5 }}>
-                        <Text style={styles.inputTitle}>Job Title</Text>
+                        <Text
+                          style={[
+                            styles.inputTitle,
+                            {
+                              color: isDarkMode
+                                ? Colors.dark.text
+                                : Colors.light.themeColor,
+                            },
+                          ]}
+                        >
+                          Job Title
+                        </Text>
                         <TextInput
                           onBlur={onBlur}
                           onChangeText={onChange}
@@ -358,7 +424,16 @@ useEffect(() => {
                     }}
                     render={({ field: { onChange, onBlur, value } }) => (
                       <View style={{ gap: 5 }}>
-                        <Text style={styles.inputTitle}>
+                        <Text
+                          style={[
+                            styles.inputTitle,
+                            {
+                              color: isDarkMode
+                                ? Colors.dark.text
+                                : Colors.light.themeColor,
+                            },
+                          ]}
+                        >
                           Years of Employment
                         </Text>
                         <TextInput
@@ -387,7 +462,18 @@ useEffect(() => {
                     }}
                     render={({ field: { onChange, onBlur, value } }) => (
                       <View style={{ gap: 5 }}>
-                        <Text style={styles.inputTitle}>Home Ownership</Text>
+                        <Text
+                          style={[
+                            styles.inputTitle,
+                            {
+                              color: isDarkMode
+                                ? Colors.dark.text
+                                : Colors.light.themeColor,
+                            },
+                          ]}
+                        >
+                          Home Ownership
+                        </Text>
                         <Dropdown
                           style={styles.inputContainer}
                           data={[
@@ -419,7 +505,18 @@ useEffect(() => {
                     }}
                     render={({ field: { onChange, onBlur, value } }) => (
                       <View style={{ gap: 5 }}>
-                        <Text style={styles.inputTitle}>Loan Intent</Text>
+                        <Text
+                          style={[
+                            styles.inputTitle,
+                            {
+                              color: isDarkMode
+                                ? Colors.dark.text
+                                : Colors.light.themeColor,
+                            },
+                          ]}
+                        >
+                          Loan Intent
+                        </Text>
                         <Dropdown
                           style={styles.inputContainer}
                           data={[
@@ -460,7 +557,18 @@ useEffect(() => {
                     }}
                     render={({ field: { onChange, onBlur, value } }) => (
                       <View style={{ gap: 5 }}>
-                        <Text style={styles.inputTitle}>Loan Grade</Text>
+                        <Text
+                          style={[
+                            styles.inputTitle,
+                            {
+                              color: isDarkMode
+                                ? Colors.dark.text
+                                : Colors.light.themeColor,
+                            },
+                          ]}
+                        >
+                          Loan Grade
+                        </Text>
                         <Dropdown
                           style={styles.inputContainer}
                           data={[
@@ -495,7 +603,18 @@ useEffect(() => {
                     }}
                     render={({ field: { onChange, onBlur, value } }) => (
                       <View style={{ gap: 5 }}>
-                        <Text style={styles.inputTitle}>Interest Rate</Text>
+                        <Text
+                          style={[
+                            styles.inputTitle,
+                            {
+                              color: isDarkMode
+                                ? Colors.dark.text
+                                : Colors.light.themeColor,
+                            },
+                          ]}
+                        >
+                          Interest Rate
+                        </Text>
                         <TextInput
                           onBlur={onBlur}
                           onChangeText={onChange}
@@ -522,7 +641,18 @@ useEffect(() => {
                     }}
                     render={({ field: { onChange, onBlur, value } }) => (
                       <View style={{ gap: 5 }}>
-                        <Text style={styles.inputTitle}>Credit Score</Text>
+                        <Text
+                          style={[
+                            styles.inputTitle,
+                            {
+                              color: isDarkMode
+                                ? Colors.dark.text
+                                : Colors.light.themeColor,
+                            },
+                          ]}
+                        >
+                          Credit Score
+                        </Text>
                         <TextInput
                           onBlur={onBlur}
                           onChangeText={onChange}
@@ -549,7 +679,16 @@ useEffect(() => {
                     }}
                     render={({ field: { onChange, onBlur, value } }) => (
                       <View style={{ gap: 5 }}>
-                        <Text style={styles.inputTitle}>
+                        <Text
+                          style={[
+                            styles.inputTitle,
+                            {
+                              color: isDarkMode
+                                ? Colors.dark.text
+                                : Colors.light.themeColor,
+                            },
+                          ]}
+                        >
                           Credit History Years
                         </Text>
                         <TextInput
@@ -578,7 +717,18 @@ useEffect(() => {
                     }}
                     render={({ field: { onChange, onBlur, value } }) => (
                       <View style={{ gap: 5 }}>
-                        <Text style={styles.inputTitle}>Default Status</Text>
+                        <Text
+                          style={[
+                            styles.inputTitle,
+                            {
+                              color: isDarkMode
+                                ? Colors.dark.text
+                                : Colors.light.themeColor,
+                            },
+                          ]}
+                        >
+                          Default Status
+                        </Text>
                         <Dropdown
                           style={styles.inputContainer}
                           data={[
@@ -608,7 +758,18 @@ useEffect(() => {
                     }}
                     render={({ field: { onChange, onBlur, value } }) => (
                       <View style={{ gap: 5 }}>
-                        <Text style={styles.inputTitle}>Loan Amount</Text>
+                        <Text
+                          style={[
+                            styles.inputTitle,
+                            {
+                              color: isDarkMode
+                                ? Colors.dark.text
+                                : Colors.light.themeColor,
+                            },
+                          ]}
+                        >
+                          Loan Amount
+                        </Text>
                         <TextInput
                           onBlur={onBlur}
                           onChangeText={onChange}
@@ -657,7 +818,7 @@ useEffect(() => {
                         },
                       ]
                     );
-                  })} 
+                  })}
                 >
                   <Text
                     style={{

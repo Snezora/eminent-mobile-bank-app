@@ -12,6 +12,7 @@ import {
   TextInput,
   Button,
   Alert,
+  useColorScheme,
 } from "react-native";
 import Animated, { FadeOut } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -66,6 +67,8 @@ const LoanDetails = () => {
   const [shouldPredict, setShouldPredict] = useState(false);
   const [loanPredicting, setLoanPredicting] = useState(false);
   const { user, isMockEnabled } = useAuth();
+  const colorScheme = useColorScheme();
+  const isDarkMode = colorScheme === "dark";
 
   const loanGrade = [
     {
@@ -258,18 +261,30 @@ const LoanDetails = () => {
             flex: 1,
             justifyContent: "center",
             alignItems: "center",
-            backgroundColor: Colors.light.background,
+            backgroundColor: isDarkMode
+              ? Colors.dark.background
+              : Colors.light.background,
           }}
         >
           <ActivityIndicator
             size="large"
-            color={Colors.light.themeColor}
+            color={isDarkMode ? "white" : Colors.light.themeColor}
             style={{ marginBottom: 20 }}
           />
         </Animated.View>
       )}
       {!loading && (
-        <Animated.ScrollView style={styles.container} bounces={false}>
+        <Animated.ScrollView
+          style={[
+            styles.container,
+            {
+              backgroundColor: isDarkMode
+                ? Colors.dark.background
+                : Colors.light.background,
+            },
+          ]}
+          bounces={false}
+        >
           <View
             style={[
               styles.containerHeader,
@@ -286,7 +301,7 @@ const LoanDetails = () => {
             <View
               style={{ justifyContent: "space-between", flexDirection: "row" }}
             >
-              <Text style={styles.containerHeaderText}>Loan ID: # {id}</Text>
+              <Text style={[styles.containerHeaderText]}>Loan ID: # {id}</Text>
               <Text style={styles.containerHeaderText}>
                 {dayjs(loan?.application_date).format("DD/MM/YYYY")}
               </Text>
@@ -310,55 +325,130 @@ const LoanDetails = () => {
           </View>
           <View style={styles.customerDetailsContainer}>
             <View style={[styles.customerHalfContainer, { maxWidth: "70%" }]}>
-              <Text style={styles.customerDetailsText}>
+              <Text
+                style={[
+                  styles.customerDetailsText,
+                  { color: isDarkMode ? Colors.dark.text : "#000" },
+                ]}
+              >
                 Full Name: {customer?.first_name} {customer?.last_name}
               </Text>
               {customer?.ic_no ? (
-                <Text style={styles.customerDetailsText}>
+                <Text
+                  style={[
+                    styles.customerDetailsText,
+                    { color: isDarkMode ? Colors.dark.text : "#000" },
+                  ]}
+                >
                   IC No: {customer?.ic_no}
                 </Text>
               ) : (
-                <Text style={styles.customerDetailsText}>
+                <Text
+                  style={[
+                    styles.customerDetailsText,
+                    { color: isDarkMode ? Colors.dark.text : "#000" },
+                  ]}
+                >
                   Passport No: {customer?.passport_no}
                 </Text>
               )}
-              <Text style={styles.customerDetailsText}>
+              <Text
+                style={[
+                  styles.customerDetailsText,
+                  { color: isDarkMode ? Colors.dark.text : "#000" },
+                ]}
+              >
                 Age:{" "}
                 {customer?.date_of_birth
                   ? dayjs().diff(dayjs(customer.date_of_birth), "year")
                   : "N/A"}
               </Text>
-              <Text style={styles.customerDetailsText}>
+              <Text
+                style={[
+                  styles.customerDetailsText,
+                  { color: isDarkMode ? Colors.dark.text : "#000" },
+                ]}
+              >
                 Nationality: {customer?.nationality}
               </Text>
-              <Text style={styles.customerDetailsText}>
+              <Text
+                style={[
+                  styles.customerDetailsText,
+                  { color: isDarkMode ? Colors.dark.text : "#000" },
+                ]}
+              >
                 Phone No: {customer?.phone_no}
               </Text>
-              <Text style={styles.customerDetailsText}>
+              <Text
+                style={[
+                  styles.customerDetailsText,
+                  { color: isDarkMode ? Colors.dark.text : "#000" },
+                ]}
+              >
                 Company Name: {loan?.customer_job_company_name}
               </Text>
-              <Text style={styles.customerDetailsText}>
+              <Text
+                style={[
+                  styles.customerDetailsText,
+                  { color: isDarkMode ? Colors.dark.text : "#000" },
+                ]}
+              >
                 Occupation: {loan?.customer_job_title}
               </Text>
-              <Text style={styles.customerDetailsText}>
+              <Text
+                style={[
+                  styles.customerDetailsText,
+                  { color: isDarkMode ? Colors.dark.text : "#000" },
+                ]}
+              >
                 Experience: {loan?.customer_job_years} Years
               </Text>
-              <Text style={styles.customerDetailsText}>
+              <Text
+                style={[
+                  styles.customerDetailsText,
+                  { color: isDarkMode ? Colors.dark.text : "#000" },
+                ]}
+              >
                 Home Address: {customer?.home_address}
               </Text>
-              <Text style={styles.customerDetailsText}>
+              <Text
+                style={[
+                  styles.customerDetailsText,
+                  { color: isDarkMode ? Colors.dark.text : "#000" },
+                ]}
+              >
                 Home Ownership: {loan?.customer_home_ownership}
               </Text>
-              <Text style={styles.customerDetailsText}>
+              <Text
+                style={[
+                  styles.customerDetailsText,
+                  { color: isDarkMode ? Colors.dark.text : "#000" },
+                ]}
+              >
                 Annual Income: USD {loan?.customer_annual_income}
               </Text>
-              <Text style={styles.customerDetailsText}>
+              <Text
+                style={[
+                  styles.customerDetailsText,
+                  { color: isDarkMode ? Colors.dark.text : "#000" },
+                ]}
+              >
                 Credit History: {loan?.customer_credit_history_years} Years
               </Text>
-              <Text style={styles.customerDetailsText}>
+              <Text
+                style={[
+                  styles.customerDetailsText,
+                  { color: isDarkMode ? Colors.dark.text : "#000" },
+                ]}
+              >
                 Credit Score: {loan?.customer_credit_score}
               </Text>
-              <Text style={styles.customerDetailsText}>
+              <Text
+                style={[
+                  styles.customerDetailsText,
+                  { color: isDarkMode ? Colors.dark.text : "#000" },
+                ]}
+              >
                 Default Status: {loan?.customer_default ? "Yes" : "No"}
               </Text>
             </View>
@@ -369,7 +459,10 @@ const LoanDetails = () => {
               ]}
             >
               <TouchableOpacity
-                style={styles.buttonContainer}
+                style={[
+                  styles.buttonContainer,
+                  { backgroundColor: Colors.light.themeColor },
+                ]}
                 onPress={() => {
                   setImageModalVisible(true);
                   setIsIC(true);
@@ -380,7 +473,10 @@ const LoanDetails = () => {
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={styles.buttonContainer}
+                style={[
+                  styles.buttonContainer,
+                  { backgroundColor: Colors.light.themeColor },
+                ]}
                 onPress={() => {
                   setImageModalVisible(true);
                   setIsPayslip(true);
@@ -389,7 +485,10 @@ const LoanDetails = () => {
                 <Text style={styles.buttonText}>View Payslip</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={styles.buttonContainer}
+                style={[
+                  styles.buttonContainer,
+                  { backgroundColor: Colors.light.themeColor },
+                ]}
                 onPress={() => {
                   setImageModalVisible(true);
                   setIsUtilityBill(true);
@@ -398,7 +497,10 @@ const LoanDetails = () => {
                 <Text style={styles.buttonText}>View Utility Bill</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={styles.buttonContainer}
+                style={[
+                  styles.buttonContainer,
+                  { backgroundColor: Colors.light.themeColor },
+                ]}
                 onPress={() => {
                   setTextModalVisible(true);
                   setIsEditLoan(true);
@@ -413,16 +515,36 @@ const LoanDetails = () => {
           />
           <View style={styles.customerDetailsContainer}>
             <View style={[styles.customerHalfContainer, { maxWidth: "70%" }]}>
-              <Text style={styles.customerDetailsText}>
+              <Text
+                style={[
+                  styles.customerDetailsText,
+                  { color: isDarkMode ? Colors.dark.text : "#000" },
+                ]}
+              >
                 Acc. No: {loan?.account_number}
               </Text>
-              <Text style={styles.customerDetailsText}>
+              <Text
+                style={[
+                  styles.customerDetailsText,
+                  { color: isDarkMode ? Colors.dark.text : "#000" },
+                ]}
+              >
                 Loan Intent: {loan?.loan_intent}
               </Text>
-              <Text style={styles.customerDetailsText}>
+              <Text
+                style={[
+                  styles.customerDetailsText,
+                  { color: isDarkMode ? Colors.dark.text : "#000" },
+                ]}
+              >
                 Loan Grade: {loan?.loan_grade}
               </Text>
-              <Text style={styles.customerDetailsText}>
+              <Text
+                style={[
+                  styles.customerDetailsText,
+                  { color: isDarkMode ? Colors.dark.text : "#000" },
+                ]}
+              >
                 Interest Rate: {loan?.loan_interest_rate?.toFixed(2)}%
               </Text>
             </View>
@@ -452,6 +574,7 @@ const LoanDetails = () => {
                       (loanPrediction.prediction ?? 0) > 0.5
                         ? "green"
                         : "#CC0000",
+                    backgroundColor: Colors.light.themeColor,
                   },
                 ]}
               >
@@ -473,6 +596,7 @@ const LoanDetails = () => {
                     borderColor: "#CC0000",
                     width: "35%",
                     justifyContent: "center",
+                    backgroundColor: Colors.light.background,
                   },
                 ]}
                 onPress={async () => {
@@ -524,6 +648,7 @@ const LoanDetails = () => {
                     borderColor: "green",
                     width: "35%",
                     justifyContent: "center",
+                    backgroundColor: Colors.light.background,
                   },
                 ]}
                 onPress={() => {
@@ -587,7 +712,7 @@ const LoanDetails = () => {
             </View>
           )}
           {loan?.final_approval !== null && (
-            <Text style={{ marginLeft: 20, marginTop: 10 }}>
+            <Text style={{ marginLeft: 20, marginTop: 10, color: "red" }}>
               Please contact server operator to change decision.
             </Text>
           )}
@@ -611,7 +736,7 @@ const LoanDetails = () => {
       >
         <View
           style={{
-            backgroundColor: "white",
+            backgroundColor: Colors.light.background,
             minHeight: 450,
             paddingVertical: 30,
           }}
@@ -1010,7 +1135,7 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: 16,
     fontWeight: "bold",
-    color: Colors.light.themeColor,
+    color: "white",
     textAlign: "center",
   },
   predictionContainer: {

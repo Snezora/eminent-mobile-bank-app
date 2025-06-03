@@ -11,6 +11,11 @@ from catboost import CatBoostClassifier
 import lightgbm as lgb
 import xgboost as xgb
 from sklearn.ensemble import RandomForestClassifier, ExtraTreesClassifier
+from cryptography.fernet import Fernet
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = FastAPI()
 
@@ -114,3 +119,31 @@ async def predict(data: PredictionInput):
         "prediction": float(prediction),
         "shap_values": shap_dict
     }
+    
+SECRET_KEY = os.getenv("SECRET_KEY") or "BANKAPPEMINENTWESTERNBANK"
+if not SECRET_KEY:
+    raise ValueError("SECRET_KEY is not set in the environment variables or .env file.")
+
+# Ensure SECRET_KEY is 32 url-safe base64-encoded bytes for Fernet
+import base64
+if len(SECRET_KEY) != 44:
+    # Pad or hash the key to 32 bytes, then base64 encode
+    SECRET_KEY = base64.urlsafe_b64encode(SECRET_KEY.encode('utf-8').ljust(32, b'0'))
+
+fernet = Fernet(SECRET_KEY)
+
+class DataInput(BaseModel):
+    receiver_account_no: str
+
+@app.post("/encrypt")
+def encrypt(data: DataInput):
+    encrypted_data = fernet.encrypt(data.json().encode()).decode()
+    return {"encrypted_data": encrypted_data}
+
+@app.post("/decrypt")
+def decrypt(encrypted_data: str):
+    try:
+        decrypted_data = fernet.decrypt(encrypted_data.encode()).decode()
+        return {"decrypted_data": eval(decrypted_data)}
+    except Exception as e:
+        return {"error": f"Decryption failed: {e}"}

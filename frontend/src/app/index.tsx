@@ -10,6 +10,7 @@ import Animated, {
   withRepeat,
   withTiming,
   Easing,
+  FadeOut,
 } from "react-native-reanimated";
 import { supabase } from "../lib/supabase";
 
@@ -60,6 +61,7 @@ const IndexPage = () => {
           { flex: 1, justifyContent: "center", alignItems: "center" },
           animatedStyle,
         ]}
+        exiting={FadeOut.duration(1000)}
       >
         <Image
           source={require("@/assets/images/EWBLogo.png")}
