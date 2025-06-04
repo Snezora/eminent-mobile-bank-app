@@ -1,6 +1,6 @@
 import { Redirect, Tabs } from "expo-router";
 import { FontAwesome } from "@expo/vector-icons";
-import { useColorScheme } from "react-native";
+import { useColorScheme, View } from "react-native";
 import Colors from "@/src/constants/Colors";
 import { useAuth } from "@/src/providers/AuthProvider";
 
@@ -9,9 +9,8 @@ export default function TabLayout() {
   const { session } = useAuth();
 
   if (!session) {
-    return <Redirect href="/(auth)/home-page"  />;
+    return <Redirect href="/(auth)/home-page" />;
   }
-  
 
   return (
     <Tabs
@@ -19,12 +18,20 @@ export default function TabLayout() {
         tabBarActiveTintColor:
           colorScheme === "dark"
             ? Colors.light.themeColorSecondary
-            : Colors.light.themeColor,
+            : Colors.light.themeColorSecondary,
         tabBarInactiveTintColor:
           colorScheme === "dark"
             ? "rgba(255, 255, 255, 0.5)"
-            : "rgba(0, 0, 0, 0.5)",
+            : "rgba(255, 255, 255, 0.5)",
         headerShown: false, // Hide headers for all tabs
+        tabBarStyle: {
+          borderTopWidth: 0,
+          elevation: 5,
+          backgroundColor:
+            colorScheme === "dark"
+              ? Colors.dark.firstButton
+              : Colors.dark.background,
+        },
       }}
     >
       <Tabs.Screen

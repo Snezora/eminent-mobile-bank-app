@@ -25,13 +25,28 @@ export default function Layout() {
           headerShown: false, // Hide the header for the tabs
         }}
       />
-      {/* Camera screen as a separate Stack screen */}
       <Stack.Screen
         name="camera"
         options={{
           title: "Camera",
-          gestureEnabled: true, // Enable swipe back gesture
-          headerShown: false, // Optional: Hide the header for the camera screen
+          gestureEnabled: true,
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="(transfer)/transferHome"
+        options={{
+          title: "Transfer",
+          gestureEnabled: true, 
+          headerShown: false, 
+        }}
+      />
+      <Stack.Screen
+        name="(transfer)/newTransfer"
+        options={{
+          title: "Transfer",
+          gestureEnabled: true,
+          headerShown: false, 
         }}
       />
     </Stack>

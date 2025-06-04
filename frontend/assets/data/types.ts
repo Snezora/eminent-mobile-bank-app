@@ -23,6 +23,7 @@ export interface Account {
   created_at: string; // timestamptz
   nickname: string | null;
   approved_at : string | null; // timestamptz (when the account was approved)
+  favourite_accounts: JSON[];
 }
 
 export interface Transaction {

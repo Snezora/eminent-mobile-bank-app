@@ -15,6 +15,8 @@ import { useAuth } from "@/src/providers/AuthProvider";
 import fetchListofAccounts from "@/src/providers/fetchListofAccounts";
 import { Account } from "@/assets/data/types";
 import Colors from "@/src/constants/Colors";
+import { Alert } from "react-native";
+
 import * as LocalAuthentication from "expo-local-authentication";
 
 export default function TabOneScreen() {
@@ -27,17 +29,31 @@ export default function TabOneScreen() {
   const [hasAuthenticated, setHasAuthenticated] = useState(false);
 
   const handleEyePress = async () => {
-    if (!hasAuthenticated) {
-      const hasAuthenticated = await LocalAuthentication.authenticateAsync();
-      if (hasAuthenticated.success) {
-        setHasAuthenticated(true);
-        setIsEyeOpen(!isEyeOpen);
+    try {
+      if (!hasAuthenticated) {
+        const hasAuthenticated = await LocalAuthentication.authenticateAsync();
+        if (hasAuthenticated.success) {
+          setHasAuthenticated(true);
+          setIsEyeOpen(!isEyeOpen);
+        } else {
+          console.log("Authentication failed");
+          Alert.alert(
+            "Authentication Failed",
+            "Unable to authenticate. Please try again.",
+            [{ text: "OK" }]
+          );
+          return;
+        }
       } else {
-        console.log("Authentication failed");
-        return;
+        setIsEyeOpen(!isEyeOpen);
       }
-    } else {
-      setIsEyeOpen(!isEyeOpen);
+    } catch (error) {
+      console.error("Error during authentication:", error);
+      Alert.alert(
+        "Error",
+        "An unexpected error occurred during authentication. Please try again.",
+        [{ text: "OK" }]
+      );
     }
   };
 
@@ -46,7 +62,7 @@ export default function TabOneScreen() {
       console.log("User is null, skipping fetchListofAccounts");
       return;
     }
-    
+
     const accounts = fetchListofAccounts({
       isMockEnabled: false,
       isAdmin: false,

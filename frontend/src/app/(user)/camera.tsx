@@ -89,6 +89,13 @@ export default function Camera() {
       Brightness.setBrightnessAsync(brightness);
     };
 
+    if (selectedOption === "scan") {
+      setTimeout(() => {
+        setHasScanned(false);
+        setCameraActive(true);
+      }, 2000);
+    }
+
     if (countdown === 30) {
       encryptData();
     }
@@ -158,17 +165,40 @@ export default function Camera() {
         new Date().getTime() >
         new Date(decryptedData.time_created).getTime() + 45000
       ) {
-        Alert.alert("QR code has expired");
+        Alert.alert(
+          "QR code has expired",
+          "Please scan a valid QR code.",
+          [
+            {
+              text: "OK",
+              onPress: () => {
+                setHasScanned(false); // Re-enable scanning
+                setCameraActive(true); // Re-enable the camera
+              },
+            },
+          ],
+          { cancelable: false } // Prevent dismissing the alert without pressing "OK"
+        );
       } else {
         console.log("Decrypted data:", decryptedData);
       }
     } catch (error) {
       console.error("Error decrypting data:", error);
+      Alert.alert(
+        "Error",
+        "An error occurred while processing the QR code.",
+        [
+          {
+            text: "OK",
+            onPress: () => {
+              setHasScanned(false); // Re-enable scanning
+              setCameraActive(true); // Re-enable the camera
+            },
+          },
+        ],
+        { cancelable: false }
+      );
     } finally {
-      setTimeout(() => {
-        setHasScanned(false);
-        setCameraActive(true);
-      }, 2000);
     }
   }
 
@@ -210,10 +240,10 @@ export default function Camera() {
               </View>
             )}
             {!qrLoading && (
-              <>
+              <View style={{ alignItems: "center", gap: 10 }}>
                 <QRCode
                   value={encryptedData}
-                  size={200}
+                  size={250}
                   backgroundColor={
                     isDarkMode
                       ? Colors.dark.background
@@ -221,16 +251,26 @@ export default function Camera() {
                   }
                   color={isDarkMode ? Colors.dark.text : Colors.light.text}
                 />
-                <Text style={styles.countdownText}>
+                <Text
+                  style={[
+                    styles.countdownText,
+                    {
+                      color: isDarkMode ? Colors.dark.text : Colors.light.text,
+                    },
+                  ]}
+                >
                   Refreshing in: {countdown}s
                 </Text>
                 <TouchableOpacity
-                  onPress={() => {encryptData(); setCountdown(30);}} // Call encryptData to manually refresh
+                  onPress={() => {
+                    encryptData();
+                    setCountdown(30);
+                  }} // Call encryptData to manually refresh
                   style={styles.refreshButton}
                 >
                   <Text style={styles.refreshButtonText}>Refresh Now</Text>
                 </TouchableOpacity>
-              </>
+              </View>
             )}
           </View>
         )}
@@ -349,7 +389,6 @@ const styles = StyleSheet.create({
   countdownText: {
     marginTop: 10,
     fontSize: 16,
-    color: "white",
   },
   refreshButton: {
     marginTop: 10,

@@ -5,6 +5,7 @@ import {
   Text,
   useColorScheme,
   TouchableOpacity,
+  ActivityIndicator,
 } from "react-native";
 import {
   SafeAreaView,
@@ -21,7 +22,7 @@ import SettingsLogOut from "@/src/components/SettingsLogOut";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import * as LocalAuthentication from "expo-local-authentication";
 import { Card } from "react-native-ui-lib";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { AntDesign, MaterialCommunityIcons } from "@expo/vector-icons";
 import RotatingLogo from "@/src/components/spinningLogo";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { router } from "expo-router";
@@ -45,6 +46,7 @@ export default function Accounts() {
   const [hasAuthenticated, setHasAuthenticated] = useState(false);
   const [pageLoading, setPageLoading] = useState(true);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [transactionLoading, setTransactionLoading] = useState(true);
 
   const handleEyePress = async () => {
     if (!hasAuthenticated) {
@@ -117,7 +119,7 @@ export default function Accounts() {
 
   useEffect(() => {
     if (accounts.length == 0) return;
-
+    setTransactionLoading(true);
     const fetchAccountData = async () => {
       const transactions = await fetchListofTransactions({
         isMockEnabled: false,
@@ -129,7 +131,11 @@ export default function Accounts() {
       setTransactions(transactions ?? []);
     };
 
-    fetchAccountData();
+    fetchAccountData().then(() => {
+      setTimeout(() => {
+        setTransactionLoading(false);
+      }, 2000);
+    });
   }, [selectedAccount]);
 
   return (
@@ -268,6 +274,9 @@ export default function Accounts() {
                   console.log(
                     "Pressed Transfer for " + selectedAccount?.account_no
                   );
+                  router.push({
+                    pathname: "/(user)/(transfer)/transferHome",
+                  });
                 }}
               >
                 <MaterialCommunityIcons
@@ -285,89 +294,161 @@ export default function Accounts() {
                   Transfer
                 </Text>
               </Card>
-              {/* <Card
-                style={[
-                  styles.upperCard,
-                  {
-                    backgroundColor: isDarkMode
-                      ? Colors.dark.firstButton
-                      : "white",
-                  },
-                ]}
-              >
-                <MaterialCommunityIcons
-                  name="account-lock"
-                  size={30}
-                  color={isDarkMode ? Colors.dark.text : Colors.light.text}
-                />
-                <Text
-                  style={{
-                    color: isDarkMode ? Colors.dark.text : Colors.light.text,
-                    fontSize: 16,
-                    fontWeight: "bold",
-                  }}
-                >
-                  Block
-                </Text>
-              </Card> */}
             </View>
             <View id="transactionHistory" style={{ marginTop: 20 }}>
-              <Text
+              <View
                 style={{
-                  fontSize: 18,
-                  fontWeight: "bold",
-                  color: isDarkMode ? Colors.dark.text : Colors.light.text,
+                  flexDirection: "row",
+                  justifyContent: "space-between",
                 }}
               >
-                Recent Transaction History
-              </Text>
-              {/* line */}
+                <Text
+                  style={{
+                    fontSize: 18,
+                    fontWeight: "bold",
+                    color: isDarkMode ? Colors.dark.text : Colors.light.text,
+                  }}
+                >
+                  Recent Transaction History
+                </Text>
+                <Text
+                  style={{
+                    fontSize: 14,
+                    fontWeight: "bold",
+                    color: isDarkMode ? Colors.dark.text : Colors.light.text,
+                    textDecorationLine: "underline",
+                    alignSelf: "center",
+                  }}
+                >
+                  View All
+                </Text>
+              </View>
+              {(transactionLoading ||
+                isEyeOpen ||
+                transactions.length === 0) && (
+                <View
+                  style={{
+                    backgroundColor: Colors.light.themeColor,
+                    height: 2,
+                    marginVertical: 10,
+                  }}
+                ></View>
+              )}
 
-              <Animated.FlatList
-                data={transactions.slice(0, 5)}
-                renderItem={({ item, index }) => {
-                  const prevItem = index > 0 ? transactions[index - 1] : null;
-                  const showSeparator =
-                    index === 0 ||
-                    (prevItem &&
-                      dayjs(prevItem.transfer_datetime).format("YYYY-MM-DD") !==
-                        dayjs(item.transfer_datetime).format("YYYY-MM-DD"));
+              {isEyeOpen && (
+                <View
+                  style={{
+                    alignItems: "center",
+                    height: "70%",
+                    justifyContent: "center",
+                    gap: 20,
+                  }}
+                >
+                  <MaterialCommunityIcons
+                    name="database-eye-off-outline"
+                    size={42}
+                    color={isDarkMode ? Colors.dark.text : Colors.light.text}
+                  />
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      fontWeight: "bold",
+                      color: isDarkMode ? Colors.dark.text : Colors.light.text,
+                    }}
+                  >
+                    Press the eye icon on top to show.
+                  </Text>
+                </View>
+              )}
 
-                  return (
-                    <>
-                      {showSeparator && (
-                        <>
-                          <View
-                            style={{
-                              backgroundColor: Colors.light.themeColor,
-                              height: 2,
-                              marginVertical: 10,
-                            }}
-                          ></View>
-                          <Text
-                            style={{
-                              fontSize: 14,
-                              fontWeight: "bold",
-                              paddingBottom: 15,
-                              color: isDarkMode ? Colors.dark.text : Colors.light.text
-                            }}
-                          >
-                            {dayjs(item.transfer_datetime).format(
-                              "DD MMMM YYYY"
-                            )}
-                          </Text>
-                        </>
-                      )}
-                      {selectedAccount && (
-                        <CustomerTransactionBlock
-                          transaction={item}
-                          account={selectedAccount}
-                        />
-                      )}
-                    </>
-                  );
-                }}
-              ></Animated.FlatList>
+              {!isEyeOpen && transactionLoading && (
+                <ActivityIndicator
+                  size={"large"}
+                  style={{ alignSelf: "center", paddingTop: 100 }}
+                />
+              )}
+              {!isEyeOpen && !transactionLoading && transactions && (
+                <Animated.FlatList
+                  entering={FadeIn.duration(1000)}
+                  data={transactions.slice(0, 5)}
+                  renderItem={({ item, index }) => {
+                    const prevItem = index > 0 ? transactions[index - 1] : null;
+                    const showSeparator =
+                      index === 0 ||
+                      (prevItem &&
+                        dayjs(prevItem.transfer_datetime).format(
+                          "YYYY-MM-DD"
+                        ) !==
+                          dayjs(item.transfer_datetime).format("YYYY-MM-DD"));
+
+                    return (
+                      <>
+                        {showSeparator && (
+                          <>
+                            <View
+                              style={{
+                                backgroundColor: Colors.light.themeColor,
+                                height: 2,
+                                marginVertical: 10,
+                              }}
+                            ></View>
+                            <Text
+                              style={{
+                                fontSize: 14,
+                                fontWeight: "bold",
+                                paddingBottom: 15,
+                                color: isDarkMode
+                                  ? Colors.dark.text
+                                  : Colors.light.text,
+                              }}
+                            >
+                              {dayjs(item.transfer_datetime).format(
+                                "DD MMMM YYYY"
+                              )}
+                            </Text>
+                          </>
+                        )}
+                        {selectedAccount && (
+                          <CustomerTransactionBlock
+                            transaction={item}
+                            account={selectedAccount}
+                          />
+                        )}
+                      </>
+                    );
+                  }}
+                ></Animated.FlatList>
+              )}
+              {!isEyeOpen &&
+                !transactionLoading &&
+                transactions.length === 0 && (
+                  <View
+                    style={{
+                      alignItems: "center",
+                      justifyContent: "center",
+                      height: "50%",
+                      gap: 20,
+                    }}
+                  >
+                    <AntDesign
+                      name="closecircleo"
+                      size={42}
+                      color={isDarkMode ? Colors.dark.text : Colors.light.text}
+                    />
+                    <Text
+                      style={{
+                        fontSize: 14,
+                        fontWeight: "bold",
+                        paddingBottom: 15,
+                        color: isDarkMode
+                          ? Colors.dark.text
+                          : Colors.light.text,
+                      }}
+                    >
+                      No Transaction History
+                    </Text>
+                  </View>
+                )}
             </View>
           </View>
         </>
