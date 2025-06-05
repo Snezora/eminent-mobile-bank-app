@@ -9,6 +9,8 @@ import {
   Alert,
 } from "react-native";
 import Colors from "../constants/Colors";
+import bankLogos from "@/src/constants/Banks";
+import { router } from "expo-router";
 
 type ExternalAccountProps = {
   bankName: string;
@@ -24,29 +26,6 @@ type BankTabProps = {
   account_no?: string;
   nickname?: string;
 };
-
-const bankLogos = [
-  {
-    name: "EWB",
-    full_bank_name: "Eminent Western Bank",
-    logo: require("@/assets/images/EWBLogo.png"),
-  },
-  {
-    name: "MBB",
-    full_bank_name: "Maybank",
-    logo: require("@/assets/images/banks/maybank.png"),
-  },
-  {
-    name: "CIMB",
-    full_bank_name: "CIMB Bank",
-    logo: require("@/assets/images/banks/cimb.png"),
-  },
-  {
-    name: "PBB",
-    full_bank_name: "Public Bank",
-    logo: require("@/assets/images/banks/publicbank.png"),
-  },
-];
 
 const BankTab = ({
   account,
@@ -64,10 +43,18 @@ const BankTab = ({
         style={{
           flexDirection: "row",
           borderColor: isDarkMode ? Colors.dark.text : Colors.light.text,
-          //   borderWidth: 1,
           padding: 10,
           borderRadius: 20,
           backgroundColor: isDarkMode ? Colors.dark.firstButton : "white",
+        }}
+        onPress={() => {
+          router.push({
+            pathname: "/(user)/(transfer)/newTransfer",
+            params: {
+              bankName: "EWB",
+              account_no: account.account_no,
+            },
+          });
         }}
       >
         <View
@@ -146,11 +133,17 @@ const BankTab = ({
           backgroundColor: isDarkMode ? Colors.dark.firstButton : "white",
         }}
         onPress={() => {
-            if (external_account.bankName === "EWB") {
-                
-            } else {
-                Alert.alert("Not implemented yet");
-            }
+          if (external_account.bankName === "EWB") {
+            router.push({
+              pathname: "/(user)/(transfer)/newTransfer",
+              params: {
+                bankName: "EWB",
+                account_no: external_account?.account_no,
+              },
+            });
+          } else {
+            Alert.alert("Bank not supported yet");
+          }
         }}
       >
         <View

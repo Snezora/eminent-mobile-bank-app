@@ -16,10 +16,10 @@ import {
 import Colors from "@/src/constants/Colors";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useForm, Controller } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
 import { Ionicons, FontAwesome } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useAuth } from "@/src/providers/AuthProvider";
-import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import Animated from "react-native-reanimated";
 import { Dropdown, MultiSelect } from "react-native-element-dropdown";

@@ -17,12 +17,10 @@ import { Account } from "@/assets/data/types";
 import Colors from "@/src/constants/Colors";
 import { Alert } from "react-native";
 
-import * as LocalAuthentication from "expo-local-authentication";
-
 export default function TabOneScreen() {
   const colorScheme = useColorScheme();
   const isDarkMode = colorScheme === "dark";
-  const { session, user } = useAuth();
+  const { session, user, isBiometricAuthenticated, authenticateBiometric } = useAuth();
   const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [isEyeOpen, setIsEyeOpen] = useState(true);
@@ -30,7 +28,7 @@ export default function TabOneScreen() {
 
   const handleEyePress = async () => {
     try {
-      if (!hasAuthenticated) {
+      if (!isBiometricAuthenticated) {
         const hasAuthenticated = await LocalAuthentication.authenticateAsync();
         if (hasAuthenticated.success) {
           setHasAuthenticated(true);

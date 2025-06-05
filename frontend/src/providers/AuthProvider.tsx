@@ -9,6 +9,8 @@ import { supabase } from "@/src/lib/supabase";
 import React from "react";
 import { Session } from "@supabase/supabase-js";
 import { Admin, Customer } from "@/assets/data/types";
+import * as LocalAuthentication from "expo-local-authentication";
+import { Alert } from "react-native";
 
 interface AuthData {
   session: Session | null;
@@ -16,6 +18,8 @@ interface AuthData {
   user: Customer | Admin | null;
   isAdmin: boolean;
   isMockEnabled?: boolean;
+  isBiometricAuthenticated: boolean;
+  authenticateBiometric: () => Promise<boolean>; 
 }
 
 const AuthContext = createContext<AuthData>({
@@ -24,6 +28,8 @@ const AuthContext = createContext<AuthData>({
   user: null,
   isAdmin: false,
   isMockEnabled: false,
+  isBiometricAuthenticated: false, 
+  authenticateBiometric: () => Promise.resolve(false), 
 });
 
 export default function AuthProvider({ children }: PropsWithChildren) {
@@ -32,6 +38,46 @@ export default function AuthProvider({ children }: PropsWithChildren) {
   const [user, setUser] = useState<Customer | Admin | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isMockEnabled, setIsMockEnabled] = useState(false);
+  const [isBiometricAuthenticated, setIsBiometricAuthenticated] =
+    useState(false); // New state for biometric authentication
+
+  const authenticateBiometric = async () => {
+    try {
+      const hasHardware = await LocalAuthentication.hasHardwareAsync();
+      const isEnrolled = await LocalAuthentication.isEnrolledAsync();
+
+      if (!hasHardware || !isEnrolled) {
+        Alert.alert(
+          "Authentication Error",
+          "Biometric authentication is not available on this device."
+        );
+        return false;
+      }
+
+      const result = await LocalAuthentication.authenticateAsync({
+        promptMessage: "Authenticate to continue",
+        fallbackLabel: "Enter PIN",
+      });
+
+      if (result.success) {
+        setIsBiometricAuthenticated(true);
+        return true;
+      } else {
+        Alert.alert(
+          "Authentication Error",
+          "Biometric authentication failed. Please try again."
+        );
+        return false;
+      }
+    } catch (error) {
+      console.error("Error during biometric authentication:", error);
+      Alert.alert(
+        "Authentication Error",
+        "An error occurred during authentication."
+      );
+      return false;
+    }
+  };
 
   useEffect(() => {
     const fetchSession = async () => {
@@ -45,7 +91,7 @@ export default function AuthProvider({ children }: PropsWithChildren) {
             app_metadata: {},
             user_metadata: {},
             aud: "",
-            created_at: ""
+            created_at: "",
           },
           access_token: "mock-access-token",
           refresh_token: "mock-refresh-token",
@@ -55,10 +101,10 @@ export default function AuthProvider({ children }: PropsWithChildren) {
 
         const mockAdmin: Admin = {
           user_uuid: "a1a1a1a1-a1a1-a1a1-a1a1-a1a1a1a1a1a1",
-          username: 'admin_manager',
+          username: "admin_manager",
           admin_id: "ad1d1d1d-e1e1-f1f1-a1a1-b1b1b1b1b1ad",
-          role: 'Manager',
-          created_at: '2023-12-01T09:00:00Z'
+          role: "Manager",
+          created_at: "2023-12-01T09:00:00Z",
         };
 
         setSession(mockSession);
@@ -117,7 +163,7 @@ export default function AuthProvider({ children }: PropsWithChildren) {
     const { data: subscription } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         setLoading(true);
-        fetchSession(); 
+        fetchSession();
       }
     );
 
@@ -127,8 +173,24 @@ export default function AuthProvider({ children }: PropsWithChildren) {
   }, []);
 
   const contextValue = React.useMemo(
-    () => ({ session, loading, user, isAdmin, isMockEnabled }),
-    [session, loading, user, isAdmin, isMockEnabled]
+    () => ({
+      session,
+      loading,
+      user,
+      isAdmin,
+      isMockEnabled,
+      isBiometricAuthenticated,
+      authenticateBiometric,
+    }),
+    [
+      session,
+      loading,
+      user,
+      isAdmin,
+      isMockEnabled,
+      isBiometricAuthenticated,
+      authenticateBiometric,
+    ]
   );
 
   return (

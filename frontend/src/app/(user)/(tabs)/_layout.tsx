@@ -8,6 +8,8 @@ export default function TabLayout() {
   const colorScheme = useColorScheme();
   const { session } = useAuth();
 
+  // TODO: FOR SOME REASON, IT UNSUBSCRIBES FAILED WHEN TRANSFER
+
   if (!session) {
     return <Redirect href="/(auth)/home-page" />;
   }

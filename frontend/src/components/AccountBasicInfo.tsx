@@ -9,8 +9,8 @@ import { Float } from "react-native/Libraries/Types/CodegenTypes";
 import { AccountBasicInfoProps } from "../types";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useState } from "react";
-import * as LocalAuthentication from "expo-local-authentication";
 import { Account } from "@/assets/data/types";
+import { useAuth } from "../providers/AuthProvider";
 
 export const AccountBasicInfoWithEye = ({
   account,
@@ -18,19 +18,18 @@ export const AccountBasicInfoWithEye = ({
   account: Account;
 }) => {
   const colorScheme = useColorScheme();
+  const { session, user, isBiometricAuthenticated, authenticateBiometric } = useAuth();
   const [isEyeOpen, setIsEyeOpen] = useState(true);
-  const [hasAuthenticated, setHasAuthenticated] = useState(false);
 
   const handleEyePress = async () => {
-    if (!hasAuthenticated) {
-      const hasAuthenticated = await LocalAuthentication.authenticateAsync();
-      if (hasAuthenticated.success) {
-        setHasAuthenticated(true);
-        setIsEyeOpen(!isEyeOpen);
-      } else {
-        console.log("Authentication failed");
-        return;
-      }
+    if (!isBiometricAuthenticated) {
+      authenticateBiometric().then((success) => {
+        if (success) {
+          setIsEyeOpen(!isEyeOpen);
+        } else {
+          return;
+        }
+      });
     } else {
       setIsEyeOpen(!isEyeOpen);
     }

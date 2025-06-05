@@ -49,8 +49,6 @@ const transferTypes = [
   { label: "FPX", value: "FPX" },
   { label: "DuitNow", value: "DuitNow" },
   { label: "Instant Transfer", value: "Instant Transfer" },
-  { label: "Internal Transfer", value: "Internal Transfer" },
-  { label: "Cash Deposit", value: "Cash Deposit" },
 ];
 
 const TransferAdminPage = () => {

@@ -32,13 +32,16 @@ export default function Layout() {
           gestureEnabled: true,
           headerShown: false,
         }}
+        listeners={({ navigation }) => ({
+          blur: () => navigation.setParams({ screen: undefined }),
+        })}
       />
       <Stack.Screen
         name="(transfer)/transferHome"
         options={{
           title: "Transfer",
-          gestureEnabled: true, 
-          headerShown: false, 
+          gestureEnabled: true,
+          headerShown: false,
         }}
       />
       <Stack.Screen
@@ -46,7 +49,7 @@ export default function Layout() {
         options={{
           title: "Transfer",
           gestureEnabled: true,
-          headerShown: false, 
+          headerShown: false,
         }}
       />
     </Stack>

@@ -29,11 +29,12 @@ import { router } from "expo-router";
 import fetchListofTransactions from "@/src/providers/fetchListofTransactions";
 import dayjs from "dayjs";
 import CustomerTransactionBlock from "@/src/components/CustomerTransactionBlock";
+import type { RealtimeChannel } from "@supabase/supabase-js";
 
 export default function Accounts() {
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [totalAmount, setTotalAmount] = useState<number>(0);
-  const { user } = useAuth();
+  const { user, isBiometricAuthenticated, authenticateBiometric } = useAuth();
   const [selectedAccount, setSelectedAccount] = useState<Account | null>(
     accounts[0]
   );
@@ -47,17 +48,17 @@ export default function Accounts() {
   const [pageLoading, setPageLoading] = useState(true);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [transactionLoading, setTransactionLoading] = useState(true);
+  const channelRef = useRef<RealtimeChannel | null>(null);
 
   const handleEyePress = async () => {
-    if (!hasAuthenticated) {
-      const hasAuthenticated = await LocalAuthentication.authenticateAsync();
-      if (hasAuthenticated.success) {
-        setHasAuthenticated(true);
-        setIsEyeOpen(!isEyeOpen);
-      } else {
-        console.log("Authentication failed");
-        return;
-      }
+    if (!isBiometricAuthenticated) {
+      authenticateBiometric().then((success) => {
+        if (success) {
+          setIsEyeOpen(!isEyeOpen);
+        } else {
+          return;
+        }
+      });
     } else {
       setIsEyeOpen(!isEyeOpen);
     }
@@ -67,7 +68,8 @@ export default function Accounts() {
     setSelectedAccount(item); // Update the selected account
   };
 
-  useEffect(() => {
+  useEffect(() => {    
+
     const fetchAccounts = () =>
       fetchListofAccounts({
         isMockEnabled: false,
@@ -92,29 +94,30 @@ export default function Accounts() {
 
     fetchAccounts();
 
-    const channels = supabase
-      .channel("custom-all-channel")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "Account" },
-        (payload) => {
-          console.log("Account change received!", payload);
-          fetchAccounts();
-        }
-      )
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "Transaction" },
-        (payload) => {
-          console.log("Transaction change received!", payload);
-          // Add logic to handle transaction changes here
-        }
-      )
-      .subscribe();
+    // const channels = supabase
+    //   .channel("custom-all-channel")
+    //   .on(
+    //     "postgres_changes",
+    //     { event: "*", schema: "public", table: "Account" },
+    //     (payload) => {
+    //       console.log("Account change received!", payload);
+    //       fetchAccounts();
+    //     }
+    //   )
+    //   .on(
+    //     "postgres_changes",
+    //     { event: "*", schema: "public", table: "Transaction" },
+    //     (payload) => {
+    //       console.log("Transaction change received!", payload);
+    //       // Add logic to handle transaction changes here
+    //     }
+    //   )
+    //   .subscribe();
 
-    return () => {
-      channels.unsubscribe();
-    };
+    // return () => {
+    //   console.log("Unsubscribing from Supabase channel...");
+    //   supabase.removeAllChannels(); // Ensure proper cleanup
+    // };
   }, []);
 
   useEffect(() => {
@@ -240,10 +243,23 @@ export default function Accounts() {
                   },
                 ]}
                 onPress={() => {
-                  router.push({
-                    pathname: "/(user)/camera",
-                    params: { account_no: selectedAccount?.account_no },
-                  });
+                  if (isBiometricAuthenticated) {
+                    router.push({
+                      pathname: "/(user)/camera",
+                      params: { account_no: selectedAccount?.account_no },
+                    });
+                  } else {
+                    authenticateBiometric().then((success) => {
+                      if (success) {
+                        router.push({
+                          pathname: "/(user)/camera",
+                          params: { account_no: selectedAccount?.account_no },
+                        });
+                      } else {
+                        return;
+                      }
+                    });
+                  }
                 }}
               >
                 <MaterialCommunityIcons
@@ -271,17 +287,26 @@ export default function Accounts() {
                   },
                 ]}
                 onPress={() => {
-                  console.log(
-                    "Pressed Transfer for " + selectedAccount?.account_no
-                  );
-                  router.push({
-                    pathname: "/(user)/(transfer)/transferHome",
-                  });
+                  if (isBiometricAuthenticated) {
+                    router.push({
+                      pathname: "/(user)/(transfer)/transferHome",
+                    });
+                  } else {
+                    authenticateBiometric().then((success) => {
+                      if (success) {
+                        router.push({
+                          pathname: "/(user)/(transfer)/transferHome",
+                        });
+                      } else {
+                        return;
+                      }
+                    });
+                  }
                 }}
               >
                 <MaterialCommunityIcons
                   name="bank-transfer-out"
-                  size={30}
+                  size={36}
                   color={isDarkMode ? Colors.dark.text : Colors.light.text}
                 />
                 <Text
@@ -496,7 +521,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
   },
   upperCard: {
-    paddingVertical: 20,
+    paddingVertical: 15,
     paddingHorizontal: 10,
     maxWidth: "40%",
     width: "40%",

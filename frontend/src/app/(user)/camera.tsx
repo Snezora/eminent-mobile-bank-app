@@ -1,5 +1,6 @@
 import { CameraView, CameraType, useCameraPermissions } from "expo-camera";
 import { useEffect, useRef, useState } from "react";
+
 import {
   ActivityIndicator,
   Alert,
@@ -36,6 +37,7 @@ export default function Camera() {
   const [facing, setFacing] = useState<CameraType>("back");
   const [permission, requestPermission] = useCameraPermissions();
   const [hasScanned, setHasScanned] = useState(false); // Track if QR code has been scanned
+  const [qrCodeData, setQrCodeData] = useState<string | null>(null);
   const [selectedOption, setSelectedOption] = useState("scan");
   const [torchOpen, setTorchOpen] = useState(false);
   const [cameraActive, setCameraActive] = useState(true);
@@ -47,6 +49,8 @@ export default function Camera() {
   const [qrLoading, setQrLoading] = useState(false);
   const SECRETKEY = process.env.EXPO_PUBLIC_SECRETQRKEY;
   const [countdown, setCountdown] = useState(30);
+  const { account_no } = useLocalSearchParams();
+  let debounceTimeout: NodeJS.Timeout | null = null;
 
   const options = [
     { label: "Scan", value: "scan" },
@@ -56,7 +60,6 @@ export default function Camera() {
   const handleLayout = (event: LayoutChangeEvent) => {
     const { height } = event.nativeEvent.layout;
     bottomContainerHeight.current = height; // Save the height
-    console.log("Bottom container height:", height); // Log the height
   };
 
   const encryptData = async () => {
@@ -69,7 +72,6 @@ export default function Camera() {
       });
 
       const encrypted = CryptoJS.AES.encrypt(qrJSON, SECRETKEY).toString();
-      console.log(qrJSON);
 
       setEncryptedData(encrypted);
     } catch (error) {
@@ -142,14 +144,13 @@ export default function Camera() {
     );
   }
 
-  function toggleCameraFacing() {
-    setFacing((current) => (current === "back" ? "front" : "back"));
-  }
-
   function handleBarcodeScanned({ data }: { data: string }) {
-    if (hasScanned) return; // Prevent multiple scans
-    setHasScanned(true); // Disable further scans immediately
-    setCameraActive(false); // Disable the camera
+    setHasScanned(true);
+    if (debounceTimeout || hasScanned) return;
+    debounceTimeout = setTimeout(() => {
+      debounceTimeout = null;
+    }, 5000);
+    setCameraActive(false);
 
     try {
       // Decrypt the scanned QR code data
@@ -160,27 +161,40 @@ export default function Camera() {
         throw new Error("Invalid QR code");
       }
 
-      // Reject the QR code 45 seconds after the date
-      if (
-        new Date().getTime() >
-        new Date(decryptedData.time_created).getTime() + 45000
-      ) {
-        Alert.alert(
-          "QR code has expired",
-          "Please scan a valid QR code.",
-          [
-            {
-              text: "OK",
-              onPress: () => {
-                setHasScanned(false); // Re-enable scanning
-                setCameraActive(true); // Re-enable the camera
+      if (decryptedData) {
+        // Reject the QR code 45 seconds after the date
+        if (
+          new Date().getTime() >
+          new Date(decryptedData.time_created).getTime() + 45000
+        ) {
+          Alert.alert(
+            "QR code has expired",
+            "Please scan a valid QR code.",
+            [
+              {
+                text: "OK",
+                onPress: () => {
+                  setHasScanned(false); // Re-enable scanning
+                  setCameraActive(true); // Re-enable the camera
+                },
               },
-            },
-          ],
-          { cancelable: false } // Prevent dismissing the alert without pressing "OK"
-        );
+            ],
+            { cancelable: false }
+          );
+          return;
+        }
+
+        // Push to the newTransfer page with the scanned data
+        router.push({
+          pathname: "/(user)/(transfer)/newTransfer",
+          params: {
+            bankName: "EWB",
+            account_no: decryptedData.receiver_account_no,
+            transfer_account: account_no,
+          },
+        });
       } else {
-        console.log("Decrypted data:", decryptedData);
+        throw new Error("Invalid QR code");
       }
     } catch (error) {
       console.error("Error decrypting data:", error);
@@ -199,6 +213,10 @@ export default function Camera() {
         { cancelable: false }
       );
     } finally {
+      setTimeout(() => {
+        setHasScanned(false); // Re-enable scanning after a delay
+        setCameraActive(true); // Re-enable the camera
+      }, 5000); // Add a delay to prevent immediate re-scanning
     }
   }
 
@@ -213,13 +231,13 @@ export default function Camera() {
             <Ionicons name="chevron-back-outline" size={24} color="white" />
           </TouchableOpacity>
         </View>
-        {selectedOption === "scan" && (
+        {selectedOption === "scan" && cameraActive && (
           <CameraView
             active={cameraActive}
             style={styles.camera}
             facing={facing}
             barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
-            onBarcodeScanned={handleBarcodeScanned}
+            onBarcodeScanned={hasScanned ? undefined : handleBarcodeScanned}
           ></CameraView>
         )}
         {selectedOption === "receive" && encryptedData && (
