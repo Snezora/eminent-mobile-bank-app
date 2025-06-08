@@ -45,6 +45,7 @@ const NewTransferPage = () => {
   >(null);
   const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
   const [accounts, setAccounts] = useState<Account[]>([]);
+  const [allAccounts, setAllAccounts] = useState<Account[]>([]);
 
   const editableForm = yup.object({
     account_no: yup
@@ -86,10 +87,56 @@ const NewTransferPage = () => {
 
   const onSubmit = async (data) => {
     try {
-      Alert.alert("Success", "Account created successfully!", [{ text: "OK" }]);
-      router.push("/(user)/(tabs)/accounts");
+      const accountExists = allAccounts.some(
+        (account) => account.account_no === data.account_no
+      );
+
+      if (!accountExists) {
+        Alert.alert("Error", "The account number does not exist.");
+        return;
+      }
+
+      let accountData;
+      if (accountExists) {
+        const { data: account, error } = await supabase
+          .from("Account")
+          .select("*")
+          .eq("account_no", data.account_no)
+          .single();
+        accountData = account;
+
+        if (error) {
+          console.error("Error fetching account:", error.message);
+          Alert.alert("Error", "Failed to fetch account details.");
+          return;
+        }
+      }
+
+      if (accountData && accountData.account_status !== "Active") {
+        Alert.alert(
+          "Error",
+          `The account number ${data.account_no} is not active.`
+        );
+        return;
+      }
+
+      if (!data.selected_account) {
+        Alert.alert("Error", "Please select a transfer account");
+        return;
+      }
+
+      router.push({
+        pathname: "/(user)/(transfer)/transferConfirmation",
+        params: {
+          account_no: data.account_no,
+          selected_bank: data.selected_bank,
+          amount: data.amount,
+          purpose: data.purpose,
+          transfer_account_id: data.selected_account,
+        },
+      });
     } catch (error) {
-      console.error("Error creating account:", error);
+      console.error("Error transferring:", error);
     }
   };
 
@@ -119,7 +166,12 @@ const NewTransferPage = () => {
 
       if (data) {
         const filteredAccounts = data
-          .filter((account) => account.account_no !== account_no)
+          .filter((account) => {
+            return (
+              account.account_no !== account_no &&
+              account.account_status === "Active"
+            );
+          })
           .map((account) => ({
             ...account,
             nickname: account.nickname || account.account_no,
@@ -131,7 +183,7 @@ const NewTransferPage = () => {
     };
 
     fetchAccounts();
-  }, [user?.customer_id, account_no]); // Add account_no as a dependency
+  }, [user?.customer_id, account_no]);
 
   useEffect(() => {
     clearErrors("account_no");
@@ -139,18 +191,40 @@ const NewTransferPage = () => {
 
   useEffect(() => {
     if (!bankName) return;
-    setSelectedBank(bankLogos.find((bank) => bank.name === bankName));    
-    setSelectedAccount(accounts.find((account) => account.account_no === transfer_account) || null);
+    setSelectedBank(bankLogos.find((bank) => bank.name === bankName));
+    setSelectedAccount(
+      accounts.find((account) => account.account_no === transfer_account) ||
+        null
+    );
     if (transfer_account == account_no) {
-      Alert.alert(
-        "Error",
-        "You cannot transfer to the same account.",
-        [{ text: "OK" }]
-      );
+      Alert.alert("Error", "You cannot transfer to the same account.", [
+        { text: "OK" },
+      ]);
       router.back();
       router.reload();
     }
   }, [bankName, accounts, transfer_account]);
+
+  useEffect(() => {
+    const fetchAllAccounts = async () => {
+      try {
+        const { data, error } = await supabase.from("Account").select("*");
+
+        if (error) {
+          console.error("Error fetching accounts:", error.message);
+          return;
+        }
+
+        if (data) {
+          setAllAccounts(data);
+        }
+      } catch (err) {
+        console.error("Error fetching accounts:", err);
+      }
+    };
+
+    fetchAllAccounts();
+  }, []);
 
   return (
     <SafeAreaView
@@ -391,7 +465,7 @@ const NewTransferPage = () => {
                 }}
                 value={value}
                 labelField={"nickname"}
-                valueField={"account_no"}
+                valueField={"account_id"}
                 style={{
                   padding: 10,
                   borderRadius: 10,
@@ -415,9 +489,7 @@ const NewTransferPage = () => {
         />
         {errors.selected_account && (
           <View style={{ height: errors.selected_account ? undefined : 0 }}>
-            <Text style={styles.error}>
-              {errors.selected_account?.message}
-            </Text>
+            <Text style={styles.error}>{errors.selected_account?.message}</Text>
           </View>
         )}
         <Controller
@@ -460,7 +532,14 @@ const NewTransferPage = () => {
                   onChangeText={onChange}
                   keyboardType="numeric"
                   value={value ? String(value) : ""}
-                  style={[{ fontSize: 16, textAlign: "right", flex: 1 }]} // Align text to the right
+                  style={[
+                    {
+                      fontSize: 16,
+                      textAlign: "right",
+                      flex: 1,
+                      color: isDarkMode ? Colors.dark.text : Colors.light.text,
+                    },
+                  ]}
                   placeholder="Enter amount"
                   placeholderTextColor={isDarkMode ? "#A9A9A9" : "#B0B0B0"}
                   inputMode="decimal"
@@ -497,7 +576,10 @@ const NewTransferPage = () => {
                 onBlur={onBlur}
                 onChangeText={onChange}
                 value={value}
-                style={styles.inputContainer}
+                style={[
+                  styles.inputContainer,
+                  { color: isDarkMode ? Colors.dark.text : Colors.light.text },
+                ]}
                 placeholder="Enter transfer purpose"
                 placeholderTextColor={isDarkMode ? "#A9A9A9" : "#B0B0B0"}
               />

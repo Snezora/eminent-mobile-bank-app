@@ -48,13 +48,21 @@ const BankTab = ({
           backgroundColor: isDarkMode ? Colors.dark.firstButton : "white",
         }}
         onPress={() => {
-          router.push({
-            pathname: "/(user)/(transfer)/newTransfer",
-            params: {
-              bankName: "EWB",
-              account_no: account.account_no,
-            },
-          });
+          if (account.account_status !== "Active") {
+            Alert.alert(
+              "Account Inactive",
+              "Your account is currently inactive. Please contact support for assistance."
+            );
+            return;
+          } else {
+            router.push({
+              pathname: "/(user)/(transfer)/newTransfer",
+              params: {
+                bankName: "EWB",
+                account_no: account.account_no,
+              },
+            });
+          }
         }}
       >
         <View

@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useCallback, useRef } from "react";
 import {
   StyleSheet,
   View,
@@ -6,6 +6,7 @@ import {
   useColorScheme,
   TouchableOpacity,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 import {
   SafeAreaView,
@@ -30,6 +31,7 @@ import fetchListofTransactions from "@/src/providers/fetchListofTransactions";
 import dayjs from "dayjs";
 import CustomerTransactionBlock from "@/src/components/CustomerTransactionBlock";
 import type { RealtimeChannel } from "@supabase/supabase-js";
+import { useRealtimeSubscription } from "@/src/lib/useRealTimeSubscription";
 
 export default function Accounts() {
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -48,98 +50,112 @@ export default function Accounts() {
   const [pageLoading, setPageLoading] = useState(true);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [transactionLoading, setTransactionLoading] = useState(true);
-  const channelRef = useRef<RealtimeChannel | null>(null);
 
-  const handleEyePress = async () => {
+  const handleEyePress = useCallback(async () => {
     if (!isBiometricAuthenticated) {
-      authenticateBiometric().then((success) => {
-        if (success) {
-          setIsEyeOpen(!isEyeOpen);
-        } else {
-          return;
-        }
-      });
+      const success = await authenticateBiometric();
+      if (success) {
+        setIsEyeOpen(!isEyeOpen);
+      }
     } else {
       setIsEyeOpen(!isEyeOpen);
     }
-  };
+  }, [isBiometricAuthenticated, isEyeOpen, authenticateBiometric]);
 
-  const handleSelectItem = (item: any) => {
-    setSelectedAccount(item); // Update the selected account
-  };
+  const handleSelectItem = useCallback((item: Account) => {
+    setSelectedAccount(item);
+  }, []);
 
-  useEffect(() => {    
-
-    const fetchAccounts = () =>
-      fetchListofAccounts({
+  const fetchAccounts = useCallback(async () => {
+    try {
+      const fetchedAccounts = await fetchListofAccounts({
         isMockEnabled: false,
         isAdmin: false,
         customer_id: user?.customer_id,
-      })
-        .then((fetchedAccounts) => {
-          setAccounts(fetchedAccounts ?? []);
-          setSelectedAccount(fetchedAccounts?.[0] ?? null);
+      });
 
-          const totalAmount = fetchedAccounts?.reduce(
-            (total, account) => total + account.balance,
-            0
-          );
-          setTotalAmount(totalAmount ?? 0);
-        })
-        .finally(() => {
-          setTimeout(() => {
-            setPageLoading(false);
-          }, 1000);
-        });
+      if (fetchedAccounts) {
+        setAccounts(fetchedAccounts);
+        setSelectedAccount(fetchedAccounts[0] ?? null);
 
-    fetchAccounts();
+        const totalAmount = fetchedAccounts.reduce(
+          (total, account) => total + account.balance,
+          0
+        );
+        setTotalAmount(totalAmount);
+      }
+    } catch (error) {
+      console.error("Error fetching accounts:", error);
+    } finally {
+      setTimeout(() => {
+        setPageLoading(false);
+      }, 1000);
+    }
+  }, [user?.customer_id]);
 
-    // const channels = supabase
-    //   .channel("custom-all-channel")
-    //   .on(
-    //     "postgres_changes",
-    //     { event: "*", schema: "public", table: "Account" },
-    //     (payload) => {
-    //       console.log("Account change received!", payload);
-    //       fetchAccounts();
-    //     }
-    //   )
-    //   .on(
-    //     "postgres_changes",
-    //     { event: "*", schema: "public", table: "Transaction" },
-    //     (payload) => {
-    //       console.log("Transaction change received!", payload);
-    //       // Add logic to handle transaction changes here
-    //     }
-    //   )
-    //   .subscribe();
+  const fetchAccountData = useCallback(async () => {
+    if (!selectedAccount) return;
 
-    // return () => {
-    //   console.log("Unsubscribing from Supabase channel...");
-    //   supabase.removeAllChannels(); // Ensure proper cleanup
-    // };
-  }, []);
-
-  useEffect(() => {
-    if (accounts.length == 0) return;
     setTransactionLoading(true);
-    const fetchAccountData = async () => {
+    try {
       const transactions = await fetchListofTransactions({
         isMockEnabled: false,
         isAdmin: false,
-        initiator_account_id: selectedAccount?.account_id,
-        receiver_account_no: selectedAccount?.account_no,
+        initiator_account_id: selectedAccount.account_id,
+        receiver_account_no: selectedAccount.account_no,
       });
 
       setTransactions(transactions ?? []);
-    };
-
-    fetchAccountData().then(() => {
+    } catch (error) {
+      console.error("Error fetching transactions:", error);
+      setTransactions([]);
+    } finally {
       setTimeout(() => {
         setTransactionLoading(false);
       }, 2000);
-    });
+    }
   }, [selectedAccount]);
+
+  const handleAccountChange = useCallback(
+    (payload: any) => {
+      console.log("Account change received!", payload);
+      fetchAccounts();
+    },
+    [fetchAccounts]
+  );
+
+  const handleTransactionChange = useCallback(
+    (payload: any) => {
+      console.log("Transaction change received!", payload);
+      if (
+        selectedAccount &&
+        (payload.new?.initiator_account_id === selectedAccount.account_id ||
+          payload.new?.receiver_account_no === selectedAccount.account_no ||
+          payload.old?.initiator_account_id === selectedAccount.account_id ||
+          payload.old?.receiver_account_no === selectedAccount.account_no)
+      ) {
+        fetchAccountData();
+      }
+    },
+    [selectedAccount, fetchAccountData]
+  );
+
+  useRealtimeSubscription("Account", handleAccountChange, "*", !pageLoading);
+  useRealtimeSubscription(
+    "Transaction",
+    handleTransactionChange,
+    "*",
+    !pageLoading
+  );
+
+  useEffect(() => {
+    fetchAccounts();
+  }, [fetchAccounts]);
+
+  useEffect(() => {
+    if (accounts.length === 0) return;
+    fetchAccountData();
+  }, [fetchAccountData, accounts.length]);
 
   return (
     <SafeAreaView
@@ -243,22 +259,47 @@ export default function Accounts() {
                   },
                 ]}
                 onPress={() => {
-                  if (isBiometricAuthenticated) {
-                    router.push({
-                      pathname: "/(user)/camera",
-                      params: { account_no: selectedAccount?.account_no },
-                    });
-                  } else {
-                    authenticateBiometric().then((success) => {
-                      if (success) {
-                        router.push({
-                          pathname: "/(user)/camera",
-                          params: { account_no: selectedAccount?.account_no },
-                        });
-                      } else {
-                        return;
-                      }
-                    });
+                  console.log(selectedAccount);
+
+                  if (selectedAccount?.account_status === "Blocked") {
+                    Alert.alert(
+                      "Account Blocked",
+                      "This account is currently blocked. Please contact your bank for assistance.",
+                      [{ text: "OK" }]
+                    );
+                    return;
+                  } else if (selectedAccount?.account_status === "Inactive") {
+                    Alert.alert(
+                      "Account Inactive",
+                      "This account is currently inactive. Please activate it to proceed.",
+                      [{ text: "OK" }]
+                    );
+                    return;
+                  } else if (selectedAccount?.account_status === "Pending") {
+                    Alert.alert(
+                      "Account Pending",
+                      "This account is currently pending. Please wait for activation.",
+                      [{ text: "OK" }]
+                    );
+                    return;
+                  } else if (selectedAccount?.account_status == "Active") {
+                    if (isBiometricAuthenticated) {
+                      router.push({
+                        pathname: "/(user)/camera",
+                        params: { account_no: selectedAccount?.account_no },
+                      });
+                    } else {
+                      authenticateBiometric().then((success) => {
+                        if (success) {
+                          router.push({
+                            pathname: "/(user)/camera",
+                            params: { account_no: selectedAccount?.account_no },
+                          });
+                        } else {
+                          return;
+                        }
+                      });
+                    }
                   }
                 }}
               >
@@ -287,6 +328,29 @@ export default function Accounts() {
                   },
                 ]}
                 onPress={() => {
+                  if (selectedAccount?.account_status === "Blocked") {
+                    Alert.alert(
+                      "Account Blocked",
+                      "This account is currently blocked. Please contact your bank for assistance.",
+                      [{ text: "OK" }]
+                    );
+                    return;
+                  } else if (selectedAccount?.account_status === "Inactive") {
+                    Alert.alert(
+                      "Account Inactive",
+                      "This account is currently inactive. Please activate it to proceed.",
+                      [{ text: "OK" }]
+                    );
+                    return;
+                  } else if (selectedAccount?.account_status === "Pending") {
+                    Alert.alert(
+                      "Account Pending",
+                      "This account is currently pending. Please wait for activation.",
+                      [{ text: "OK" }]
+                    );
+                    return;
+                  }
+
                   if (isBiometricAuthenticated) {
                     router.push({
                       pathname: "/(user)/(transfer)/transferHome",
@@ -344,6 +408,25 @@ export default function Accounts() {
                     textDecorationLine: "underline",
                     alignSelf: "center",
                   }}
+                  onPress={() => {
+                    if (isBiometricAuthenticated) {
+                      router.push({
+                        pathname: "/(transfer)/transferHistory",
+                        params: { account_id: selectedAccount?.account_id },
+                      });
+                    } else {
+                      authenticateBiometric().then((success) => {
+                        if (success) {
+                          router.push({
+                            pathname: "/(transfer)/transferHistory",
+                            params: { account_id: selectedAccount?.account_id },
+                          });
+                        } else {
+                          return;
+                        }
+                      });
+                    }
+                  }}
                 >
                   View All
                 </Text>
@@ -396,6 +479,10 @@ export default function Accounts() {
                 <Animated.FlatList
                   entering={FadeIn.duration(1000)}
                   data={transactions.slice(0, 5)}
+                  ItemSeparatorComponent={() => <View style={{ height: 15 }} />}
+                  contentContainerStyle={{
+                    paddingBottom: insets.bottom + 80,
+                  }}
                   renderItem={({ item, index }) => {
                     const prevItem = index > 0 ? transactions[index - 1] : null;
                     const showSeparator =
@@ -414,7 +501,7 @@ export default function Accounts() {
                               style={{
                                 backgroundColor: Colors.light.themeColor,
                                 height: 2,
-                                marginVertical: 10,
+                                marginBottom: 10,
                               }}
                             ></View>
                             <Text

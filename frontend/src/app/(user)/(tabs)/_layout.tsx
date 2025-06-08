@@ -54,6 +54,15 @@ export default function TabLayout() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="loans"
+        options={{
+          title: "Loans",
+          tabBarIcon: ({ color }) => (
+            <FontAwesome name="bank" size={20} color={color} />
+          ),
+        }}
+      />
     </Tabs>
   );
 }

@@ -49,7 +49,7 @@ export const AccountBasicInfoWithEye = ({
         }}
       >
         <Text style={[styles.title]}>
-          RM {isEyeOpen ? "****" : account.balance.toFixed(2)}
+          USD {isEyeOpen ? "****" : account.balance.toFixed(2)}
         </Text>
         <Ionicons
           name={isEyeOpen ? "eye-off" : "eye"}

@@ -10,7 +10,7 @@ import React from "react";
 import { Session } from "@supabase/supabase-js";
 import { Admin, Customer } from "@/assets/data/types";
 import * as LocalAuthentication from "expo-local-authentication";
-import { Alert } from "react-native";
+import { Alert, Platform } from "react-native";
 
 interface AuthData {
   session: Session | null;
@@ -19,7 +19,7 @@ interface AuthData {
   isAdmin: boolean;
   isMockEnabled?: boolean;
   isBiometricAuthenticated: boolean;
-  authenticateBiometric: () => Promise<boolean>; 
+  authenticateBiometric: () => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthData>({
@@ -28,8 +28,8 @@ const AuthContext = createContext<AuthData>({
   user: null,
   isAdmin: false,
   isMockEnabled: false,
-  isBiometricAuthenticated: false, 
-  authenticateBiometric: () => Promise.resolve(false), 
+  isBiometricAuthenticated: false,
+  authenticateBiometric: () => Promise.resolve(false),
 });
 
 export default function AuthProvider({ children }: PropsWithChildren) {
@@ -42,6 +42,12 @@ export default function AuthProvider({ children }: PropsWithChildren) {
     useState(false); // New state for biometric authentication
 
   const authenticateBiometric = async () => {
+    if (Platform.OS === "android") {
+      console.log("Skipping biometric authentication for Android emulator.");
+      setIsBiometricAuthenticated(true); // Automatically authenticate for Android emulator
+      return true;
+    }
+
     try {
       const hasHardware = await LocalAuthentication.hasHardwareAsync();
       const isEnrolled = await LocalAuthentication.isEnrolledAsync();

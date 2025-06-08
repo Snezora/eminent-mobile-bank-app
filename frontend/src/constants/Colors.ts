@@ -14,6 +14,7 @@ export default {
     themeColorAccent: "#71faca",
     themeColorReject: "#904151",
     grayColor: "#6C6C82",
+    border: "#121212",
   },
   dark: {
     text: "#f0f0f0",
@@ -29,5 +30,6 @@ export default {
     themeColorReject: "#904151",
     grayColor: "#6C6C82",
     firstButton: "rgba(255, 255, 255, 0.25)",
+    border: "#dcdcdc",
   },
 };

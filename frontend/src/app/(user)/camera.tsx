@@ -184,6 +184,12 @@ export default function Camera() {
           return;
         }
 
+        if (decryptedData.receiver_account_no === account_no) {
+          Alert.alert("Error", "You cannot transfer to the same account.", [
+            { text: "OK" },
+          ]);
+          return;
+        }
         // Push to the newTransfer page with the scanned data
         router.push({
           pathname: "/(user)/(transfer)/newTransfer",
@@ -213,10 +219,12 @@ export default function Camera() {
         { cancelable: false }
       );
     } finally {
-      setTimeout(() => {
-        setHasScanned(false); // Re-enable scanning after a delay
-        setCameraActive(true); // Re-enable the camera
-      }, 5000); // Add a delay to prevent immediate re-scanning
+      if (!cameraActive) {
+        setTimeout(() => {
+          setHasScanned(false); // Re-enable scanning after a delay
+          setCameraActive(true); // Re-enable the camera
+        }, 1000); // Add a delay to prevent immediate re-scanning
+      }
     }
   }
 
@@ -231,6 +239,42 @@ export default function Camera() {
             <Ionicons name="chevron-back-outline" size={24} color="white" />
           </TouchableOpacity>
         </View>
+        {!cameraActive && (
+          <View
+            style={[
+              styles.qrContainer,
+              {
+                height: screenHeight - 100 - bottomContainerHeight.current,
+                backgroundColor: isDarkMode
+                  ? Colors.dark.background
+                  : Colors.light.background,
+              },
+            ]}
+          >
+            <TouchableOpacity
+              style={{ alignItems: "center", gap: 10 }}
+              onPress={() => {
+                setCameraActive(true);
+                setHasScanned(false);
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 24,
+                  fontWeight: "bold",
+                  color: isDarkMode ? Colors.dark.text : Colors.light.text,
+                }}
+              >
+                Reload
+              </Text>
+              <Ionicons
+                name="reload-circle-outline"
+                size={50}
+                color="white"
+              ></Ionicons>
+            </TouchableOpacity>
+          </View>
+        )}
         {selectedOption === "scan" && cameraActive && (
           <CameraView
             active={cameraActive}

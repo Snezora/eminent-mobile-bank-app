@@ -33,7 +33,14 @@ export default function Layout() {
           headerShown: false,
         }}
         listeners={({ navigation }) => ({
-          blur: () => navigation.setParams({ screen: undefined }),
+          focus: () => {
+            console.log("Camera screen focused");
+            navigation.setParams({ cameraActive: true, hasScanned: false }); // Activate the camera
+          },
+          blur: () => {
+            console.log("Camera screen blurred");
+            navigation.setParams({ cameraActive: false, hasScanned: true }); // Deactivate the camera
+          },
         })}
       />
       <Stack.Screen
@@ -51,6 +58,34 @@ export default function Layout() {
           gestureEnabled: true,
           headerShown: false,
         }}
+      />
+      <Stack.Screen
+        name="(transfer)/transferConfirmation"
+        options={{ headerShown: false, gestureEnabled: true }}
+      />
+      <Stack.Screen
+        name="accountDetails"
+        options={{
+          title: "Account Details",
+          gestureEnabled: true,
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="(transfer)/transferHistory"
+        options={{ headerShown: false, gestureEnabled: true }}
+      />
+      <Stack.Screen
+        name="(transfer)/transferDetails"
+        options={{ headerShown: false, gestureEnabled: true }}
+      />
+      <Stack.Screen
+        name="newAccount"
+        options={{ headerShown: false, gestureEnabled: true }}
+      />
+      <Stack.Screen
+        name="newLoan"
+        options={{ headerShown: false, gestureEnabled: true }}
       />
     </Stack>
   );

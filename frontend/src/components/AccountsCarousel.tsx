@@ -9,12 +9,14 @@ import {
 } from "react-native";
 import { useSharedValue } from "react-native-reanimated";
 import { Image } from "expo-image";
+import { MaterialIcons } from "@expo/vector-icons";
 import Carousel, {
   ICarouselInstance,
   Pagination,
 } from "react-native-reanimated-carousel";
 import Colors from "../constants/Colors";
 import { Account } from "@/assets/data/types";
+import { router } from "expo-router";
 
 // https://rn-carousel.dev/
 
@@ -37,6 +39,12 @@ const AccountCarousel = ({
   const cardWidth = 0.9 * screenWidth;
   const cardHeight = cardWidth / (16 / 9);
 
+  // Add a placeholder item for the "Add New Account" card
+  const carouselData = [
+    ...accounts,
+    { id: 'add-new-account', isAddCard: true }
+  ];
+
   const onPressPagination = (index: number) => {
     ref.current?.scrollTo({
       /**
@@ -49,18 +57,81 @@ const AccountCarousel = ({
   };
 
   const handleSnapToItem = (index: number) => {
-    const selectedItem = accounts[index];
-    onSelectItem(selectedItem);
+    const selectedItem = carouselData[index];
+    // Only call onSelectItem for actual accounts, not the add card
+    if (!selectedItem.isAddCard) {
+      onSelectItem(selectedItem);
+    }
+  };
+
+  const handleAddNewAccount = () => {
+    // Navigate to new account application page
+    router.push({
+      pathname: "/(user)/newAccount", // Adjust path as needed
+    });
   };
 
   return (
     <View style={{ marginTop: 10 }}>
       <Carousel
         ref={ref}
-        data={accounts}
-        
+        data={carouselData}
         loop={false}
         renderItem={({ item, index }) => {
+          // Render "Add New Account" card
+          if (item.isAddCard) {
+            return (
+              <TouchableOpacity
+                style={[
+                  styles.card,
+                  styles.addCard,
+                  {
+                    width: "100%",
+                    height: "100%",
+                    borderRadius: 10,
+                    borderWidth: 3,
+                    borderStyle: "dashed",
+                    borderColor: isDarkMode ? Colors.dark.text : Colors.light.themeColor,
+                    backgroundColor: isDarkMode 
+                      ? Colors.dark.background 
+                      : Colors.light.background,
+                  },
+                ]}
+                onPress={handleAddNewAccount}
+                activeOpacity={0.7}
+              >
+                <View style={styles.addCardContent}>
+                  <MaterialIcons
+                    name="add-circle-outline"
+                    size={60}
+                    color={isDarkMode ? Colors.dark.text : Colors.light.themeColor}
+                  />
+                  <Text
+                    style={[
+                      styles.addCardText,
+                      {
+                        color: isDarkMode ? Colors.dark.text : Colors.light.themeColor,
+                      },
+                    ]}
+                  >
+                    Apply for New Account
+                  </Text>
+                  <Text
+                    style={[
+                      styles.addCardSubtext,
+                      {
+                        color: isDarkMode ? Colors.dark.text : Colors.light.text,
+                      },
+                    ]}
+                  >
+                    Tap to get started
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            );
+          }
+
+          // Render regular account card
           return (
             <View
               style={[
@@ -70,9 +141,6 @@ const AccountCarousel = ({
                   height: "100%",
                   borderRadius: 10,
                   borderWidth: 5,
-                  // borderColor: isDarkMode
-                  //   ? Colors.light.background
-                  //   : Colors.dark.background,
                   borderColor: Colors.light.background,
                 },
               ]}
@@ -85,7 +153,6 @@ const AccountCarousel = ({
               <View
                 style={{
                   flexDirection: "row",
-                  // alignItems: "center",
                   justifyContent: "space-between",
                 }}
               >
@@ -104,7 +171,7 @@ const AccountCarousel = ({
                           ? "red"
                           : item.account_status === "Pending"
                           ? "yellow"
-                          : "gray", // Default color if no matching status
+                          : "gray",
                     },
                   ]}
                 >
@@ -163,10 +230,23 @@ const AccountCarousel = ({
                   </Text>
                   <Text style={[styles.cardText]}>{item.account_type}</Text>
                 </View>
-                <TouchableOpacity activeOpacity={0.5} onPress={() => {
-                  console.log("More Details for ", item.account_no)
-                }}>
-                  <Text style={[styles.cardText, {fontSize: 16, textDecorationLine: "underline"}]}>More Details >>></Text>
+                <TouchableOpacity
+                  activeOpacity={0.5}
+                  onPress={() => {
+                    router.push({
+                      pathname: "/accountDetails",
+                      params: { account_id: item.account_id },
+                    });
+                  }}
+                >
+                  <Text
+                    style={[
+                      styles.cardText,
+                      { fontSize: 16, textDecorationLine: "underline" },
+                    ]}
+                  >
+                    More Details >>>
+                  </Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -203,18 +283,39 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   statusContainer: {
-    borderWidth: 4, 
-    borderRadius: 10, 
+    borderWidth: 4,
+    borderRadius: 10,
     paddingVertical: 3,
     paddingHorizontal: 5,
     alignItems: "center",
-    justifyContent: "center", 
+    justifyContent: "center",
     alignSelf: "flex-start",
   },
   statusText: {
     fontSize: 16,
     fontWeight: "bold",
-    color: "white", 
+    color: "white",
+  },
+  addCard: {
+    backgroundColor: "transparent",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  addCardContent: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  addCardText: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginTop: 15,
+    textAlign: "center",
+  },
+  addCardSubtext: {
+    fontSize: 14,
+    marginTop: 5,
+    opacity: 0.7,
+    textAlign: "center",
   },
 });
 

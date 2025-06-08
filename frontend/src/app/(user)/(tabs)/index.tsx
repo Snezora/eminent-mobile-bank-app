@@ -7,7 +7,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { Redirect, Stack } from "expo-router";
 import QuickActions from "@/src/components/QuickActions";
 import { AccountBasicInfoWithEye } from "@/src/components/AccountBasicInfo";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { StatusBar } from "expo-status-bar";
 import AdvertisementsCarousel from "@/src/components/AdvertisementsCarousel";
 import SettingsLogOut from "@/src/components/SettingsLogOut";
@@ -16,70 +16,106 @@ import fetchListofAccounts from "@/src/providers/fetchListofAccounts";
 import { Account } from "@/assets/data/types";
 import Colors from "@/src/constants/Colors";
 import { Alert } from "react-native";
+import { useRealtimeSubscription } from "@/src/lib/useRealTimeSubscription";
 
 export default function TabOneScreen() {
   const colorScheme = useColorScheme();
   const isDarkMode = colorScheme === "dark";
-  const { session, user, isBiometricAuthenticated, authenticateBiometric } = useAuth();
+  const { session, user, isBiometricAuthenticated, authenticateBiometric } =
+    useAuth();
   const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [isEyeOpen, setIsEyeOpen] = useState(true);
   const [hasAuthenticated, setHasAuthenticated] = useState(false);
 
-  const handleEyePress = async () => {
+  // Refresh accounts data
+  const refreshAccounts = useCallback(async () => {
+    if (!user) return;
+
     try {
-      if (!isBiometricAuthenticated) {
-        const hasAuthenticated = await LocalAuthentication.authenticateAsync();
-        if (hasAuthenticated.success) {
-          setHasAuthenticated(true);
-          setIsEyeOpen(!isEyeOpen);
-        } else {
-          console.log("Authentication failed");
-          Alert.alert(
-            "Authentication Failed",
-            "Unable to authenticate. Please try again.",
-            [{ text: "OK" }]
+      const accountsData = await fetchListofAccounts({
+        isMockEnabled: false,
+        isAdmin: false,
+        customer_id: "customer_id" in user ? user.customer_id : undefined,
+      });
+
+      if (accountsData) {
+        const processedAccounts = accountsData.map((account) => ({
+          ...account,
+          nickname: account.nickname ?? account.account_no,
+        }));
+
+        setAccounts(processedAccounts);
+
+        // Only update selected account if it doesn't exist in the new data or if no account is selected
+        if (selectedAccount) {
+          const updatedSelectedAccount = processedAccounts.find(
+            (acc) => acc.account_id === selectedAccount.account_id
           );
-          return;
+          if (updatedSelectedAccount) {
+            // Update the selected account with fresh data but keep the same selection
+            setSelectedAccount(updatedSelectedAccount);
+          } else {
+            // Selected account no longer exists, fall back to first account
+            setSelectedAccount(processedAccounts[0] || null);
+          }
+        } else {
+          // No account selected, select the first one
+          setSelectedAccount(processedAccounts[0] || null);
         }
-      } else {
-        setIsEyeOpen(!isEyeOpen);
       }
     } catch (error) {
-      console.error("Error during authentication:", error);
-      Alert.alert(
-        "Error",
-        "An unexpected error occurred during authentication. Please try again.",
-        [{ text: "OK" }]
-      );
+      console.error("Error refreshing accounts:", error);
     }
-  };
+  }, [user]); // Remove selectedAccount from dependencies
 
+
+  // Handle account changes from realtime subscription
+  const handleAccountChange = useCallback(
+    (payload: any) => {
+      console.log("Account change received:", payload);
+      refreshAccounts();
+    },
+    [refreshAccounts]
+  );
+
+  // Handle transaction changes from realtime subscription
+  const handleTransactionChange = useCallback(
+    (payload: any) => {
+      console.log("Transaction change received:", payload);
+      const transaction = payload.new;
+
+      // Check if this transaction affects any of the user's accounts
+      if (
+        accounts.some(
+          (acc) =>
+            acc.account_id === transaction.initiator_account_id ||
+            acc.account_no === transaction.receiver_account_no
+        )
+      ) {
+        // Refresh accounts to get updated balances
+        refreshAccounts();
+      }
+    },
+    [accounts, refreshAccounts]
+  );
+
+  // Set up realtime subscriptions
+  useRealtimeSubscription(
+    "Account",
+    handleAccountChange,
+    "*",
+    !!user // Only enable when user exists
+  );
+
+  // Initial data fetch
   useEffect(() => {
     if (!user) {
       console.log("User is null, skipping fetchListofAccounts");
       return;
     }
 
-    const accounts = fetchListofAccounts({
-      isMockEnabled: false,
-      isAdmin: false,
-      customer_id: user!.customer_id,
-    });
-
-    if (!accounts) {
-      return;
-    }
-
-    accounts.then((data) => {
-      const processedAccounts = data!.map((account) => ({
-        ...account,
-        nickname: account.nickname ?? account.account_no,
-      }));
-
-      setAccounts(processedAccounts);
-      setSelectedAccount(processedAccounts[0]);
-    });
+    refreshAccounts();
   }, [user]);
 
   const handleSelect = (item: any) => {
@@ -124,7 +160,9 @@ export default function TabOneScreen() {
             onSelect={handleSelect}
           />
         </View>
-        <AccountBasicInfoWithEye account={selectedAccount} />
+        <AccountBasicInfoWithEye
+          account={selectedAccount}
+        />
       </View>
       <View style={[styles.bottomContainer, centerContainerStyle]}>
         <View style={styles.individualContainer}>
