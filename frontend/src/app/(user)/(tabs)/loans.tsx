@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
 import {
-  SafeAreaView,
   View,
   Text,
   useColorScheme,
@@ -17,6 +16,7 @@ import { useAuth } from "@/src/providers/AuthProvider";
 import { supabase } from "@/src/lib/supabase";
 import { useRealtimeSubscription } from "@/src/lib/useRealTimeSubscription";
 import { Loan } from "@/assets/data/types";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const LoanPage = () => {
   const colorScheme = useColorScheme();

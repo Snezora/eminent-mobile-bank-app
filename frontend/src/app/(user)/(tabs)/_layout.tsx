@@ -1,5 +1,5 @@
 import { Redirect, Tabs } from "expo-router";
-import { FontAwesome } from "@expo/vector-icons";
+import { FontAwesome, FontAwesome5 } from "@expo/vector-icons";
 import { useColorScheme, View } from "react-native";
 import Colors from "@/src/constants/Colors";
 import { useAuth } from "@/src/providers/AuthProvider";
@@ -59,7 +59,16 @@ export default function TabLayout() {
         options={{
           title: "Loans",
           tabBarIcon: ({ color }) => (
-            <FontAwesome name="bank" size={20} color={color} />
+            <FontAwesome5 name="file-contract" size={20} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: "Profile",
+          tabBarIcon: ({ color }) => (
+            <FontAwesome5 name="user" size={20} color={color} />
           ),
         }}
       />

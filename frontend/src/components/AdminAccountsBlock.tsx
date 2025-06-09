@@ -84,7 +84,7 @@ const AdminAccountsBlock = ({
             {account.account_no}
           </Text>
         </View>
-        {account.approved_at && (
+        {account.account_status !== "Pending" && (
           <Text
             style={[
               styles.nameText,

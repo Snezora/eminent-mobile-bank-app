@@ -22,7 +22,7 @@ import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import fetchListofAccounts from "@/src/providers/fetchListofAccounts";
 import { Account, Customer } from "@/assets/data/types";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/src/providers/AuthProvider";
 import Animated, {
   FadeIn,
@@ -39,6 +39,7 @@ import Modal from "react-native-modal";
 import Button from "@/src/components/Button";
 import { Dropdown, MultiSelect } from "react-native-element-dropdown";
 import { set } from "react-hook-form";
+import { useRealtimeSubscription } from "@/src/lib/useRealTimeSubscription";
 
 // DO MODAL FOR ACCOUNT DETAILS!!!!
 
@@ -81,114 +82,88 @@ const Accounts = () => {
     { label: "Pending", value: "Pending" },
   ];
 
-  useEffect(() => {
-    setUpdateTime(new Date());
-    fetchListofAccounts({ isMockEnabled: isMockEnabled ?? false, isAdmin })
-      .then(async (data) => {
-        if (searchName) {
-          // fetch customers with searchName
-          const { data: customers, error } = await supabase
-            .from("Customer")
-            .select("*")
-            .or(
-              `first_name.ilike.%${searchName}%,last_name.ilike.%${searchName}%`
-            );
+  const fetchAndFilterAccounts = useCallback(async () => {
+    try {
+      setLoading(true);
+      const data = await fetchListofAccounts({
+        isMockEnabled: isMockEnabled ?? false,
+        isAdmin,
+      });
 
-          if (error) {
-            console.error("Error fetching customers:", error);
-          }
+      if (!data) {
+        setAccounts([]);
+        return;
+      }
 
-          data = data?.filter((account) =>
+      let filteredData = [...data];
+
+      if (searchName) {
+        const { data: customers, error } = await supabase
+          .from("Customer")
+          .select("*")
+          .or(
+            `first_name.ilike.%${searchName}%,last_name.ilike.%${searchName}%`
+          );
+
+        if (error) {
+          console.error("Error fetching customers:", error);
+        } else {
+          filteredData = filteredData.filter((account) =>
             customers?.some(
               (customer) => customer.customer_id === account.customer_id
             )
           );
         }
+      }
 
-        let sortedAccounts = [...(data ?? [])].sort((a, b) => {
-          if (!!a.approved_at === !!b.approved_at) {
-            return (
-              new Date(b.created_at).getTime() -
-              new Date(a.created_at).getTime()
-            );
-          }
-          return a.approved_at ? 1 : -1;
-        });
-
-        if (selectedStatus) {
-          sortedAccounts = sortedAccounts.filter(
-            (account) => account.account_status === selectedStatus
-          );
-
-          console.log("Filtered accounts by status:", selectedStatus);
+      let sortedAccounts = filteredData.sort((a, b) => {
+        if (
+          (a.account_status === "Pending") !==
+          (b.account_status === "Pending")
+        ) {
+          return a.account_status === "Pending" ? -1 : 1;
         }
-
-        if (accountName) {
-          sortedAccounts = sortedAccounts.filter((account) =>
-            account.nickname?.toLowerCase().includes(accountName.toLowerCase())
-          );
-        }
-
-        setAccounts(sortedAccounts);
-      })
-      .then(() => {
-        setTimeout(() => {
-          setPageLoading(false);
-        }, 2000);
+        return (
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
       });
 
-    if (!searchName && !accountName) {
-      const channel = supabase
-        .channel("custom-all-channel")
-        .on(
-          "postgres_changes",
-          { event: "*", schema: "public", table: "Account" },
-          (payload) => {
-            setLoading(true);
-            fetchListofAccounts({
-              isMockEnabled: isMockEnabled ?? false,
-              isAdmin,
-            }).then((data) => {
-              if (payload.new && payload.new.customer_id && accountName) {
-                data = data?.filter(
-                  (account) => account.customer_id === payload.new.customer_id
-                );
-              }
+      if (selectedStatus) {
+        sortedAccounts = sortedAccounts.filter(
+          (account) => account.account_status === selectedStatus
+        );
+      }
 
-              let sortedAccounts = [...(data ?? [])].sort((a, b) => {
-                if (!!a.approved_at === !!b.approved_at) {
-                  return (
-                    new Date(b.created_at).getTime() -
-                    new Date(a.created_at).getTime()
-                  );
-                }
-                return a.approved_at ? 1 : -1;
-              });
+      if (accountName) {
+        sortedAccounts = sortedAccounts.filter((account) =>
+          account.nickname?.toLowerCase().includes(accountName.toLowerCase())
+        );
+      }
 
-              if (selectedStatus) {
-                sortedAccounts = sortedAccounts.filter(
-                  (account) => account.account_status === selectedStatus
-                );
-              }
-
-              if (accountName) {
-                sortedAccounts = sortedAccounts.filter((account) =>
-                  account.nickname
-                    ?.toLowerCase()
-                    .includes(accountName.toLowerCase())
-                );
-              }
-
-              setAccounts(sortedAccounts);
-              setUpdateTime(new Date());
-              setLoading(false);
-              setPageLoading(false);
-            });
-          }
-        )
-        .subscribe();
+      setAccounts(sortedAccounts);
+      setUpdateTime(new Date());
+    } catch (error) {
+      console.error("Error fetching accounts:", error);
+    } finally {
+      setLoading(false);
+      setPageLoading(false);
     }
-  }, [isAdmin, searchName, accountName, selectedStatus]);
+  }, [isAdmin, isMockEnabled, searchName, accountName, selectedStatus]);
+
+  // Handle realtime account changes
+  const handleAccountChange = useCallback(
+    (payload: any) => {
+      console.log("Account change received:", payload);
+      fetchAndFilterAccounts();
+    },
+    [fetchAndFilterAccounts]
+  );
+
+  useRealtimeSubscription("Account", handleAccountChange, "*", true);
+
+  useEffect(() => {
+    fetchAndFilterAccounts();
+  }, [fetchAndFilterAccounts]);
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -576,25 +551,28 @@ const Accounts = () => {
                     const showSeparator =
                       index === 0 ||
                       (prevItem &&
-                        !!prevItem.approved_at !== !!item.approved_at);
+                        (prevItem.account_status === "Pending") !==
+                          (item.account_status === "Pending"));
 
                     return (
                       <>
                         {showSeparator && (
                           <View
                             style={{
-                              backgroundColor: item.approved_at
-                                ? "green"
-                                : Colors.light.themeColorReject,
+                              backgroundColor:
+                                item.account_status === "Pending"
+                                  ? Colors.light.themeColorReject
+                                  : "green",
                               marginBottom: 20,
                               paddingVertical: 5,
                               width: "40%",
                               alignSelf: "center",
                               borderRadius: 30,
                               borderWidth: 4,
-                              borderColor: item.approved_at
-                                ? "green"
-                                : Colors.light.themeColorReject,
+                              borderColor:
+                                item.account_status === "Pending"
+                                  ? Colors.light.themeColorReject
+                                  : "green",
                             }}
                           >
                             <Text
@@ -605,7 +583,9 @@ const Accounts = () => {
                                 color: "white",
                               }}
                             >
-                              {item.approved_at ? "Approved" : "Not Approved"}
+                              {item.account_status === "Pending"
+                                ? "Not Approved"
+                                : "Approved"}
                             </Text>
                           </View>
                         )}
@@ -816,7 +796,7 @@ const Accounts = () => {
                 {dayjs(chosenAccount?.created_at).format("DD/MM/YYYY")}
               </Text>
             </View>
-            {!chosenAccount?.approved_at && (
+            {chosenAccount?.account_status === "Pending" && (
               <>
                 <View style={styles.textContainer}>
                   <Text
@@ -880,7 +860,7 @@ const Accounts = () => {
               </>
             )}
 
-            {chosenAccount?.approved_at && (
+            {chosenAccount?.account_status !== "Pending" && (
               <>
                 <View style={styles.textContainer}>
                   <Text style={styles.nameText}>Approved On: </Text>

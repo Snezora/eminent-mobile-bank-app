@@ -240,7 +240,7 @@ const TransferDetails = () => {
               color="white"
             />
             <Text style={styles.summaryAmount}>
-              RM {transaction.amount.toFixed(2)}
+              USD {transaction.amount.toFixed(2)}
             </Text>
             <Text style={styles.summaryType}>
               {transaction.type_of_transfer}
@@ -582,7 +582,7 @@ const TransferDetails = () => {
                     { color: isDarkMode ? Colors.dark.themeColorSecondary : Colors.light.themeColor },
                   ]}
                 >
-                  RM {transaction.amount.toFixed(2)}
+                  USD {transaction.amount.toFixed(2)}
                 </Text>
               </View>
 

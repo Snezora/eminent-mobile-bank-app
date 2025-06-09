@@ -115,7 +115,7 @@ const AdminPage = () => {
         const { data: pendingAccounts, error } = await supabase
           .from("Account")
           .select("*")
-          .eq("account_status", "pending");
+          .eq("account_status", "Pending");
 
         if (error) {
           console.error("Error fetching pending accounts:", error);

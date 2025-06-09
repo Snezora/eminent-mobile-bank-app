@@ -99,7 +99,7 @@ const BankTab = ({
               { color: isDarkMode ? Colors.dark.text : Colors.light.text },
             ]}
           >
-            {account.nickname}
+            {account.nickname ?? account.account_type}
           </Text>
           <Text
             style={[
