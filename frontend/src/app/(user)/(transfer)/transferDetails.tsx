@@ -23,8 +23,6 @@ const TransferDetails = () => {
   const router = useRouter();
   const { transaction_id } = useLocalSearchParams();
   const isDarkMode = useColorScheme() === "dark";
-
-  // State management
   const [loading, setLoading] = useState(true);
   const [transaction, setTransaction] = useState<Transaction | null>(null);
   const [senderAccount, setSenderAccount] = useState<Account | null>(null);
@@ -42,7 +40,6 @@ const TransferDetails = () => {
     try {
       setLoading(true);
 
-      // Fetch transaction details
       const { data: transactionData, error: transactionError } = await supabase
         .from("Transaction")
         .select("*")
@@ -58,14 +55,12 @@ const TransferDetails = () => {
       if (transactionData) {
         setTransaction(transactionData);
 
-        // Fetch sender account details
         const senderAcc = await fetchAccountDetails(
           false,
           transactionData.initiator_account_id
         );
         setSenderAccount(senderAcc);
 
-        // Fetch receiver account details
         const receiverAcc = await fetchAccountDetails(
           false,
           undefined,
@@ -73,7 +68,6 @@ const TransferDetails = () => {
         );
         setReceiverAccount(receiverAcc);
 
-        // Fetch sender customer details
         if (senderAcc?.customer_id) {
           const senderCust = await fetchCustomerDetails(
             false,
@@ -82,7 +76,6 @@ const TransferDetails = () => {
           setSenderCustomer(senderCust);
         }
 
-        // Fetch receiver customer details
         if (receiverAcc?.customer_id) {
           const receiverCust = await fetchCustomerDetails(
             false,
@@ -167,7 +160,6 @@ const TransferDetails = () => {
       ]}
       edges={["top"]}
     >
-      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
           onPress={() => router.back()}
@@ -225,7 +217,6 @@ const TransferDetails = () => {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          {/* Transaction Summary Card */}
           <View
             style={[
               styles.summaryCard,
@@ -252,7 +243,6 @@ const TransferDetails = () => {
             </Text>
           </View>
 
-          {/* Sender Details */}
           <View
             style={[
               styles.detailsCard,
@@ -380,7 +370,6 @@ const TransferDetails = () => {
             </View>
           </View>
 
-          {/* Receiver Details */}
           <View
             style={[
               styles.detailsCard,
@@ -512,7 +501,6 @@ const TransferDetails = () => {
             </View>
           </View>
 
-          {/* Transaction Details */}
           <View
             style={[
               styles.detailsCard,
@@ -665,7 +653,6 @@ const TransferDetails = () => {
             </View>
           </View>
 
-          {/* Actions */}
           <View style={styles.actionsContainer}>
             <TouchableOpacity
               style={[

@@ -19,6 +19,7 @@ import { Controller, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { TextInput } from "react-native";
+import * as LocalAuthentication from "expo-local-authentication";
 
 const schema = yup.object().shape({
   account_type: yup.string().required("Please select an account type"),
@@ -112,6 +113,15 @@ const NewAccountPage = () => {
   };
 
   const onSubmit = async (data: any) => {
+    const isAuthenticated = await LocalAuthentication.authenticateAsync({
+      promptMessage: "Authenticate to create account",
+      fallbackLabel: "Enter PIN",
+      cancelLabel: "Cancel",
+    });
+    if (!isAuthenticated.success) {
+      Alert.alert("Authentication Failed", "You must authenticate to proceed.");
+      return;
+    }
     try {
       setLoading(true);
 
@@ -175,18 +185,9 @@ const NewAccountPage = () => {
           onPress={() => router.back()}
           style={styles.backButton}
         >
-          <MaterialIcons
-            name="arrow-back"
-            size={24}
-            color={Colors.dark.text}
-          />
+          <MaterialIcons name="arrow-back" size={24} color={Colors.dark.text} />
         </TouchableOpacity>
-        <Text
-          style={[
-            styles.headerTitle,
-            { color: Colors.dark.text },
-          ]}
-        >
+        <Text style={[styles.headerTitle, { color: Colors.dark.text }]}>
           Apply for New Account
         </Text>
         <View style={{ width: 24 }} />

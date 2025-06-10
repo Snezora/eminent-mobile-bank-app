@@ -604,8 +604,8 @@ const NewTransferPage = () => {
           }}
           onPress={handleSubmit((data) => {
             Alert.alert(
-              "Confirm Tras",
-              "Are you sure you want to add this account?",
+              "Confirm Transfer",
+              "Are you sure you want to perform this transaction?",
               [
                 {
                   text: "Cancel",

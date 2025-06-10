@@ -22,8 +22,9 @@ import * as yup from "yup";
 import { Customer } from "@/assets/data/types";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import dayjs from "dayjs";
+import { Dropdown } from "react-native-element-dropdown";
+import { NATIONALITIES } from "@/src/constants/Nationalities";
 
-// Validation schema
 const profileSchema = yup.object().shape({
   username: yup
     .string()
@@ -46,7 +47,7 @@ const profileSchema = yup.object().shape({
     .required("Last name is required"),
   phone_no: yup
     .string()
-    .matches(/^\+?[1-9]\d{1,14}$/, "Please enter a valid phone number")
+    .matches(/^[0-9]{8,15}$/, "Please enter a valid phone number (8-15 digits)")
     .required("Phone number is required"),
   home_address: yup
     .string()
@@ -103,7 +104,6 @@ interface ProfileFormData {
   passport_no: string | null | undefined;
 }
 
-// Helper functions to avoid cognitive complexity
 const getDarkTextColor = () => Colors.dark.text;
 const getLightTextColor = () => Colors.light.text;
 const getDarkPlaceholderColor = () => Colors.dark.text + "80";
@@ -111,13 +111,11 @@ const getLightPlaceholderColor = () => Colors.light.text + "80";
 const getDarkBorderColor = () => Colors.dark.border;
 const getLightBorderColor = () => Colors.light.border;
 
-// Helper function to get border color
 const getBorderColor = (hasError: boolean, isDarkMode: boolean) => {
   if (hasError) return Colors.light.themeColorReject;
   return isDarkMode ? getDarkBorderColor() : getLightBorderColor();
 };
 
-// Helper functions with separate implementations
 const getTextColorDark = () => getDarkTextColor();
 const getTextColorLight = () => getLightTextColor();
 const getPlaceholderColorDark = () => getDarkPlaceholderColor();
@@ -137,7 +135,6 @@ const getPlaceholderColor = (isDarkMode: boolean) => {
   return getPlaceholderColorLight();
 };
 
-// Form input component
 const FormInput: React.FC<{
   label: string;
   control: any;
@@ -148,6 +145,8 @@ const FormInput: React.FC<{
   multiline?: boolean;
   keyboardType?: "default" | "phone-pad";
   autoCapitalize?: "none" | "characters";
+  disabled?: boolean;
+  hideWhenDisabled?: boolean; // Add this new prop
 }> = ({
   label,
   control,
@@ -158,7 +157,88 @@ const FormInput: React.FC<{
   multiline = false,
   keyboardType = "default",
   autoCapitalize = "none",
-}) => (
+  disabled = false,
+  hideWhenDisabled = false, // Default to false
+}) => {
+  // If hideWhenDisabled is true and field is disabled, don't render anything
+  if (hideWhenDisabled && disabled) {
+    return null;
+  }
+
+  return (
+    <View style={styles.inputContainer}>
+      <Text style={[styles.inputLabel, { color: getTextColor(isDarkMode) }]}>
+        {label}
+      </Text>
+      <Controller
+        control={control}
+        name={name}
+        render={({ field: { onChange, onBlur, value } }) => (
+          <TextInput
+            style={[
+              styles.input,
+              multiline && styles.textArea,
+              {
+                backgroundColor: disabled
+                  ? isDarkMode
+                    ? Colors.dark.background
+                    : Colors.light.grayColor + "20"
+                  : isDarkMode
+                  ? Colors.dark.firstButton
+                  : "white",
+                color: disabled
+                  ? getPlaceholderColor(isDarkMode)
+                  : getTextColor(isDarkMode),
+                borderColor: getBorderColor(errors[name], isDarkMode),
+              },
+            ]}
+            onBlur={onBlur}
+            onChangeText={onChange}
+            value={value ?? ""}
+            placeholder={placeholder}
+            placeholderTextColor={getPlaceholderColor(isDarkMode)}
+            multiline={multiline}
+            numberOfLines={multiline ? 3 : 1}
+            keyboardType={keyboardType}
+            autoCapitalize={autoCapitalize}
+            editable={!disabled}
+            selectTextOnFocus={!disabled}
+          />
+        )}
+      />
+      {disabled && !hideWhenDisabled && (
+        <View style={styles.disabledOverlay}>
+          <Ionicons
+            name="lock-closed"
+            size={16}
+            color={getPlaceholderColor(isDarkMode)}
+          />
+          <Text
+            style={[
+              styles.disabledText,
+              { color: getPlaceholderColor(isDarkMode) },
+            ]}
+          >
+            Requires biometric authentication
+          </Text>
+        </View>
+      )}
+      {errors[name] && (
+        <Text style={styles.errorText}>{errors[name].message}</Text>
+      )}
+    </View>
+  );
+};
+
+const FormDropdown: React.FC<{
+  label: string;
+  control: any;
+  name: keyof ProfileFormData;
+  errors: any;
+  isDarkMode: boolean;
+  placeholder: string;
+  data: Array<{ label: string; value: string }>;
+}> = ({ label, control, name, errors, isDarkMode, placeholder, data }) => (
   <View style={styles.inputContainer}>
     <Text style={[styles.inputLabel, { color: getTextColor(isDarkMode) }]}>
       {label}
@@ -167,25 +247,58 @@ const FormInput: React.FC<{
       control={control}
       name={name}
       render={({ field: { onChange, onBlur, value } }) => (
-        <TextInput
+        <Dropdown
           style={[
             styles.input,
-            multiline && styles.textArea,
+            styles.dropdown,
             {
               backgroundColor: isDarkMode ? Colors.dark.firstButton : "white",
-              color: getTextColor(isDarkMode),
               borderColor: getBorderColor(errors[name], isDarkMode),
             },
           ]}
-          onBlur={onBlur}
-          onChangeText={onChange}
-          value={value ?? ""}
+          placeholderStyle={[
+            styles.dropdownPlaceholder,
+            {
+              color: getPlaceholderColor(isDarkMode),
+            },
+          ]}
+          selectedTextStyle={[
+            styles.dropdownSelectedText,
+            {
+              color: getTextColor(isDarkMode),
+            },
+          ]}
+          itemTextStyle={{
+            color: isDarkMode ? Colors.dark.text : Colors.light.text,
+            fontSize: 16,
+            backgroundColor: "transparent",
+          }}
+          containerStyle={[
+            styles.dropdownContainer,
+            {
+              backgroundColor: isDarkMode ? Colors.dark.grayColor : "white",
+              borderColor: getBorderColor(false, isDarkMode),
+            },
+          ]}
+          data={data}
+          maxHeight={300}
+          labelField="label"
+          valueField="value"
           placeholder={placeholder}
-          placeholderTextColor={getPlaceholderColor(isDarkMode)}
-          multiline={multiline}
-          numberOfLines={multiline ? 3 : 1}
-          keyboardType={keyboardType}
-          autoCapitalize={autoCapitalize}
+          searchPlaceholder="Search nationality..."
+          search
+          value={value}
+          onFocus={() => onBlur()}
+          onChange={(item) => {
+            onChange(item.value);
+          }}
+          renderRightIcon={() => (
+            <Ionicons
+              name="chevron-down"
+              size={20}
+              color={getPlaceholderColor(isDarkMode)}
+            />
+          )}
         />
       )}
     />
@@ -197,7 +310,7 @@ const FormInput: React.FC<{
 
 const Profile = () => {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, isBiometricAuthenticated, authenticateBiometric } = useAuth();
   const isDarkMode = useColorScheme() === "dark";
 
   const [loading, setLoading] = useState(true);
@@ -224,10 +337,9 @@ const Profile = () => {
     },
   });
 
-  // Check if user is a customer
   const isCustomer = user && "customer_id" in user;
   const customerId = isCustomer ? user.customer_id : null;
-  // Fetch customer data
+
   const fetchCustomerData = useCallback(async () => {
     if (!customerId) {
       setLoading(false);
@@ -250,7 +362,6 @@ const Profile = () => {
       if (data) {
         setCustomerData(data);
 
-        // Set form values
         reset({
           username: data.username ?? "",
           first_name: data.first_name ?? "",
@@ -277,12 +388,12 @@ const Profile = () => {
   useEffect(() => {
     fetchCustomerData();
   }, [fetchCustomerData]);
-  // Handle date selection
+
   const handleDateConfirm = (date: Date) => {
     setSelectedDate(date);
     setShowDatePicker(false);
   };
-  // Handle form submission
+
   const onSubmit = async (data: ProfileFormData) => {
     if (!customerId) {
       Alert.alert("Error", "User session not found. Please log in again.");
@@ -318,7 +429,6 @@ const Profile = () => {
         { text: "OK" },
       ]);
 
-      // Refresh customer data
       setCustomerData({ ...customerData, ...updateData } as Customer);
     } catch (error) {
       console.error("Error:", error);
@@ -366,7 +476,6 @@ const Profile = () => {
       ]}
       edges={["top"]}
     >
-      {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Profile</Text>
       </View>
@@ -383,8 +492,6 @@ const Profile = () => {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.form}>
-          {" "}
-          {/* Profile Header */}
           <View style={styles.profileHeader}>
             <View
               style={[
@@ -405,34 +512,30 @@ const Profile = () => {
               {customerData?.first_name} {customerData?.last_name}
             </Text>
           </View>
-          {/* Username */}
           <FormInput
-            label="Username *"
+            label="Username*"
             control={control}
             name="username"
             errors={errors}
             isDarkMode={isDarkMode}
             placeholder="Enter username"
           />
-          {/* First Name */}
           <FormInput
-            label="First Name *"
+            label="First Name*"
             control={control}
             name="first_name"
             errors={errors}
             isDarkMode={isDarkMode}
             placeholder="Enter first name"
           />
-          {/* Last Name */}
           <FormInput
-            label="Last Name *"
+            label="Last Name*"
             control={control}
             name="last_name"
             errors={errors}
             isDarkMode={isDarkMode}
             placeholder="Enter last name"
           />
-          {/* Date of Birth */}
           <View style={styles.inputContainer}>
             <Text
               style={[styles.inputLabel, { color: getTextColor(isDarkMode) }]}
@@ -473,9 +576,8 @@ const Profile = () => {
               />
             </TouchableOpacity>
           </View>
-          {/* Phone Number */}
           <FormInput
-            label="Phone Number *"
+            label="Phone Number*"
             control={control}
             name="phone_no"
             errors={errors}
@@ -483,9 +585,8 @@ const Profile = () => {
             placeholder="Enter phone number"
             keyboardType="phone-pad"
           />
-          {/* Home Address */}
           <FormInput
-            label="Home Address *"
+            label="Home Address*"
             control={control}
             name="home_address"
             errors={errors}
@@ -493,35 +594,86 @@ const Profile = () => {
             placeholder="Enter home address"
             multiline
           />
-          {/* Nationality */}
-          <FormInput
-            label="Nationality *"
+          <FormDropdown
+            label="Nationality*"
             control={control}
             name="nationality"
             errors={errors}
             isDarkMode={isDarkMode}
-            placeholder="Enter nationality"
-          />{" "}
-          {/* IC Number */}
-          <FormInput
-            label="IC Number (Required - Either IC or Passport)"
-            control={control}
-            name="ic_no"
-            errors={errors}
-            isDarkMode={isDarkMode}
-            placeholder="XXXXXX-XX-XXXX"
+            placeholder="Select your nationality"
+            data={NATIONALITIES}
           />
-          {/* Passport Number */}
-          <FormInput
-            label="Passport Number (Required - Either IC or Passport)"
-            control={control}
-            name="passport_no"
-            errors={errors}
-            isDarkMode={isDarkMode}
-            placeholder="Enter passport number"
-            autoCapitalize="characters"
-          />
-          {/* Account Created Date */}
+          {!isBiometricAuthenticated ? (
+            <View
+              style={[
+                styles.lockedSection,
+                {
+                  backgroundColor: isDarkMode
+                    ? Colors.dark.firstButton
+                    : Colors.light.grayColor + "20",
+                  borderColor: getBorderColor(false, isDarkMode),
+                },
+              ]}
+            >
+              <View style={styles.lockedContent}>
+                <Ionicons
+                  name="lock-closed"
+                  size={32}
+                  color={getPlaceholderColor(isDarkMode)}
+                />
+                <Text
+                  style={[
+                    styles.lockedTitle,
+                    { color: getTextColor(isDarkMode) },
+                  ]}
+                >
+                  Sensitive Information
+                </Text>
+                <Text
+                  style={[
+                    styles.lockedSubtitle,
+                    { color: getPlaceholderColor(isDarkMode) },
+                  ]}
+                >
+                  IC and Passport fields require biometric authentication
+                </Text>
+                <TouchableOpacity
+                  style={[
+                    styles.authenticateButton,
+                    { backgroundColor: Colors.light.themeColor },
+                  ]}
+                  onPress={() => {
+                    authenticateBiometric();
+                  }}
+                >
+                  <Ionicons name="finger-print" size={16} color="white" />
+                  <Text style={styles.authenticateButtonText}>
+                    Authenticate
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          ) : (
+            <>
+              <FormInput
+                label="IC Number (Required - Either IC or Passport)"
+                control={control}
+                name="ic_no"
+                errors={errors}
+                isDarkMode={isDarkMode}
+                placeholder="XXXXXX-XX-XXXX"
+              />
+              <FormInput
+                label="Passport Number (Required - Either IC or Passport)"
+                control={control}
+                name="passport_no"
+                errors={errors}
+                isDarkMode={isDarkMode}
+                placeholder="Enter passport number"
+                autoCapitalize="characters"
+              />
+            </>
+          )}
           <View style={styles.inputContainer}>
             <Text
               style={[styles.inputLabel, { color: getTextColor(isDarkMode) }]}
@@ -557,7 +709,6 @@ const Profile = () => {
         </View>
       </ScrollView>
 
-      {/* Save Button */}
       <View style={styles.buttonContainer}>
         <TouchableOpacity
           style={[
@@ -582,7 +733,6 @@ const Profile = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Date Picker Modal */}
       <DateTimePickerModal
         isVisible={showDatePicker}
         mode="date"
@@ -703,6 +853,75 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 16,
     fontWeight: "bold",
+  },
+  dropdown: {
+    paddingVertical: 0,
+    paddingHorizontal: 16,
+  },
+  dropdownContainer: {
+    borderRadius: 12,
+    borderWidth: 1,
+    marginTop: 5,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+    opacity: 1,
+    backgroundColor: "white",
+  },
+  dropdownPlaceholder: {
+    fontSize: 16,
+  },
+  dropdownSelectedText: {
+    fontSize: 16,
+  },
+  disabledOverlay: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 5,
+    gap: 5,
+  },
+  disabledText: {
+    fontSize: 12,
+    fontStyle: "italic",
+  },
+    lockedSection: {
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 20,
+    marginBottom: 20,
+    borderStyle: 'dashed',
+  },
+  lockedContent: {
+    alignItems: 'center',
+    gap: 10,
+  },
+  lockedTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  lockedSubtitle: {
+    fontSize: 14,
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  authenticateButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+    gap: 6,
+    marginTop: 5,
+  },
+  authenticateButtonText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '600',
   },
 });
 

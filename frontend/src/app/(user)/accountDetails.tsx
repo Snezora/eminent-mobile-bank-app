@@ -66,7 +66,6 @@ const AccountDetails = () => {
 
     setSaving(true);
     try {
-      // Prepare the update object
       const updateData: any = {
         nickname: nickname.trim() || null,
       };
@@ -89,7 +88,6 @@ const AccountDetails = () => {
         return;
       }
 
-      // Show different success messages based on what was updated
       const statusUpdated =
         account.account_status !== "Pending" &&
         account.account_status !== "Blocked";
@@ -335,7 +333,6 @@ const AccountDetails = () => {
             Account Settings
           </Text>
 
-          {/* Nickname Input */}
           <View style={styles.inputContainer}>
             <Text
               style={[

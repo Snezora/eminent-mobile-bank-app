@@ -8,10 +8,10 @@ import {
   Alert,
   ActivityIndicator,
   TextInput,
+  useColorScheme,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { useColorScheme } from "react-native";
 import Colors from "@/src/constants/Colors";
 import { MaterialIcons } from "@expo/vector-icons";
 import { supabase } from "@/src/lib/supabase";
@@ -21,15 +21,15 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import fetchListofAccounts from "@/src/providers/fetchListofAccounts";
 import { Account } from "@/assets/data/types";
+import * as LocalAuthentication from "expo-local-authentication";
 
 // TODO: TRY AND SEE IF UPLOAD FILE IS DOABLE
 
-// Validation schema
 const schema = yup.object().shape({
   loan_amount: yup
     .number()
     .min(1000, "Minimum loan amount is $1,000")
-    .max(50000, "Maximum loan amount is $50,000")
+    .max(100000, "Maximum loan amount is $100,000")
     .required("Loan amount is required"),
   loan_intent: yup.string().required("Please select a loan purpose"),
   account_number: yup.string().required("Please select an account"),
@@ -49,40 +49,117 @@ const schema = yup.object().shape({
     .min(0, "Employment length cannot be negative")
     .max(50, "Employment length cannot exceed 50 years")
     .required("Employment length is required"),
+  loan_interest_rate: yup
+    .number()
+    .min(0.1, "Interest rate must be at least 0.1%")
+    .max(50, "Interest rate cannot exceed 50%")
+    .required("Desired interest rate is required"),
+  loan_grade: yup
+    .string()
+    .oneOf(
+      ["A", "B", "C", "D", "E", "F", "G"],
+      "Please select a valid loan grade"
+    )
+    .required("Loan grade is required"),
 });
 
-// Loan intent options
 const LOAN_INTENTS = [
-  { value: 'PERSONAL', label: 'Personal', icon: 'person', description: 'Personal expenses and purchases' },
-  { value: 'MEDICAL', label: 'Medical', icon: 'local-hospital', description: 'Medical bills and healthcare' },
-  { value: 'VENTURE', label: 'Business', icon: 'business', description: 'Business investment or startup' },
-  { value: 'HOMEIMPROVEMENT', label: 'Home Improvement', icon: 'home', description: 'Home renovation and upgrades' },
-  { value: 'DEBTCONSOLIDATION', label: 'Debt Consolidation', icon: 'account-balance', description: 'Consolidate existing debts' },
-  { value: 'EDUCATION', label: 'Education', icon: 'school', description: 'Educational expenses' },
+  {
+    value: "PERSONAL",
+    label: "Personal",
+    icon: "person",
+    description: "Personal expenses and purchases",
+  },
+  {
+    value: "MEDICAL",
+    label: "Medical",
+    icon: "local-hospital",
+    description: "Medical bills and healthcare",
+  },
+  {
+    value: "VENTURE",
+    label: "Business",
+    icon: "business",
+    description: "Business investment or startup",
+  },
+  {
+    value: "HOMEIMPROVEMENT",
+    label: "Home Improvement",
+    icon: "home",
+    description: "Home renovation and upgrades",
+  },
+  {
+    value: "DEBTCONSOLIDATION",
+    label: "Debt Consolidation",
+    icon: "account-balance",
+    description: "Consolidate existing debts",
+  },
+  {
+    value: "EDUCATION",
+    label: "Education",
+    icon: "school",
+    description: "Educational expenses",
+  },
 ];
 
-// Home ownership options
 const HOME_OWNERSHIP_OPTIONS = [
-  { value: 'RENT', label: 'Rent' },
-  { value: 'OWN', label: 'Own' },
-  { value: 'MORTGAGE', label: 'Mortgage' },
-  { value: 'OTHER', label: 'Other' },
+  { value: "RENT", label: "Rent" },
+  { value: "OWN", label: "Own" },
+  { value: "MORTGAGE", label: "Mortgage" },
+  { value: "OTHER", label: "Other" },
+];
+
+const LOAN_GRADE_OPTIONS = [
+  {
+    value: "A",
+    label: "Grade A",
+    description: "Excellent credit - Lowest interest rates",
+  },
+  {
+    value: "B",
+    label: "Grade B",
+    description: "Very good credit - Low interest rates",
+  },
+  {
+    value: "C",
+    label: "Grade C",
+    description: "Good credit - Moderate interest rates",
+  },
+  {
+    value: "D",
+    label: "Grade D",
+    description: "Fair credit - Higher interest rates",
+  },
+  {
+    value: "E",
+    label: "Grade E",
+    description: "Poor credit - High interest rates",
+  },
+  {
+    value: "F",
+    label: "Grade F",
+    description: "Very poor credit - Very high interest rates",
+  },
+  {
+    value: "G",
+    label: "Grade G",
+    description: "Bad credit - Highest interest rates",
+  },
 ];
 
 const NewLoanPage = () => {
   const router = useRouter();
   const isDarkMode = useColorScheme() === "dark";
   const { user } = useAuth();
-
-  // State management
   const [loading, setLoading] = useState(false);
   const [loadingAccounts, setLoadingAccounts] = useState(true);
   const [selectedIntent, setSelectedIntent] = useState<string>("");
-  const [selectedHomeOwnership, setSelectedHomeOwnership] = useState<string>("");
+  const [selectedHomeOwnership, setSelectedHomeOwnership] =
+    useState<string>("");
   const [selectedAccount, setSelectedAccount] = useState<string>("");
+  const [selectedLoanGrade, setSelectedLoanGrade] = useState<string>("");
   const [accounts, setAccounts] = useState<Account[]>([]);
 
-  // Form handling
   const {
     control,
     handleSubmit,
@@ -92,23 +169,24 @@ const NewLoanPage = () => {
   } = useForm({
     resolver: yupResolver(schema),
     defaultValues: {
-      loan_amount: "",
+      loan_amount: 0,
       loan_intent: "",
       account_number: "",
-      customer_annual_income: "",
+      customer_annual_income: 0,
       customer_job_title: "",
-      customer_credit_score: "",
       customer_home_ownership: "",
-      customer_employment_length: "",
+      customer_employment_length: 0,
+      loan_interest_rate: 0,
+      loan_grade: "A" as const,
     },
   });
 
   const watchedAmount = watch("loan_amount");
 
-  // Fetch user accounts
   useEffect(() => {
     const fetchAccounts = async () => {
-      if (!user?.customer_id) return;
+      const isCustomer = user && "customer_id" in user;
+      if (!isCustomer) return;
 
       try {
         const accountsData = await fetchListofAccounts({
@@ -118,9 +196,8 @@ const NewLoanPage = () => {
         });
 
         if (accountsData) {
-          // Filter only active accounts
           const activeAccounts = accountsData.filter(
-            account => account.account_status === 'Active'
+            (account) => account.account_status === "Active"
           );
           setAccounts(activeAccounts);
         }
@@ -135,30 +212,81 @@ const NewLoanPage = () => {
     fetchAccounts();
   }, [user]);
 
-  // Handle loan intent selection
   const handleIntentSelect = (intent: string) => {
     setSelectedIntent(intent);
     setValue("loan_intent", intent);
   };
 
-  // Handle home ownership selection
   const handleHomeOwnershipSelect = (ownership: string) => {
     setSelectedHomeOwnership(ownership);
     setValue("customer_home_ownership", ownership);
   };
 
-  // Handle account selection
   const handleAccountSelect = (accountNumber: string) => {
     setSelectedAccount(accountNumber);
     setValue("account_number", accountNumber);
   };
 
-  // Handle form submission
+  const handleLoanGradeSelect = (
+    grade: "A" | "B" | "C" | "D" | "E" | "F" | "G"
+  ) => {
+    setSelectedLoanGrade(grade);
+    setValue("loan_grade", grade);
+  }; 
+
   const onSubmit = async (data: any) => {
+    Alert.alert(
+      "Confirm Application",
+      `Please review your loan application:\n\n• Loan Amount: ${formatCurrency(
+        parseFloat(data.loan_amount)
+      )}\n• Purpose: ${
+        LOAN_INTENTS.find((intent) => intent.value === data.loan_intent)?.label
+      }\n• Deposit Account: ${formatAccountNumber(
+        data.account_number
+      )}\n• Annual Income: ${formatCurrency(
+        parseFloat(data.customer_annual_income)
+      )}\n• Desired Interest Rate: ${
+        data.loan_interest_rate
+      }%\n• Expected Loan Grade: ${
+        data.loan_grade
+      }\n\nAre you sure you want to submit this application?`,
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Submit",
+          style: "default",
+          onPress: async () => {
+            const isAuthenticated = await LocalAuthentication.authenticateAsync(
+              {
+                promptMessage: "Authenticate to create account",
+                fallbackLabel: "Enter PIN",
+                cancelLabel: "Cancel",
+              }
+            );
+            if (!isAuthenticated.success) {
+              Alert.alert(
+                "Authentication Failed",
+                "You must authenticate to proceed."
+              );
+              return;
+            } else {
+              handleSubmitApplication(data);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleSubmitApplication = async (data: any) => {
     try {
       setLoading(true);
 
-      if (!user?.customer_id) {
+      const isCustomer = user && "customer_id" in user;
+      if (!isCustomer) {
         Alert.alert("Error", "User session not found. Please log in again.");
         return;
       }
@@ -172,26 +300,31 @@ const NewLoanPage = () => {
         customer_annual_income: parseFloat(data.customer_annual_income),
         customer_job_title: data.customer_job_title.trim(),
         customer_home_ownership: data.customer_home_ownership,
-        customer_employment_length: parseFloat(data.customer_employment_length),
+        customer_job_years: parseFloat(data.customer_employment_length),
+        loan_interest_rate: parseFloat(data.loan_interest_rate),
+        loan_grade: data.loan_grade,
         application_date: new Date().toISOString(),
-        final_approval: null, // Pending approval
+        final_approval: null, 
       };
 
-      // Insert loan application into database
-      const { error } = await supabase
-        .from("Loan")
-        .insert([loanData]);
+      const { error } = await supabase.from("Loan").insert([loanData]);
 
       if (error) {
         console.error("Error submitting loan application:", error);
-        Alert.alert("Error", "Failed to submit loan application. Please try again.");
+        Alert.alert(
+          "Error",
+          "Failed to submit loan application. Please try again."
+        );
         return;
       }
 
-      // Show success message
       Alert.alert(
         "Application Submitted!",
-        `Your loan application for ${formatCurrency(parseFloat(data.loan_amount))} has been submitted successfully.\n\nThe funds will be deposited into account ${data.account_number} upon approval.\n\nYour application will be reviewed and you'll receive a response within 2-3 business days.`,
+        `Your loan application for ${formatCurrency(
+          parseFloat(data.loan_amount)
+        )} has been submitted successfully.\n\nThe funds will be deposited into account ${
+          data.account_number
+        } upon approval.\n\nYour application will be reviewed and you'll receive a response within 2-3 business days.`,
         [
           {
             text: "OK",
@@ -208,7 +341,7 @@ const NewLoanPage = () => {
   };
 
   const formatCurrency = (amount: number) => {
-    return `$${amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
+    return `$${amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}`;
   };
 
   const formatAccountNumber = (accountNo: string) => {
@@ -218,17 +351,16 @@ const NewLoanPage = () => {
     }
     return accountNo;
   };
-
-  const getAccountTypeIcon = (accountType: string) => {
+  const getAccountTypeIcon = (accountType: string | null): string => {
     switch (accountType?.toLowerCase()) {
-      case 'savings':
-        return 'savings';
-      case 'checking':
-        return 'account-balance-wallet';
-      case 'business':
-        return 'business';
+      case "savings":
+        return "savings";
+      case "checking":
+        return "account-balance-wallet";
+      case "business":
+        return "business";
       default:
-        return 'account-balance';
+        return "account-balance";
     }
   };
 
@@ -242,7 +374,6 @@ const NewLoanPage = () => {
       ]}
       edges={["top"]}
     >
-      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
           onPress={() => router.back()}
@@ -254,7 +385,6 @@ const NewLoanPage = () => {
         <View style={{ width: 24 }} />
       </View>
 
-      {/* Main Content */}
       <View
         style={[
           styles.content,
@@ -270,7 +400,6 @@ const NewLoanPage = () => {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          {/* Loan Amount */}
           <View style={styles.section}>
             <Text
               style={[
@@ -302,9 +431,11 @@ const NewLoanPage = () => {
                   ]}
                   placeholder="Enter amount (e.g., 10000)"
                   placeholderTextColor={
-                    isDarkMode ? Colors.dark.text + "80" : Colors.light.text + "80"
+                    isDarkMode
+                      ? Colors.dark.text + "80"
+                      : Colors.light.text + "80"
                   }
-                  value={value}
+                  value={String(value || "")}
                   onChangeText={onChange}
                   onBlur={onBlur}
                   keyboardType="numeric"
@@ -316,19 +447,15 @@ const NewLoanPage = () => {
               <Text style={styles.errorText}>{errors.loan_amount.message}</Text>
             )}
 
-            {watchedAmount && !errors.loan_amount && (
+            {Boolean(watchedAmount) && !errors.loan_amount && (
               <Text
-                style={[
-                  styles.helperText,
-                  { color: Colors.light.themeColor },
-                ]}
+                style={[styles.helperText, { color: Colors.light.themeColor }]}
               >
-                Loan Amount: {formatCurrency(parseFloat(watchedAmount))}
+                Loan Amount:{" "}
+                {formatCurrency(parseFloat(String(watchedAmount || "0")))}
               </Text>
             )}
           </View>
-
-          {/* Account Selection */}
           <View style={styles.section}>
             <Text
               style={[
@@ -341,7 +468,11 @@ const NewLoanPage = () => {
             <Text
               style={[
                 styles.sectionSubtitle,
-                { color: isDarkMode ? Colors.dark.text + "80" : Colors.light.text + "80" },
+                {
+                  color: isDarkMode
+                    ? Colors.dark.text + "80"
+                    : Colors.light.text + "80",
+                },
               ]}
             >
               Choose the account where loan funds will be deposited
@@ -349,11 +480,16 @@ const NewLoanPage = () => {
 
             {loadingAccounts ? (
               <View style={styles.loadingContainer}>
-                <ActivityIndicator size="small" color={Colors.light.themeColor} />
+                <ActivityIndicator
+                  size="small"
+                  color={Colors.light.themeColor}
+                />
                 <Text
                   style={[
                     styles.loadingText,
-                    { color: isDarkMode ? Colors.dark.text : Colors.light.text },
+                    {
+                      color: isDarkMode ? Colors.dark.text : Colors.light.text,
+                    },
                   ]}
                 >
                   Loading your accounts...
@@ -364,12 +500,18 @@ const NewLoanPage = () => {
                 <MaterialIcons
                   name="account-balance"
                   size={48}
-                  color={isDarkMode ? Colors.dark.text + "40" : Colors.light.text + "40"}
+                  color={
+                    isDarkMode
+                      ? Colors.dark.text + "40"
+                      : Colors.light.text + "40"
+                  }
                 />
                 <Text
                   style={[
                     styles.noAccountsText,
-                    { color: isDarkMode ? Colors.dark.text : Colors.light.text },
+                    {
+                      color: isDarkMode ? Colors.dark.text : Colors.light.text,
+                    },
                   ]}
                 >
                   No active accounts found
@@ -377,7 +519,11 @@ const NewLoanPage = () => {
                 <Text
                   style={[
                     styles.noAccountsSubtext,
-                    { color: isDarkMode ? Colors.dark.text + "80" : Colors.light.text + "80" },
+                    {
+                      color: isDarkMode
+                        ? Colors.dark.text + "80"
+                        : Colors.light.text + "80",
+                    },
                   ]}
                 >
                   Please create an account first to apply for a loan
@@ -401,7 +547,8 @@ const NewLoanPage = () => {
                           : isDarkMode
                           ? Colors.dark.border
                           : Colors.light.border,
-                      borderWidth: selectedAccount === account.account_no ? 2 : 1,
+                      borderWidth:
+                        selectedAccount === account.account_no ? 2 : 1,
                     },
                   ]}
                   onPress={() => handleAccountSelect(account.account_no)}
@@ -438,20 +585,29 @@ const NewLoanPage = () => {
                           },
                         ]}
                       >
-                        {account.nickname || account.account_no}
+                        {account.nickname ?? account.account_no}
                       </Text>
                       <Text
                         style={[
                           styles.accountDetails,
-                          { color: isDarkMode ? Colors.dark.text + "80" : Colors.light.text + "80" },
+                          {
+                            color: isDarkMode
+                              ? Colors.dark.text + "80"
+                              : Colors.light.text + "80",
+                          },
                         ]}
                       >
-                        {account.account_type} • {formatAccountNumber(account.account_no)}
+                        {account.account_type} •{" "}
+                        {formatAccountNumber(account.account_no)}
                       </Text>
                       <Text
                         style={[
                           styles.accountBalance,
-                          { color: isDarkMode ? Colors.dark.text : Colors.light.text },
+                          {
+                            color: isDarkMode
+                              ? Colors.dark.text
+                              : Colors.light.text,
+                          },
                         ]}
                       >
                         Balance: {formatCurrency(account.balance)}
@@ -474,11 +630,11 @@ const NewLoanPage = () => {
             )}
 
             {errors.account_number && (
-              <Text style={styles.errorText}>{errors.account_number.message}</Text>
+              <Text style={styles.errorText}>
+                {errors.account_number.message}
+              </Text>
             )}
           </View>
-
-          {/* Loan Purpose */}
           <View style={styles.section}>
             <Text
               style={[
@@ -557,7 +713,9 @@ const NewLoanPage = () => {
                 <Text
                   style={[
                     styles.intentDescription,
-                    { color: isDarkMode ? Colors.dark.text : Colors.light.text },
+                    {
+                      color: isDarkMode ? Colors.dark.text : Colors.light.text,
+                    },
                   ]}
                 >
                   {intent.description}
@@ -569,8 +727,6 @@ const NewLoanPage = () => {
               <Text style={styles.errorText}>{errors.loan_intent.message}</Text>
             )}
           </View>
-
-          {/* Personal Information */}
           <View style={styles.section}>
             <Text
               style={[
@@ -581,7 +737,6 @@ const NewLoanPage = () => {
               Personal Information
             </Text>
 
-            {/* Annual Income */}
             <View style={styles.fieldContainer}>
               <Text
                 style={[
@@ -589,7 +744,7 @@ const NewLoanPage = () => {
                   { color: isDarkMode ? Colors.dark.text : Colors.light.text },
                 ]}
               >
-                Annual Income
+                Annual Income (USD)
               </Text>
               <Controller
                 control={control}
@@ -607,14 +762,18 @@ const NewLoanPage = () => {
                           : isDarkMode
                           ? Colors.dark.border
                           : Colors.light.border,
-                        color: isDarkMode ? Colors.dark.text : Colors.light.text,
+                        color: isDarkMode
+                          ? Colors.dark.text
+                          : Colors.light.text,
                       },
                     ]}
                     placeholder="Enter annual income (e.g., 50000)"
                     placeholderTextColor={
-                      isDarkMode ? Colors.dark.text + "80" : Colors.light.text + "80"
+                      isDarkMode
+                        ? Colors.dark.text + "80"
+                        : Colors.light.text + "80"
                     }
-                    value={value}
+                    value={String(value || "")}
                     onChangeText={onChange}
                     onBlur={onBlur}
                     keyboardType="numeric"
@@ -628,7 +787,6 @@ const NewLoanPage = () => {
               )}
             </View>
 
-            {/* Job Title */}
             <View style={styles.fieldContainer}>
               <Text
                 style={[
@@ -654,14 +812,18 @@ const NewLoanPage = () => {
                           : isDarkMode
                           ? Colors.dark.border
                           : Colors.light.border,
-                        color: isDarkMode ? Colors.dark.text : Colors.light.text,
+                        color: isDarkMode
+                          ? Colors.dark.text
+                          : Colors.light.text,
                       },
                     ]}
                     placeholder="Enter your job title"
                     placeholderTextColor={
-                      isDarkMode ? Colors.dark.text + "80" : Colors.light.text + "80"
+                      isDarkMode
+                        ? Colors.dark.text + "80"
+                        : Colors.light.text + "80"
                     }
-                    value={value}
+                    value={String(value || "")}
                     onChangeText={onChange}
                     onBlur={onBlur}
                   />
@@ -674,7 +836,6 @@ const NewLoanPage = () => {
               )}
             </View>
 
-            {/* Employment Length */}
             <View style={styles.fieldContainer}>
               <Text
                 style={[
@@ -700,14 +861,18 @@ const NewLoanPage = () => {
                           : isDarkMode
                           ? Colors.dark.border
                           : Colors.light.border,
-                        color: isDarkMode ? Colors.dark.text : Colors.light.text,
+                        color: isDarkMode
+                          ? Colors.dark.text
+                          : Colors.light.text,
                       },
                     ]}
                     placeholder="Enter employment length (e.g., 5)"
                     placeholderTextColor={
-                      isDarkMode ? Colors.dark.text + "80" : Colors.light.text + "80"
+                      isDarkMode
+                        ? Colors.dark.text + "80"
+                        : Colors.light.text + "80"
                     }
-                    value={value}
+                    value={String(value || "")}
                     onChangeText={onChange}
                     onBlur={onBlur}
                     keyboardType="numeric"
@@ -720,9 +885,156 @@ const NewLoanPage = () => {
                 </Text>
               )}
             </View>
+
+            <View style={styles.fieldContainer}>
+              <Text
+                style={[
+                  styles.fieldLabel,
+                  { color: isDarkMode ? Colors.dark.text : Colors.light.text },
+                ]}
+              >
+                Desired Interest Rate (%)
+              </Text>
+              <Controller
+                control={control}
+                name="loan_interest_rate"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <TextInput
+                    style={[
+                      styles.input,
+                      {
+                        backgroundColor: isDarkMode
+                          ? Colors.dark.firstButton
+                          : Colors.light.background,
+                        borderColor: errors.loan_interest_rate
+                          ? "red"
+                          : isDarkMode
+                          ? Colors.dark.border
+                          : Colors.light.border,
+                        color: isDarkMode
+                          ? Colors.dark.text
+                          : Colors.light.text,
+                      },
+                    ]}
+                    placeholder="Enter desired interest rate (e.g., 5.5)"
+                    placeholderTextColor={
+                      isDarkMode
+                        ? Colors.dark.text + "80"
+                        : Colors.light.text + "80"
+                    }
+                    value={String(value || "")}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    keyboardType="numeric"
+                  />
+                )}
+              />
+              {errors.loan_interest_rate && (
+                <Text style={styles.errorText}>
+                  {errors.loan_interest_rate.message}
+                </Text>
+              )}
+            </View>
           </View>
 
-          {/* Home Ownership */}
+          <View style={styles.section}>
+            <Text
+              style={[
+                styles.sectionTitle,
+                { color: isDarkMode ? Colors.dark.text : Colors.light.text },
+              ]}
+            >
+              Expected Loan Grade
+            </Text>
+            <Text
+              style={[
+                styles.sectionSubtitle,
+                {
+                  color: isDarkMode
+                    ? Colors.dark.text + "80"
+                    : Colors.light.text + "80",
+                },
+              ]}
+            >
+              Select credit grade based on your known credit history
+            </Text>
+
+            {LOAN_GRADE_OPTIONS.map((grade) => (
+              <TouchableOpacity
+                key={grade.value}
+                style={[
+                  styles.gradeCard,
+                  {
+                    backgroundColor: isDarkMode
+                      ? Colors.dark.firstButton
+                      : Colors.light.background,
+                    borderColor:
+                      selectedLoanGrade === grade.value
+                        ? isDarkMode
+                          ? Colors.dark.themeColorSecondary
+                          : Colors.light.themeColor
+                        : isDarkMode
+                        ? Colors.dark.border
+                        : Colors.light.border,
+                    borderWidth: selectedLoanGrade === grade.value ? 2 : 1,
+                  },
+                ]}
+                onPress={() =>
+                  handleLoanGradeSelect(
+                    grade.value as "A" | "B" | "C" | "D" | "E" | "F" | "G"
+                  )
+                }
+              >
+                <View style={styles.gradeHeader}>
+                  <Text
+                    style={[
+                      styles.gradeLabel,
+                      {
+                        color:
+                          selectedLoanGrade === grade.value
+                            ? isDarkMode
+                              ? Colors.dark.themeColorSecondary
+                              : Colors.light.themeColor
+                            : isDarkMode
+                            ? Colors.dark.text
+                            : Colors.light.text,
+                      },
+                    ]}
+                  >
+                    {grade.label}
+                  </Text>
+                  {selectedLoanGrade === grade.value && (
+                    <MaterialIcons
+                      name="check-circle"
+                      size={20}
+                      color={
+                        isDarkMode
+                          ? Colors.dark.themeColorSecondary
+                          : Colors.light.themeColor
+                      }
+                    />
+                  )}
+                </View>
+                <Text
+                  style={[
+                    styles.gradeDescription,
+                    {
+                      color: isDarkMode
+                        ? Colors.dark.text + "80"
+                        : Colors.light.text + "80",
+                    },
+                  ]}
+                >
+                  {grade.description}
+                </Text>
+              </TouchableOpacity>
+            ))}
+
+            {errors.loan_grade && (
+              <Text style={styles.errorText}>{errors.loan_grade.message}</Text>
+            )}
+          </View>
+
           <View style={styles.section}>
             <Text
               style={[
@@ -799,112 +1111,134 @@ const NewLoanPage = () => {
             )}
           </View>
 
-          {/* Application Summary */}
-          {watchedAmount && selectedIntent && selectedAccount && (
-            <View
-              style={[
-                styles.summaryCard,
-                {
-                  backgroundColor: isDarkMode
-                    ? Colors.dark.firstButton
-                    : Colors.light.background,
-                  borderColor: isDarkMode
-                    ? Colors.dark.themeColorSecondary
-                    : Colors.light.themeColor,
-                },
-              ]}
-            >
-              <Text
+          {Boolean(watchedAmount) &&
+            Boolean(selectedIntent) &&
+            Boolean(selectedAccount) && (
+              <View
                 style={[
-                  styles.summaryTitle,
-                  { color: isDarkMode ? Colors.dark.text : Colors.light.text },
+                  styles.summaryCard,
+                  {
+                    backgroundColor: isDarkMode
+                      ? Colors.dark.firstButton
+                      : Colors.light.background,
+                    borderColor: isDarkMode
+                      ? Colors.dark.themeColorSecondary
+                      : Colors.light.themeColor,
+                  },
                 ]}
               >
-                Application Summary
-              </Text>
-
-              <View style={styles.summaryRow}>
                 <Text
                   style={[
-                    styles.summaryLabel,
-                    { color: isDarkMode ? Colors.dark.text : Colors.light.text },
-                  ]}
-                >
-                  Loan Amount:
-                </Text>
-                <Text
-                  style={[
-                    styles.summaryValue,
-                    { 
-                      color: isDarkMode 
-                        ? Colors.dark.themeColorSecondary 
-                        : Colors.light.themeColor 
+                    styles.summaryTitle,
+                    {
+                      color: isDarkMode ? Colors.dark.text : Colors.light.text,
                     },
                   ]}
                 >
-                  {formatCurrency(parseFloat(watchedAmount))}
+                  Application Summary
                 </Text>
-              </View>
 
-              <View style={styles.summaryRow}>
+                <View style={styles.summaryRow}>
+                  <Text
+                    style={[
+                      styles.summaryLabel,
+                      {
+                        color: isDarkMode
+                          ? Colors.dark.text
+                          : Colors.light.text,
+                      },
+                    ]}
+                  >
+                    Loan Amount:
+                  </Text>
+                  <Text
+                    style={[
+                      styles.summaryValue,
+                      {
+                        color: isDarkMode
+                          ? Colors.dark.themeColorSecondary
+                          : Colors.light.themeColor,
+                      },
+                    ]}
+                  >
+                    {formatCurrency(parseFloat(String(watchedAmount || "0")))}
+                  </Text>
+                </View>
+
+                <View style={styles.summaryRow}>
+                  <Text
+                    style={[
+                      styles.summaryLabel,
+                      {
+                        color: isDarkMode
+                          ? Colors.dark.text
+                          : Colors.light.text,
+                      },
+                    ]}
+                  >
+                    Purpose:
+                  </Text>
+                  <Text
+                    style={[
+                      styles.summaryValue,
+                      {
+                        color: isDarkMode
+                          ? Colors.dark.themeColorSecondary
+                          : Colors.light.themeColor,
+                      },
+                    ]}
+                  >
+                    {
+                      LOAN_INTENTS.find(
+                        (intent) => intent.value === selectedIntent
+                      )?.label
+                    }
+                  </Text>
+                </View>
+
+                <View style={styles.summaryRow}>
+                  <Text
+                    style={[
+                      styles.summaryLabel,
+                      {
+                        color: isDarkMode
+                          ? Colors.dark.text
+                          : Colors.light.text,
+                      },
+                    ]}
+                  >
+                    Deposit Account:
+                  </Text>
+                  <Text
+                    style={[
+                      styles.summaryValue,
+                      {
+                        color: isDarkMode
+                          ? Colors.dark.themeColorSecondary
+                          : Colors.light.themeColor,
+                      },
+                    ]}
+                  >
+                    {formatAccountNumber(selectedAccount)}
+                  </Text>
+                </View>
+
                 <Text
                   style={[
-                    styles.summaryLabel,
-                    { color: isDarkMode ? Colors.dark.text : Colors.light.text },
-                  ]}
-                >
-                  Purpose:
-                </Text>
-                <Text
-                  style={[
-                    styles.summaryValue,
-                    { 
-                      color: isDarkMode 
-                        ? Colors.dark.themeColorSecondary 
-                        : Colors.light.themeColor 
+                    styles.summaryNote,
+                    {
+                      color: isDarkMode ? Colors.dark.text : Colors.light.text,
                     },
                   ]}
                 >
-                  {LOAN_INTENTS.find(intent => intent.value === selectedIntent)?.label}
+                  Your application will be reviewed and you'll receive a
+                  response within 2-3 business days. Upon approval, funds will
+                  be deposited into your selected account.
                 </Text>
               </View>
-
-              <View style={styles.summaryRow}>
-                <Text
-                  style={[
-                    styles.summaryLabel,
-                    { color: isDarkMode ? Colors.dark.text : Colors.light.text },
-                  ]}
-                >
-                  Deposit Account:
-                </Text>
-                <Text
-                  style={[
-                    styles.summaryValue,
-                    { 
-                      color: isDarkMode 
-                        ? Colors.dark.themeColorSecondary 
-                        : Colors.light.themeColor 
-                    },
-                  ]}
-                >
-                  {formatAccountNumber(selectedAccount)}
-                </Text>
-              </View>
-
-              <Text
-                style={[
-                  styles.summaryNote,
-                  { color: isDarkMode ? Colors.dark.text : Colors.light.text },
-                ]}
-              >
-                Your application will be reviewed and you'll receive a response within 2-3 business days. Upon approval, funds will be deposited into your selected account.
-              </Text>
-            </View>
-          )}
+            )}
         </ScrollView>
 
-        {/* Submit Button */}
         <View style={styles.buttonContainer}>
           <TouchableOpacity
             style={[
@@ -1003,8 +1337,8 @@ const styles = StyleSheet.create({
     marginTop: 5,
   },
   loadingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     padding: 20,
     gap: 10,
   },
@@ -1012,29 +1346,29 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   noAccountsContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     padding: 30,
   },
   noAccountsText: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginTop: 15,
     marginBottom: 8,
   },
   noAccountsSubtext: {
     fontSize: 14,
-    textAlign: 'center',
+    textAlign: "center",
     lineHeight: 20,
   },
   accountCard: {
     borderRadius: 12,
     borderWidth: 1,
     marginBottom: 12,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   accountHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     padding: 15,
     gap: 12,
   },
@@ -1042,16 +1376,16 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.1)',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.1)",
   },
   accountInfo: {
     flex: 1,
   },
   accountNickname: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 4,
   },
   accountDetails: {
@@ -1060,7 +1394,7 @@ const styles = StyleSheet.create({
   },
   accountBalance: {
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   intentCard: {
     padding: 15,
@@ -1155,6 +1489,26 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 16,
     fontWeight: "bold",
+  },
+  gradeCard: {
+    padding: 15,
+    borderRadius: 12,
+    marginBottom: 12,
+    borderWidth: 1,
+  },
+  gradeHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 8,
+  },
+  gradeLabel: {
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  gradeDescription: {
+    fontSize: 14,
+    lineHeight: 20,
   },
 });
 

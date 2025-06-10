@@ -20,6 +20,7 @@ import {
 import { ScrollView, TextInput } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Checkbox } from "react-native-ui-lib";
+import * as LocalAuthentication from "expo-local-authentication";
 
 const TransferConfirmationPage = () => {
   const { user } = useAuth();
@@ -550,8 +551,22 @@ const TransferConfirmationPage = () => {
                     { text: "Cancel", style: "cancel" },
                     {
                       text: "Confirm",
-                      onPress: () => {
-                        handleTransfer();
+                      onPress: async () => {
+                        // authenticate using LocalAuthentication
+                        const isAuthenticated =
+                          await LocalAuthentication.authenticateAsync({
+                            promptMessage: "Authenticate to confirm transfer",
+                            fallbackLabel: "Enter PIN",
+                            cancelLabel: "Cancel",
+                          });
+                        if (isAuthenticated) {
+                          handleTransfer();
+                        } else {
+                          Alert.alert(
+                            "Authentication Failed",
+                            "Please try again."
+                          );
+                        }
                       },
                     },
                   ]);

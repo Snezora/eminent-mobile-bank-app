@@ -147,7 +147,7 @@ export default function TabOneScreen() {
         >
           <View>
             <Text style={[styles.title]}>Welcome back,</Text>
-            <Text style={[styles.title]}>Lester</Text>
+            <Text style={[styles.title]}>{user?.username}</Text>
           </View>
           <SettingsLogOut />
         </View>

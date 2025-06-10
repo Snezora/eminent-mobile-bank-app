@@ -44,8 +44,6 @@ const TransferHistory = () => {
   const router = useRouter();
   const isDarkMode = useColorScheme() === "dark";
   const { user } = useAuth();
-
-  // State management
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [filteredTransactions, setFilteredTransactions] = useState<
@@ -53,23 +51,18 @@ const TransferHistory = () => {
   >([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-
-  // Filter states
   const [filters, setFilters] = useState<FilterOptions>({
     selectedAccount: null,
     startDate: null,
     endDate: null,
     searchQuery: "",
   });
-
-  // Modal and picker states
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
 
-  // Fetch accounts
   const fetchAccounts = useCallback(async () => {
     try {
       const fetchedAccounts = await fetchListofAccounts({
@@ -84,13 +77,11 @@ const TransferHistory = () => {
     }
   }, [user?.customer_id]);
 
-  // Fetch all transactions for user's accounts
   const fetchAllTransactions = useCallback(async () => {
     try {
       setRefreshing(true);
       const allTransactions: Transaction[] = [];
 
-      // Fetch transactions for each account
       for (const account of accounts) {
         const transactions = await fetchListofTransactions({
           isMockEnabled: false,
@@ -104,7 +95,6 @@ const TransferHistory = () => {
         }
       }
 
-      // Remove duplicates and sort by date (newest first)
       const uniqueTransactions = allTransactions.filter(
         (transaction, index, self) =>
           index ===
@@ -125,15 +115,13 @@ const TransferHistory = () => {
       setTimeout(() => {
         setRefreshing(false);
         setLoading(false);
-      }, 2000); // Simulate network delay
+      }, 2000); 
     }
   }, [accounts]);
 
-  // Apply filters to transactions
   const applyFilters = useCallback(() => {
     let filtered = [...transactions];
 
-    // Filter by account
     if (filters.selectedAccount) {
       filtered = filtered.filter(
         (transaction) =>
@@ -144,7 +132,6 @@ const TransferHistory = () => {
       );
     }
 
-    // Filter by date range
     if (filters.startDate) {
       filtered = filtered.filter(
         (transaction) =>
@@ -160,7 +147,6 @@ const TransferHistory = () => {
       );
     }
 
-    // Filter by search query (purpose or amount)
     if (filters.searchQuery.trim()) {
       const query = filters.searchQuery.toLowerCase();
       filtered = filtered.filter(
@@ -173,7 +159,7 @@ const TransferHistory = () => {
     setFilteredTransactions(filtered);
   }, [transactions, filters, accounts]);
 
-  // Clear all filters
+
   const clearFilters = () => {
     setFilters({
       selectedAccount: null,
@@ -183,7 +169,6 @@ const TransferHistory = () => {
     });
   };
 
-  // Realtime subscription callbacks
   const handleTransactionChange = useCallback(
     (payload: any) => {
       console.log("Transaction change received in history:", payload);
@@ -192,7 +177,6 @@ const TransferHistory = () => {
     [fetchAllTransactions]
   );
 
-  // Subscribe to realtime changes
   useRealtimeSubscription(
     "Transaction",
     handleTransactionChange,
@@ -200,7 +184,6 @@ const TransferHistory = () => {
     !loading
   );
 
-  // Effects
   useEffect(() => {
     fetchAccounts();
   }, [fetchAccounts]);
@@ -215,7 +198,6 @@ const TransferHistory = () => {
     applyFilters();
   }, [applyFilters]);
 
-  // Prepare account dropdown data
   const accountDropdownData = [
     { label: "All Accounts", value: null },
     ...accounts.map((account) => ({
@@ -247,7 +229,6 @@ const TransferHistory = () => {
       style={[styles.container, { backgroundColor: Colors.light.themeColor }]}
       edges={["top"]}
     >
-      {/* Main Content with Drawer */}
       <Drawer
         open={showFilterModal}
         onOpen={() => setShowFilterModal(true)}
@@ -271,7 +252,6 @@ const TransferHistory = () => {
         renderDrawerContent={() => {
           return (
             <View style={styles.drawerContent}>
-              {/* Filter Header */}
               <View style={styles.drawerHeader}>
                 <Text
                   style={{
@@ -287,7 +267,6 @@ const TransferHistory = () => {
                 </Text>
               </View>
 
-              {/* Account Filter */}
               <View style={styles.filterSection}>
                 <Text
                   style={[
@@ -334,7 +313,6 @@ const TransferHistory = () => {
                 />
               </View>
 
-              {/* Date Range Filter */}
               <View style={styles.filterSection}>
                 <Text
                   style={[
@@ -417,7 +395,6 @@ const TransferHistory = () => {
                   </TouchableOpacity>
                 </View>
 
-                {/* Updated Date Time Picker Modals */}
                 <DateTimePickerModal
                   isVisible={showStartDatePicker}
                   mode="date"
@@ -462,7 +439,6 @@ const TransferHistory = () => {
                 />
               </View>
 
-              {/* Search Filter */}
               <View style={styles.filterSection}>
                 <Text
                   style={[
@@ -493,7 +469,6 @@ const TransferHistory = () => {
                 />
               </View>
 
-              {/* Filter Actions */}
               <View style={styles.filterActions}>
                 <TouchableOpacity
                   style={[
@@ -522,7 +497,6 @@ const TransferHistory = () => {
           );
         }}
       >
-        {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity
             onPress={() => router.back()}
@@ -549,7 +523,6 @@ const TransferHistory = () => {
           </TouchableOpacity>
         </View>
 
-        {/* Main Transaction List */}
         <View
           style={[
             styles.mainContent,
@@ -560,7 +533,6 @@ const TransferHistory = () => {
             },
           ]}
         >
-          {/* Transaction List */}
           <Animated.FlatList
             style={styles.scrollView}
             contentContainerStyle={styles.scrollContent}
