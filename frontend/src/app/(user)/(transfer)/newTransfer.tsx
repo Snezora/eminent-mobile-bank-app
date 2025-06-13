@@ -229,7 +229,7 @@ const NewTransferPage = () => {
   return (
     <SafeAreaView
       style={[{ flex: 1, backgroundColor: "#385A93" }]}
-      edges={["top"]}
+      edges={["top", "bottom"]}
     >
       <View
         style={{
@@ -255,10 +255,9 @@ const NewTransferPage = () => {
           zIndex: 999,
         }}
         contentContainerStyle={{
-          marginTop: 50,
+          marginTop: 10,
           gap: 20,
         }}
-        scrollEnabled={false}
       >
         <Controller
           control={control}

@@ -7,14 +7,18 @@ import { useAuth } from "../providers/AuthProvider";
 
 const SettingsLogOut = () => {
   const router = useRouter();
-  const { session, isAdmin } = useAuth();
+  const { session, isAdmin, logOut } = useAuth();
 
   const handleLogout = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      console.log("Error signing out:", error.message);
-    } else {
-      router.replace("/(auth)/home-page"); // Explicitly navigate to login/home
+    console.log("Session:", session);
+
+    try {
+      await logOut();
+    } catch (error) {
+      console.error("Logout error:", error);
+    } finally {
+      console.log("Redirecting to home page...");
+      router.replace("/(auth)/home-page");
     }
   };
 

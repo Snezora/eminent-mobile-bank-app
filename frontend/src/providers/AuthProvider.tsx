@@ -11,6 +11,7 @@ import { Session } from "@supabase/supabase-js";
 import { Admin, Customer } from "@/assets/data/types";
 import * as LocalAuthentication from "expo-local-authentication";
 import { Alert, Platform } from "react-native";
+import { router } from "expo-router";
 
 interface AuthData {
   session: Session | null;
@@ -20,6 +21,7 @@ interface AuthData {
   isMockEnabled?: boolean;
   isBiometricAuthenticated: boolean;
   authenticateBiometric: () => Promise<boolean>;
+  logOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthData>({
@@ -30,6 +32,7 @@ const AuthContext = createContext<AuthData>({
   isMockEnabled: false,
   isBiometricAuthenticated: false,
   authenticateBiometric: () => Promise.resolve(false),
+  logOut: () => Promise.resolve(),
 });
 
 export default function AuthProvider({ children }: PropsWithChildren) {
@@ -164,7 +167,11 @@ export default function AuthProvider({ children }: PropsWithChildren) {
       }
     };
 
-    fetchSession();
+    fetchSession().then(() => {
+      if (!session) {
+        router.push("/(auth)/home-page")
+      }
+    });
 
     const { data: subscription } = supabase.auth.onAuthStateChange(
       (_event, session) => {
@@ -178,6 +185,20 @@ export default function AuthProvider({ children }: PropsWithChildren) {
     };
   }, []);
 
+  const logOut = async () => {
+    try {
+      await supabase.auth.signOut();
+      setSession(null);
+      setUser(null);
+      setIsAdmin(false);
+      setIsBiometricAuthenticated(false); // Reset biometric authentication state
+      router.push("/(auth)/home-page");
+    } catch (error) {
+      console.error("Error during logout:", error);
+      Alert.alert("Logout Error", "An error occurred while logging out.");
+    }
+  }
+
   const contextValue = React.useMemo(
     () => ({
       session,
@@ -187,6 +208,7 @@ export default function AuthProvider({ children }: PropsWithChildren) {
       isMockEnabled,
       isBiometricAuthenticated,
       authenticateBiometric,
+      logOut,
     }),
     [
       session,
@@ -196,6 +218,7 @@ export default function AuthProvider({ children }: PropsWithChildren) {
       isMockEnabled,
       isBiometricAuthenticated,
       authenticateBiometric,
+      logOut,
     ]
   );
 

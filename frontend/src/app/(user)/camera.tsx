@@ -57,6 +57,45 @@ export default function Camera() {
     { label: "Receive", value: "receive" },
   ];
 
+  useEffect(() => {
+    if (!permission?.granted) {
+      Alert.alert(
+        "Camera Permission Required",
+        "This app needs camera access to scan QR codes and generate payment QR codes.",
+        [
+          {
+            text: "Cancel",
+            style: "cancel",
+            onPress: () => router.back(),
+          },
+          {
+            text: "Grant Permission",
+            onPress: async () => {
+              const result = await requestPermission();
+              if (!result.granted) {
+                Alert.alert(
+                  "Permission Denied",
+                  "Camera access is required for QR code functionality. You can enable it in Settings.",
+                  [
+                    {
+                      text: "Go Back",
+                      onPress: () => router.back(),
+                    },
+                    {
+                      text: "Open Settings",
+                      onPress: () => Linking.openSettings(),
+                    },
+                  ]
+                );
+              }
+            },
+          },
+        ],
+        { cancelable: false }
+      );
+    }
+  }, [permission?.granted]);
+
   const handleLayout = (event: LayoutChangeEvent) => {
     const { height } = event.nativeEvent.layout;
     bottomContainerHeight.current = height; // Save the height
@@ -133,13 +172,10 @@ export default function Camera() {
   }
 
   if (!permission.granted) {
-    // Camera permissions are not granted yet.
     return (
-      <View style={styles.container}>
-        <Text style={styles.message}>
-          We need your permission to show the camera
-        </Text>
-        <Button onPress={requestPermission} title="Grant Permission" />
+      <View style={[styles.container, styles.permissionContainer]}>
+        <ActivityIndicator size="large" color={Colors.light.themeColor} />
+        <Text style={styles.message}>Requesting camera permission...</Text>
       </View>
     );
   }
@@ -411,10 +447,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  message: {
-    textAlign: "center",
-    paddingBottom: 10,
-  },
   camera: {
     flex: 1,
     // maxHeight: "60%",
@@ -464,5 +496,17 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 16,
     fontWeight: "bold",
+  },
+  permissionContainer: {
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: Colors.light.themeColor,
+  },
+  message: {
+    textAlign: "center",
+    paddingBottom: 10,
+    color: "white",
+    fontSize: 16,
+    marginTop: 20,
   },
 });

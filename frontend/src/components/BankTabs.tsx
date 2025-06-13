@@ -27,6 +27,8 @@ type BankTabProps = {
   nickname?: string;
 };
 
+
+
 const BankTab = ({
   account,
   isEWBBank,
@@ -36,6 +38,9 @@ const BankTab = ({
 }: BankTabProps) => {
   const colorScheme = useColorScheme();
   const isDarkMode = colorScheme === "dark";
+
+
+
 
   if (account && isEWBBank) {
     return (

@@ -2,7 +2,7 @@ import adminSignUp from "@/src/components/AdminSignUp";
 import SettingsLogOut from "@/src/components/SettingsLogOut";
 import Colors from "@/src/constants/Colors";
 import { supabase } from "@/src/lib/supabase";
-import { router, Stack } from "expo-router";
+import { Redirect, router, Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import {
   View,

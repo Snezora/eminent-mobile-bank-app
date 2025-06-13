@@ -42,7 +42,7 @@ const AccountCarousel = ({
   // Add a placeholder item for the "Add New Account" card
   const carouselData = [
     ...accounts,
-    { id: 'add-new-account', isAddCard: true }
+    { id: "add-new-account", isAddCard: true },
   ];
 
   const onPressPagination = (index: number) => {
@@ -91,9 +91,11 @@ const AccountCarousel = ({
                     borderRadius: 10,
                     borderWidth: 3,
                     borderStyle: "dashed",
-                    borderColor: isDarkMode ? Colors.dark.text : Colors.light.themeColor,
-                    backgroundColor: isDarkMode 
-                      ? Colors.dark.background 
+                    borderColor: isDarkMode
+                      ? Colors.dark.text
+                      : Colors.light.themeColor,
+                    backgroundColor: isDarkMode
+                      ? Colors.dark.background
                       : Colors.light.background,
                   },
                 ]}
@@ -104,13 +106,17 @@ const AccountCarousel = ({
                   <MaterialIcons
                     name="add-circle-outline"
                     size={60}
-                    color={isDarkMode ? Colors.dark.text : Colors.light.themeColor}
+                    color={
+                      isDarkMode ? Colors.dark.text : Colors.light.themeColor
+                    }
                   />
                   <Text
                     style={[
                       styles.addCardText,
                       {
-                        color: isDarkMode ? Colors.dark.text : Colors.light.themeColor,
+                        color: isDarkMode
+                          ? Colors.dark.text
+                          : Colors.light.themeColor,
                       },
                     ]}
                   >
@@ -120,7 +126,9 @@ const AccountCarousel = ({
                     style={[
                       styles.addCardSubtext,
                       {
-                        color: isDarkMode ? Colors.dark.text : Colors.light.text,
+                        color: isDarkMode
+                          ? Colors.dark.text
+                          : Colors.light.text,
                       },
                     ]}
                   >
@@ -150,104 +158,124 @@ const AccountCarousel = ({
                 contentFit="fill"
                 style={[StyleSheet.absoluteFill, { borderRadius: 5 }]}
               />
-              <View
-                style={{
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                }}
-              >
-                <Text style={styles.cardText}>
-                  {item.nickname ?? "No Nickname Set"}
-                </Text>
-                <View
-                  style={[
-                    styles.statusContainer,
-                    {
-                      borderColor:
-                        item.account_status === "Active"
-                          ? "lightgreen"
-                          : item.account_status === "Deactivated" ||
-                            item.account_status === "Blocked"
-                          ? "red"
-                          : item.account_status === "Pending"
-                          ? "yellow"
-                          : "gray",
-                    },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.statusText,
-                      {
-                        color:
-                          item.account_status === "Active"
-                            ? "lightgreen"
-                            : item.account_status === "Deactivated" ||
-                              item.account_status === "Blocked"
-                            ? "red"
-                            : item.account_status === "Pending"
-                            ? "yellow"
-                            : "gray",
-                      },
-                    ]}
-                  >
-                    {item.account_status}
-                  </Text>
-                </View>
-              </View>
-
-              <Text style={[styles.cardText, { marginTop: 0 }]}>
-                {isEyeOpen
-                  ? "**** **** ****"
-                  : item.account_no.replace(/(\d{4})(?=\d)/g, "$1 ")}
-              </Text>
-
-              <Text
-                style={{ marginTop: 20, color: "white", fontWeight: "bold" }}
-              >
-                Current Balance
-              </Text>
-              <Text style={[styles.cardText, { fontSize: 30 }]}>
-                USD {isEyeOpen ? "****" : item.balance.toFixed(2)}
-              </Text>
-
-              <View
-                style={{
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                  alignItems: "flex-end",
-                  marginTop: 10,
-                }}
-              >
+              <View style={{ justifyContent: "space-evenly" }}>
                 <View>
-                  <Text
+                  <View
                     style={{
-                      color: "white",
-                      fontWeight: "bold",
+                      flexDirection: "row",
+                      justifyContent: "space-between",
                     }}
                   >
-                    Account Type
+                    <Text style={styles.cardText}>
+                      {"nickname" in item
+                        ? item.nickname ?? "No Nickname Set"
+                        : ""}
+                    </Text>
+                    {"account_status" in item && (
+                      <View
+                        style={[
+                          styles.statusContainer,
+                          {
+                            borderColor:
+                              item.account_status === "Active"
+                                ? "lightgreen"
+                                : item.account_status === "Deactivated" ||
+                                  item.account_status === "Blocked"
+                                ? "red"
+                                : item.account_status === "Pending"
+                                ? "yellow"
+                                : "gray",
+                          },
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.statusText,
+                            {
+                              color:
+                                item.account_status === "Active"
+                                  ? "lightgreen"
+                                  : item.account_status === "Deactivated" ||
+                                    item.account_status === "Blocked"
+                                  ? "red"
+                                  : item.account_status === "Pending"
+                                  ? "yellow"
+                                  : "gray",
+                            },
+                          ]}
+                        >
+                          {item.account_status}
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+
+                  <Text style={[styles.cardText, { marginTop: 0 }]}>
+                    {isEyeOpen
+                      ? "**** **** ****"
+                      : "account_no" in item &&
+                        typeof item.account_no === "string"
+                      ? item.account_no.replace(/(\d{4})(?=\d)/g, "$1 ")
+                      : ""}
                   </Text>
-                  <Text style={[styles.cardText]}>{item.account_type}</Text>
                 </View>
-                <TouchableOpacity
-                  activeOpacity={0.5}
-                  onPress={() => {
-                    router.push({
-                      pathname: "/accountDetails",
-                      params: { account_id: item.account_id },
-                    });
+
+                <View>
+                  <Text style={{ color: "white", fontWeight: "bold" }}>
+                    Current Balance
+                  </Text>
+                  <Text style={[styles.cardText, { fontSize: 30 }]}>
+                    USD{" "}
+                    {isEyeOpen
+                      ? "****"
+                      : "balance" in item && typeof item.balance === "number"
+                      ? item.balance.toFixed(2)
+                      : ""}
+                  </Text>
+                </View>
+
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    alignItems: "flex-end",
+                    marginTop: 10,
                   }}
                 >
-                  <Text
-                    style={[
-                      styles.cardText,
-                      { fontSize: 16, textDecorationLine: "underline" },
-                    ]}
-                  >
-                    More Details >>>
-                  </Text>
-                </TouchableOpacity>
+                  <View>
+                    <Text
+                      style={{
+                        color: "white",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      Account Type
+                    </Text>
+                    {"account_type" in item && (
+                      <Text style={[styles.cardText]}>{item.account_type}</Text>
+                    )}
+                  </View>
+                  {"account_id" in item && (
+                    <TouchableOpacity
+                      activeOpacity={0.5}
+                      onPress={() => {
+                        router.push({
+                          pathname: "/accountDetails",
+                          params: { account_id: item.account_id },
+                        });
+                      }}
+                    >
+                      <Text
+                        style={[
+                          styles.cardText,
+                          { fontSize: 16, textDecorationLine: "underline" },
+                        ]}
+                      >
+                        More Details {">>>"}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
               </View>
             </View>
           );

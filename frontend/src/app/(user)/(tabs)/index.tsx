@@ -69,7 +69,6 @@ export default function TabOneScreen() {
     }
   }, [user]); // Remove selectedAccount from dependencies
 
-
   // Handle account changes from realtime subscription
   const handleAccountChange = useCallback(
     (payload: any) => {
@@ -136,51 +135,59 @@ export default function TabOneScreen() {
       style={[{ flex: 1, backgroundColor: "#385A93" }]}
       edges={["top"]}
     >
-      <Stack.Screen options={{ headerShown: false }} />
-      <View style={[styles.topContainer]}>
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "space-between",
-            // alignItems: "center",
-          }}
-        >
-          <View>
-            <Text style={[styles.title]}>Welcome back,</Text>
-            <Text style={[styles.title]}>{user?.username}</Text>
+      <ScrollView
+        style={{}}
+        contentContainerStyle={{
+          paddingBottom: 20,
+          backgroundColor: isDarkMode ? Colors.dark.background : Colors.light.background,
+        }}
+      >
+        <Stack.Screen options={{ headerShown: false }} />
+        <View style={[styles.topContainer]}>
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              // alignItems: "center",
+            }}
+          >
+            <View>
+              <Text style={[styles.title]}>Welcome back,</Text>
+              <Text style={[styles.title]}>
+                {user?.username ? user?.username : user?.first_name}
+              </Text>
+            </View>
+            <SettingsLogOut />
           </View>
-          <SettingsLogOut />
-        </View>
 
-        <View style={{ marginTop: 20, maxWidth: 200 }}>
-          <DropdownComponent
-            data={accounts}
-            labelField={"nickname"}
-            valueField={"account_no"}
-            onSelect={handleSelect}
-          />
-        </View>
-        <AccountBasicInfoWithEye
-          account={selectedAccount}
-        />
-      </View>
-      <View style={[styles.bottomContainer, centerContainerStyle]}>
-        <View style={styles.individualContainer}>
-          <View style={styles.addPadding}>
-            <Text style={[styles.title, centerTextStyle]}>Quick Actions</Text>
+          <View style={{ marginTop: 20, maxWidth: 200 }}>
+            <DropdownComponent
+              data={accounts}
+              labelField={"nickname"}
+              valueField={"account_no"}
+              onSelect={handleSelect}
+            />
           </View>
-          <QuickActions />
+          <AccountBasicInfoWithEye account={selectedAccount} />
         </View>
-        <View style={styles.individualContainer}>
-          <View style={styles.addPadding}>
-            <Text style={[styles.title, centerTextStyle]}>
-              Ongoing Promotions
-            </Text>
+        <View style={[styles.bottomContainer, centerContainerStyle]}>
+          <View style={styles.individualContainer}>
+            <View style={styles.addPadding}>
+              <Text style={[styles.title, centerTextStyle]}>Quick Actions</Text>
+            </View>
+            <QuickActions />
           </View>
-          <AdvertisementsCarousel />
+          <View style={styles.individualContainer}>
+            <View style={styles.addPadding}>
+              <Text style={[styles.title, centerTextStyle]}>
+                Ongoing Promotions
+              </Text>
+            </View>
+            <AdvertisementsCarousel />
+          </View>
         </View>
-      </View>
-      <StatusBar style="light" />
+        <StatusBar style="light" />
+      </ScrollView>
     </SafeAreaView>
   );
 }

@@ -11,6 +11,9 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import Colors from "../constants/Colors";
 import { useAuth } from "@/src/providers/AuthProvider";
+import { useEffect, useState } from "react";
+import fetchListofAccounts from "../providers/fetchListofAccounts";
+import { Account } from "@/assets/data/types";
 
 const actions = [
   {
@@ -75,28 +78,55 @@ const QuickActions = () => {
   const colorScheme = useColorScheme();
   const isDarkMode = colorScheme === "dark";
   const router = useRouter();
-  const { authenticateBiometric, isBiometricAuthenticated } = useAuth();
+  const { user, authenticateBiometric, isBiometricAuthenticated } = useAuth();
+  const [firstAccount, setFirstAccount] = useState<Account | null>(null);
 
   const handleActionPress = async (action: (typeof actions)[0]) => {
     try {
       if (!isBiometricAuthenticated) {
-        // Authentication failed or was cancelled
-        Alert.alert(
-          "Authentication Required",
-          "You must authenticate to access this feature.",
-          [
-            {
-              text: "OK",
-              style: "default",
-            },
-          ]
-        );
-        return;
+        authenticateBiometric().then(() => {
+          if (!isBiometricAuthenticated) {
+            // If authentication was not successful, show an alert
+            Alert.alert(
+              "Authentication Required",
+              "You must authenticate to access this feature.",
+              [
+                {
+                  text: "OK",
+                  style: "default",
+                },
+              ]
+            );
+            return;
+          }
+        });
       }
 
       // Authentication successful, proceed with the action
       if (action.route) {
-        router.push(action.route as any);
+        // Special handling for QR Pay (camera) route
+        if (action.route === "/(user)/camera") {
+          if (firstAccount) {
+            router.push({
+              pathname: "/(user)/camera",
+              params: { account_no: firstAccount.account_no },
+            });
+          } else {
+            Alert.alert(
+              "No Account Found",
+              "Please ensure you have an active account to use QR Pay.",
+              [
+                {
+                  text: "OK",
+                  style: "default",
+                },
+              ]
+            );
+          }
+        } else {
+          // For all other routes, use regular navigation
+          router.push(action.route as any);
+        }
       } else {
         // Show popup for features not implemented
         Alert.alert(
@@ -120,6 +150,28 @@ const QuickActions = () => {
       ]);
     }
   };
+
+  // Fetch and select the first account if available
+  useEffect(() => {
+    const fetchAccounts = async () => {
+      if (!user) return;
+      try {
+        // Assuming fetchListofAccounts is a function that fetches accounts
+        const accountsData = await fetchListofAccounts({
+          isMockEnabled: false,
+          isAdmin: false,
+          customer_id: "customer_id" in user ? user.customer_id : undefined,
+        });
+
+        if (accountsData && accountsData.length > 0) {
+          setFirstAccount(accountsData[0]);
+        }
+      } catch (error) {
+        console.error("Error fetching accounts:", error);
+      }
+    };
+    fetchAccounts();
+  }, [user, isBiometricAuthenticated]);
 
   return (
     <View style={[styles.container]}>
