@@ -124,6 +124,20 @@ const LoanPage = () => {
   };
 
   const handleApplyForLoan = () => {
+    if (
+      user?.date_of_birth == null ||
+      user?.phone_no == null ||
+      user?.home_address == null ||
+      user?.nationality == null ||
+      (!user?.passport_no && !user?.ic_no)
+    ) {
+      // Show an error message or prompt the user to complete their profile
+      Alert.alert(
+        "Incomplete Profile",
+        "Please complete your profile before applying for a loan."
+      );
+      return;
+    }
     router.push("/newLoan");
   };
 
@@ -278,7 +292,7 @@ const LoanPage = () => {
 
   const renderEmptyState = () => (
     <ScrollView
-    style={{ flex: 1 }}
+      style={{ flex: 1 }}
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
       }

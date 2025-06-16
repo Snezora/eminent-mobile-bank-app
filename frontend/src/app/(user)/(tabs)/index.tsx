@@ -4,7 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useThemeColor } from "@/src/components/Themed";
 import DropdownComponent from "@/src/components/Dropdown";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { Redirect, Stack } from "expo-router";
+import { Redirect, router, Stack } from "expo-router";
 import QuickActions from "@/src/components/QuickActions";
 import { AccountBasicInfoWithEye } from "@/src/components/AccountBasicInfo";
 import { useCallback, useEffect, useState } from "react";
@@ -21,8 +21,13 @@ import { useRealtimeSubscription } from "@/src/lib/useRealTimeSubscription";
 export default function TabOneScreen() {
   const colorScheme = useColorScheme();
   const isDarkMode = colorScheme === "dark";
-  const { session, user, isBiometricAuthenticated, authenticateBiometric } =
-    useAuth();
+  const {
+    session,
+    user,
+    isBiometricAuthenticated,
+    authenticateBiometric,
+    isAdmin,
+  } = useAuth();
   const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [isEyeOpen, setIsEyeOpen] = useState(true);
@@ -115,6 +120,31 @@ export default function TabOneScreen() {
     }
 
     refreshAccounts();
+
+    if (!isAdmin) {
+      if (
+        user?.date_of_birth == null ||
+        user?.phone_no == null ||
+        user?.home_address == null ||
+        user?.nationality == null ||
+        (!user?.passport_no && !user?.ic_no)
+      ) {
+        // Show an error message or prompt the user to complete their profile
+        Alert.alert(
+          "Incomplete Profile",
+          "Please complete your profile before applying for a loan.",
+          [
+            {
+              text: "OK",
+              onPress: () => {
+                router.push("/(user)/(tabs)/profile");
+              },
+            },
+          ]
+        );
+        return;
+      }
+    }
   }, [user]);
 
   const handleSelect = (item: any) => {
@@ -139,7 +169,9 @@ export default function TabOneScreen() {
         style={{}}
         contentContainerStyle={{
           paddingBottom: 20,
-          backgroundColor: isDarkMode ? Colors.dark.background : Colors.light.background,
+          backgroundColor: isDarkMode
+            ? Colors.dark.background
+            : Colors.light.background,
         }}
       >
         <Stack.Screen options={{ headerShown: false }} />

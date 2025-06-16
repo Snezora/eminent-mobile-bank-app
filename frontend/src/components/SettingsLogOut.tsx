@@ -17,7 +17,7 @@ const SettingsLogOut = () => {
     } catch (error) {
       console.error("Logout error:", error);
     } finally {
-      console.log("Redirecting to home page...");
+      router.dismissAll();      
       router.replace("/(auth)/home-page");
     }
   };

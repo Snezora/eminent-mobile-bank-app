@@ -90,7 +90,7 @@ const SignInScreen = () => {
       console.log("AuthProvider updated. Redirecting...");
       console.log("Redirecting to the appropriate screen...");
       router.dismissAll();
-      isAdmin ? router.push("/(admin)") : router.push("/(user)");
+      isAdmin ? router.push("/(admin)") : router.push("/(user)/(tabs)");
     }
   }, [isAdmin, session]);
 

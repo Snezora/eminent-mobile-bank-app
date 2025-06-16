@@ -86,7 +86,6 @@ const QuickActions = () => {
       if (!isBiometricAuthenticated) {
         authenticateBiometric().then(() => {
           if (!isBiometricAuthenticated) {
-            // If authentication was not successful, show an alert
             Alert.alert(
               "Authentication Required",
               "You must authenticate to access this feature.",
@@ -102,9 +101,7 @@ const QuickActions = () => {
         });
       }
 
-      // Authentication successful, proceed with the action
       if (action.route) {
-        // Special handling for QR Pay (camera) route
         if (action.route === "/(user)/camera") {
           if (firstAccount) {
             router.push({
@@ -123,12 +120,28 @@ const QuickActions = () => {
               ]
             );
           }
+        } else if (action.route === "/(user)/newLoan") {
+          if (
+            user?.date_of_birth == null ||
+            user?.phone_no == null ||
+            user?.home_address == null ||
+            user?.nationality == null ||
+            (!user?.passport_no && !user?.ic_no)
+          ) {
+            Alert.alert(
+              "Incomplete Profile",
+              "Please complete your profile before applying for a loan."
+            );
+            return;
+          }
+          router.push({
+            pathname: action.route,
+            params: { account_no: firstAccount?.account_no },
+          });
         } else {
-          // For all other routes, use regular navigation
           router.push(action.route as any);
         }
       } else {
-        // Show popup for features not implemented
         Alert.alert(
           "Feature Not Available",
           `${action.title} is not implemented yet. Coming soon!`,
@@ -151,12 +164,10 @@ const QuickActions = () => {
     }
   };
 
-  // Fetch and select the first account if available
   useEffect(() => {
     const fetchAccounts = async () => {
       if (!user) return;
       try {
-        // Assuming fetchListofAccounts is a function that fetches accounts
         const accountsData = await fetchListofAccounts({
           isMockEnabled: false,
           isAdmin: false,

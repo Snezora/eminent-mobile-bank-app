@@ -470,10 +470,10 @@ const LoanDetails = () => {
             <View
               style={[
                 styles.customerHalfContainer,
-                { maxWidth: "40%", alignItems: "center", width: "auto" },
+                { maxWidth: "40%", alignItems: "center", justifyContent: "center", width: "auto" },
               ]}
             >
-              <TouchableOpacity
+              {/* <TouchableOpacity
                 style={[
                   styles.buttonContainer,
                   { backgroundColor: Colors.light.themeColor },
@@ -510,7 +510,7 @@ const LoanDetails = () => {
                 }}
               >
                 <Text style={styles.buttonText}>View Utility Bill</Text>
-              </TouchableOpacity>
+              </TouchableOpacity> */}
               <TouchableOpacity
                 style={[
                   styles.buttonContainer,

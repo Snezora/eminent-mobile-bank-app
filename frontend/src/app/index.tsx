@@ -34,9 +34,11 @@ const IndexPage = () => {
       if (!session) {
         router.replace("/(auth)/home-page");
       } else if (isAdmin) {
+        router.dismissAll();
         router.replace("/(admin)");
       } else {
-        router.replace("/(user)");
+        router.dismissAll();
+        router.replace("/(user)/(tabs)");
       }
     }
   }, [session, isAdmin, loading, showSplash]);

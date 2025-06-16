@@ -55,8 +55,68 @@ const SignUpScreen = () => {
     resolver: yupResolver(scheme),
   });
 
+  const generateAccountNumber = async (): Promise<string> => {
+    let accountNumber: string;
+    let isUnique = false;
+
+    while (!isUnique) {
+      // Generate 12-digit number
+      accountNumber = Math.floor(
+        100000000000 + Math.random() * 900000000000
+      ).toString();
+
+      // Check if account number already exists in database
+      const { data, error } = await supabase
+        .from("Account")
+        .select("account_no")
+        .eq("account_no", accountNumber)
+        .single();
+
+      if (error && error.code === "PGRST116") {
+        // No rows returned (PGRST116 = no rows), account number is unique
+        isUnique = true;
+      } else if (error) {
+        console.error("Error checking account number:", error);
+        throw new Error("Failed to validate account number");
+      }
+    }
+
+    return accountNumber!;
+  };
+
+  const createDefaultSavingsAccount = async (
+    customerId: string
+  ): Promise<string | null> => {
+    try {
+      // Generate unique account number
+      const accountNumber = await generateAccountNumber();
+
+      const accountData = {
+        customer_id: customerId,
+        account_no: accountNumber,
+        account_type: "Savings",
+        balance: 0,
+        account_status: "Pending",
+        nickname: null,
+        created_at: new Date().toISOString(),
+      };
+
+      const { error } = await supabase.from("Account").insert([accountData]);
+
+      if (error) {
+        console.error("Error creating default savings account:", error);
+        throw error;
+      }
+
+      console.log("Default savings account created:", accountNumber);
+      return accountNumber;
+    } catch (error) {
+      console.error("Failed to create default savings account:", error);
+      return null;
+    }
+  };
+
   const onSubmit = async (data: any) => {
-    
     try {
       // Sign up the user
       const { data: signUpData, error: signUpError } =
@@ -77,7 +137,7 @@ const SignUpScreen = () => {
         return;
       }
 
-      const { error: insertError } = await supabase
+      const { data: insertData, error: insertError } = await supabase
         .from("Customer")
         .insert([
           {
@@ -92,10 +152,38 @@ const SignUpScreen = () => {
       if (insertError) {
         Alert.alert(insertError.message);
         return;
-      }
+      } else {
+        console.log("Customer inserted successfully:", insertData);
+        const accountNumber = await createDefaultSavingsAccount(
+          insertData.customer_id
+        );
 
-      Alert.alert("Please check your inbox for email verification!");
-      router.push("/(auth)/sign-in");
+        await supabase.auth.signOut();
+
+        if (accountNumber) {
+          Alert.alert(
+            "Account Created Successfully!",
+            `Welcome to Eminent Western Bank!\n\nYour savings account has been created:\nAccount Number: ${accountNumber}\n\nPlease verify your email to complete the setup.`,
+            [
+              {
+                text: "OK",
+                onPress: () => router.replace("/(auth)/sign-in"),
+              },
+            ]
+          );
+        } else {
+          Alert.alert(
+            "Registration Completed",
+            "Your account has been created successfully. Please verify your email and contact support if you need assistance setting up your banking account.",
+            [
+              {
+                text: "OK",
+                onPress: () => router.replace("/(auth)/sign-in"),
+              },
+            ]
+          );
+        }
+      }
     } catch (error) {
       Alert.alert("An unexpected error occurred. Please try again.");
       console.error("Error during sign-up:", error);
