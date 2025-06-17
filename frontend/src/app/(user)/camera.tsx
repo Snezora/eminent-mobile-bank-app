@@ -22,7 +22,6 @@ import SwitchSelector from "react-native-switch-selector";
 import * as Brightness from "expo-brightness";
 import QRCode from "react-native-qrcode-svg";
 import { Dimensions } from "react-native";
-import SimpleCrypto from "simple-crypto-js";
 import CryptoJS from "crypto-js";
 import { useMemo } from "react";
 

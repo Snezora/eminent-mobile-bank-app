@@ -441,7 +441,7 @@ const SignUpScreen = () => {
                 )}
               </View>
               <Button
-                title="Sign In"
+                title="Register"
                 onPress={handleSubmit((data) => {
                   console.log("Validation passed, calling onSubmit...");
                   onSubmit(data);

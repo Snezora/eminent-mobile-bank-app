@@ -71,17 +71,6 @@ const HomePageScreen = () => {
                 <Text style={styles.logoText}>Bank</Text>
               </View>
             </Animated.View>
-            <Animated.View
-              style={{ flexDirection: "row", alignItems: "center" }}
-              entering={FadeInRight.duration(1000)}
-            >
-              <Ionicons
-                name="globe-outline"
-                size={32}
-                color="black"
-                style={{ transform: [{ translateY: -5 }] }}
-              />
-            </Animated.View>
           </View>
 
           <View style={{ paddingHorizontal: 10, marginTop: 20 }}>

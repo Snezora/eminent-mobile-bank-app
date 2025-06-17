@@ -13,6 +13,8 @@ import Animated, {
   FadeOut,
 } from "react-native-reanimated";
 import { supabase } from "../lib/supabase";
+import { useFocusEffect } from "@react-navigation/core";
+import { useCallback } from "react";
 
 var width = Dimensions.get("window").width; //full width
 var height = Dimensions.get("window").height; //full height
@@ -22,12 +24,12 @@ const IndexPage = () => {
   const router = useRouter();
   const [showSplash, setShowSplash] = useState(true);
 
-  useEffect(() => {
-    //sign out user
-    // supabase.auth.signOut()
-    const timer = setTimeout(() => setShowSplash(false), 1000);
-    return () => clearTimeout(timer);
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      const timer = setTimeout(() => setShowSplash(false), 1000);
+      return () => clearTimeout(timer);
+    }, [])
+  );
 
   useEffect(() => {
     if (!showSplash && !loading) {

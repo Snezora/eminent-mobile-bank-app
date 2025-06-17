@@ -54,7 +54,6 @@ const SignInScreen = () => {
     let mockPassword = "abcd1234";
 
     console.log(session, isAdmin, loading, isMockEnabled);
-    
 
     if (
       isMockEnabled &&
@@ -64,7 +63,7 @@ const SignInScreen = () => {
       console.log(
         "Mock sign-in successful. Waiting for AuthProvider to update..."
       );
-      return; 
+      return;
     }
 
     try {
@@ -203,7 +202,6 @@ const SignInScreen = () => {
                   <Text style={styles.error}>{errors.email?.message}</Text>
                 )}
               </View>
-
               <View>
                 <Controller
                   control={control}
@@ -255,6 +253,13 @@ const SignInScreen = () => {
                 color={Colors.light.themeColor}
                 disabled={loading}
               />
+              {/* <TouchableOpacity
+                onPress={() => router.push("/(auth)/forgot-password")}
+                style={styles.forgotPasswordContainer}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+              </TouchableOpacity> */}
             </View>
           </Animated.View>
         </KeyboardAwareScrollView>
@@ -304,6 +309,15 @@ const styles = StyleSheet.create({
     color: "red",
     fontSize: 14,
     marginBottom: -10,
+  },
+  forgotPasswordContainer: {
+    alignItems: "center",
+    marginTop: 15,
+  },
+  forgotPasswordText: {
+    fontSize: 16,
+    color: Colors.light.themeColor,
+    textDecorationLine: "underline",
   },
 });
 
