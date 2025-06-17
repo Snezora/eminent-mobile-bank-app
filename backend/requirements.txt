@@ -1,0 +1,29 @@
+# Web Framework
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+
+# Data Processing & Scientific Computing
+pandas==2.1.3
+numpy==1.25.2
+scikit-learn==1.3.2
+
+# Machine Learning Models
+catboost==1.2.2
+lightgbm==4.1.0
+xgboost==2.0.1
+joblib==1.3.2
+
+# SHAP for Model Explainability
+shap==0.43.0
+
+# Encryption
+cryptography==41.0.8
+
+# Environment Variables
+python-dotenv==1.0.0
+
+# Data Validation
+pydantic==2.5.0
+
+# Additional Dependencies (may be required by above packages)
+typing-extensions==4.8.0
