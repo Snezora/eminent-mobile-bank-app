@@ -78,7 +78,6 @@ const AccountCarousel = ({
         data={carouselData}
         loop={false}
         renderItem={({ item, index }) => {
-          // Render "Add New Account" card
           if (item.isAddCard) {
             return (
               <TouchableOpacity
@@ -158,7 +157,7 @@ const AccountCarousel = ({
                 contentFit="fill"
                 style={[StyleSheet.absoluteFill, { borderRadius: 5 }]}
               />
-              <View style={{ justifyContent: "space-evenly" }}>
+              <View style={{ justifyContent: "space-evenly", flex: 1 }}>
                 <View>
                   <View
                     style={{

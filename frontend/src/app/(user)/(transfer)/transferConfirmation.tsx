@@ -482,17 +482,17 @@ const TransferConfirmationPage = () => {
             <ScrollView
               style={{
                 maxWidth: "50%",
-                maxHeight: 150, // Set the height to 50px
+                maxHeight: 150, 
               }}
               contentContainerStyle={{
-                flexGrow: 1, // Ensure the content fills the ScrollView
+                flexGrow: 1,
               }}
             >
               <Text
                 style={{
                   fontSize: 16,
                   color: isDarkMode ? Colors.dark.text : Colors.light.text,
-                  lineHeight: 20, // Adjust line height for better readability
+                  lineHeight: 20, 
                   textAlign: "right",
                 }}
               >
@@ -589,6 +589,7 @@ const TransferConfirmationPage = () => {
             <TouchableOpacity
               onPress={() => {
                 setIsModalVisible(false);
+                router.dismissAll();
                 router.push("/(user)/(tabs)/accounts");
               }}
               style={{

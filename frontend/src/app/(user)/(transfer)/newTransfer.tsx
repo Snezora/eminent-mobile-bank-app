@@ -229,7 +229,7 @@ const NewTransferPage = () => {
   return (
     <SafeAreaView
       style={[{ flex: 1, backgroundColor: "#385A93" }]}
-      edges={["top", "bottom"]}
+      edges={["top"]}
     >
       <View
         style={{

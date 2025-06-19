@@ -167,7 +167,7 @@ const LoanPage = () => {
     const status = getLoanStatus(loan);
 
     return (
-      <TouchableOpacity
+      <View
         key={loan.loan_id}
         style={[
           styles.loanCard,
@@ -286,7 +286,7 @@ const LoanPage = () => {
             </Text>
           </View>
         </View>
-      </TouchableOpacity>
+      </View>
     );
   };
 

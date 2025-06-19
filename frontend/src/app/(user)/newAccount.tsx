@@ -130,7 +130,6 @@ const NewAccountPage = () => {
         return;
       }
 
-      // Generate unique account number
       const accountNumber = await generateAccountNumber();
       setGeneratedAccountNo(accountNumber);
 

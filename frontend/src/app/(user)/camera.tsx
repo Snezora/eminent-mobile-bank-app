@@ -57,47 +57,74 @@ export default function Camera() {
   ];
 
   useEffect(() => {
-    if (!permission?.granted) {
-      Alert.alert(
-        "Camera Permission Required",
-        "This app needs camera access to scan QR codes and generate payment QR codes.",
-        [
-          {
-            text: "Cancel",
-            style: "cancel",
-            onPress: () => router.back(),
-          },
-          {
-            text: "Grant Permission",
-            onPress: async () => {
-              const result = await requestPermission();
-              if (!result.granted) {
-                Alert.alert(
-                  "Permission Denied",
-                  "Camera access is required for QR code functionality. You can enable it in Settings.",
-                  [
-                    {
-                      text: "Go Back",
-                      onPress: () => router.back(),
-                    },
-                    {
-                      text: "Open Settings",
-                      onPress: () => Linking.openSettings(),
-                    },
-                  ]
-                );
-              }
+    const checkPermissions = async () => {
+      // Don't do anything if permission is still loading
+      if (permission === null) return;
+
+      // If permission is already granted, no need to ask
+      if (permission.granted) return;
+
+      // Only ask for permission if we haven't asked before and can ask again
+      if (permission.canAskAgain && !permission.granted) {
+        Alert.alert(
+          "Camera Permission Required",
+          "This app needs camera access to scan QR codes and generate payment QR codes.",
+          [
+            {
+              text: "Cancel",
+              style: "cancel",
+              onPress: () => router.back(),
             },
-          },
-        ],
-        { cancelable: false }
-      );
-    }
-  }, [permission?.granted]);
+            {
+              text: "Grant Permission",
+              onPress: async () => {
+                const result = await requestPermission();
+                if (!result.granted) {
+                  Alert.alert(
+                    "Permission Denied",
+                    "Camera access is required for QR code functionality. You can enable it in Settings.",
+                    [
+                      {
+                        text: "Go Back",
+                        onPress: () => router.back(),
+                      },
+                      {
+                        text: "Open Settings",
+                        onPress: () => Linking.openSettings(),
+                      },
+                    ]
+                  );
+                }
+              },
+            },
+          ],
+          { cancelable: false }
+        );
+      } else if (!permission.canAskAgain && !permission.granted) {
+        // Permission permanently denied
+        Alert.alert(
+          "Camera Access Disabled",
+          "Camera permission has been permanently denied. Please enable it in Settings to use this feature.",
+          [
+            {
+              text: "Go Back",
+              onPress: () => router.back(),
+            },
+            {
+              text: "Open Settings",
+              onPress: () => Linking.openSettings(),
+            },
+          ]
+        );
+      }
+    };
+
+    checkPermissions();
+  }, [permission]); // Only depend on the permission object, not permission.granted
 
   const handleLayout = (event: LayoutChangeEvent) => {
     const { height } = event.nativeEvent.layout;
-    bottomContainerHeight.current = height; // Save the height
+    bottomContainerHeight.current = height;
   };
 
   const encryptData = async () => {
@@ -167,7 +194,11 @@ export default function Camera() {
 
   if (!permission) {
     // Camera permissions are still loading.
-    return <View />;
+    return (
+      <View>
+        <Text>Loading!</Text>
+      </View>
+    );
   }
 
   if (!permission.granted) {
@@ -193,7 +224,20 @@ export default function Camera() {
       const decryptedData = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
 
       if (decryptedData.app !== "EminentWesternBank") {
-        throw new Error("Invalid QR code");
+        Alert.alert(
+          "Error",
+          "An error occurred while processing the QR code.",
+          [
+            {
+              text: "OK",
+              onPress: () => {
+                setHasScanned(false);
+                setCameraActive(true);
+              },
+            },
+          ],
+          { cancelable: false }
+        );
       }
 
       if (decryptedData) {
@@ -246,8 +290,8 @@ export default function Camera() {
           {
             text: "OK",
             onPress: () => {
-              setHasScanned(false); // Re-enable scanning
-              setCameraActive(true); // Re-enable the camera
+              setHasScanned(false);
+              setCameraActive(true);
             },
           },
         ],
@@ -256,9 +300,9 @@ export default function Camera() {
     } finally {
       if (!cameraActive) {
         setTimeout(() => {
-          setHasScanned(false); // Re-enable scanning after a delay
-          setCameraActive(true); // Re-enable the camera
-        }, 1000); // Add a delay to prevent immediate re-scanning
+          setHasScanned(false);
+          setCameraActive(true);
+        }, 1000);
       }
     }
   }
