@@ -217,21 +217,19 @@ const LoanDetails = () => {
       ? dayjs().diff(dayjs(customer.date_of_birth), "year")
       : 30;
 
-    // Provide default values for null fields
     const body = {
       person_age,
       person_income: loan.customer_annual_income,
       person_home_ownership: loan.customer_home_ownership,
       person_emp_length: loan.customer_job_years || 0,
       loan_intent: loan.loan_intent,
-      loan_grade: loan.loan_grade || "C", // Default to 'C' grade
+      loan_grade: loan.loan_grade || "C",
       loan_amnt: loan.loan_amount,
-      loan_int_rate: loan.loan_interest_rate || 10.0, // Default interest rate
-      cb_person_default_on_file: loan.customer_default ?? false, // Default to false
+      loan_int_rate: loan.loan_interest_rate || 10.0,
+      cb_person_default_on_file: loan.customer_default ?? false, 
       cb_person_cred_hist_length: loan.customer_credit_history_years || 0,
     };
 
-    console.log("AI Prediction Body:", body); // Add this for debugging
 
     try {
       const response = await fetch(`${backendUrl}/predict`, {
@@ -245,11 +243,10 @@ const LoanDetails = () => {
       }
 
       const result = await response.json();
-      console.log("AI Prediction Result:", result); // Add this for debugging
+
       setLoanPrediction(result);
     } catch (error) {
       console.error("Prediction error:", error);
-      // Set a fallback prediction to prevent infinite loading
       setLoanPrediction({ prediction: 0.5, shap_values: {} });
     } finally {
       setLoanPredicting(false);

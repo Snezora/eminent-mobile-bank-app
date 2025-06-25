@@ -58,13 +58,10 @@ export default function Camera() {
 
   useEffect(() => {
     const checkPermissions = async () => {
-      // Don't do anything if permission is still loading
       if (permission === null) return;
 
-      // If permission is already granted, no need to ask
       if (permission.granted) return;
 
-      // Only ask for permission if we haven't asked before and can ask again
       if (permission.canAskAgain && !permission.granted) {
         Alert.alert(
           "Camera Permission Required",
@@ -101,7 +98,6 @@ export default function Camera() {
           { cancelable: false }
         );
       } else if (!permission.canAskAgain && !permission.granted) {
-        // Permission permanently denied
         Alert.alert(
           "Camera Access Disabled",
           "Camera permission has been permanently denied. Please enable it in Settings to use this feature.",
@@ -120,7 +116,7 @@ export default function Camera() {
     };
 
     checkPermissions();
-  }, [permission]); // Only depend on the permission object, not permission.granted
+  }, [permission]);
 
   const handleLayout = (event: LayoutChangeEvent) => {
     const { height } = event.nativeEvent.layout;

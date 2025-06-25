@@ -101,16 +101,13 @@ async def predict(data: PredictionInput):
         # If it's a list (e.g., per class), pick the positive class if binary
         if isinstance(shap_values, list):
             shap_values = shap_values[1] if len(shap_values) > 1 else shap_values[0]
-        # Now shap_values should be (n_samples, n_features) or (n_features,)
-        # If it's 2D, select the first sample
+        # Now shap_values should be (n_samples, n_features)
         if hasattr(shap_values, "shape") and len(shap_values.shape) == 2:
             shap_values_row = shap_values[0]
         elif hasattr(shap_values, "__len__") and len(shap_values) == len(input_df.columns):
             shap_values_row = shap_values
         else:
-            # Try to flatten if it's still nested
             shap_values_row = np.array(shap_values).flatten()
-        # Convert to float for JSON
         shap_dict = {str(col): float(val) for col, val in zip(input_df.columns, shap_values_row)}
     except Exception as e:
         shap_dict = {"error": f"SHAP calculation failed: {e}"}
@@ -120,30 +117,3 @@ async def predict(data: PredictionInput):
         "shap_values": shap_dict
     }
     
-SECRET_KEY = os.getenv("SECRET_KEY") or "BANKAPPEMINENTWESTERNBANK"
-if not SECRET_KEY:
-    raise ValueError("SECRET_KEY is not set in the environment variables or .env file.")
-
-# Ensure SECRET_KEY is 32 url-safe base64-encoded bytes for Fernet
-import base64
-if len(SECRET_KEY) != 44:
-    # Pad or hash the key to 32 bytes, then base64 encode
-    SECRET_KEY = base64.urlsafe_b64encode(SECRET_KEY.encode('utf-8').ljust(32, b'0'))
-
-fernet = Fernet(SECRET_KEY)
-
-class DataInput(BaseModel):
-    receiver_account_no: str
-
-@app.post("/encrypt")
-def encrypt(data: DataInput):
-    encrypted_data = fernet.encrypt(data.json().encode()).decode()
-    return {"encrypted_data": encrypted_data}
-
-@app.post("/decrypt")
-def decrypt(encrypted_data: str):
-    try:
-        decrypted_data = fernet.decrypt(encrypted_data.encode()).decode()
-        return {"decrypted_data": eval(decrypted_data)}
-    except Exception as e:
-        return {"error": f"Decryption failed: {e}"}
