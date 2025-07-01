@@ -27,6 +27,7 @@ import BottomImageLight from "@/assets/images/backgroundBlobs/layered-waves-haik
 import BottomImageDark from "@/assets/images/backgroundBlobs/layered-waves-haikei_dark.svg";
 import { Account } from "@/assets/data/types";
 import { useAuth } from "@/src/providers/AuthProvider";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 
 const NewTransferPage = () => {
   const { user } = useAuth();
@@ -245,7 +246,7 @@ const NewTransferPage = () => {
           Back
         </Text>
       </View>
-      <ScrollView
+      <KeyboardAwareScrollView
         style={{
           flex: 1,
           backgroundColor: isDarkMode
@@ -258,6 +259,9 @@ const NewTransferPage = () => {
           marginTop: 10,
           gap: 20,
         }}
+        enableOnAndroid={true}
+        extraScrollHeight={50}
+        keyboardShouldPersistTaps="handled"
       >
         <Controller
           control={control}
@@ -358,7 +362,7 @@ const NewTransferPage = () => {
                   if (selectedBank) {
                     return (
                       <Image
-                        source={selectedBank.logo} // Render the logo of the selected bank
+                        source={selectedBank.logo}
                         style={{ width: 40, height: 40, marginRight: 10 }}
                         resizeMode="contain"
                       />
@@ -631,7 +635,7 @@ const NewTransferPage = () => {
             Transfer
           </Text>
         </TouchableOpacity>
-      </ScrollView>
+      </KeyboardAwareScrollView>
     </SafeAreaView>
   );
 };

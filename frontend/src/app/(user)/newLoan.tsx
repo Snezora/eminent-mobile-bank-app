@@ -22,6 +22,7 @@ import * as yup from "yup";
 import fetchListofAccounts from "@/src/providers/fetchListofAccounts";
 import { Account } from "@/assets/data/types";
 import * as LocalAuthentication from "expo-local-authentication";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 
 // TODO: TRY AND SEE IF UPLOAD FILE IS DOABLE
 
@@ -232,7 +233,7 @@ const NewLoanPage = () => {
   ) => {
     setSelectedLoanGrade(grade);
     setValue("loan_grade", grade);
-  }; 
+  };
 
   const onSubmit = async (data: any) => {
     Alert.alert(
@@ -304,7 +305,7 @@ const NewLoanPage = () => {
         loan_interest_rate: parseFloat(data.loan_interest_rate),
         loan_grade: data.loan_grade,
         application_date: new Date().toISOString(),
-        final_approval: null, 
+        final_approval: null,
       };
 
       const { error } = await supabase.from("Loan").insert([loanData]);
@@ -395,10 +396,15 @@ const NewLoanPage = () => {
           },
         ]}
       >
-        <ScrollView
+        <KeyboardAwareScrollView
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
+          enableOnAndroid={true}
+          extraScrollHeight={50}
+          keyboardShouldPersistTaps="handled"
+          enableAutomaticScroll={true}
+          enableResetScrollToCoords={false}
         >
           <View style={styles.section}>
             <Text
@@ -1237,7 +1243,7 @@ const NewLoanPage = () => {
                 </Text>
               </View>
             )}
-        </ScrollView>
+        </KeyboardAwareScrollView>
 
         <View style={styles.buttonContainer}>
           <TouchableOpacity

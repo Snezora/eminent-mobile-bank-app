@@ -24,6 +24,7 @@ import DateTimePickerModal from "react-native-modal-datetime-picker";
 import dayjs from "dayjs";
 import { Dropdown } from "react-native-element-dropdown";
 import { NATIONALITIES } from "@/src/constants/Nationalities";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 
 const profileSchema = yup.object().shape({
   username: yup
@@ -146,7 +147,7 @@ const FormInput: React.FC<{
   keyboardType?: "default" | "phone-pad";
   autoCapitalize?: "none" | "characters";
   disabled?: boolean;
-  hideWhenDisabled?: boolean; // Add this new prop
+  hideWhenDisabled?: boolean;
 }> = ({
   label,
   control,
@@ -158,9 +159,8 @@ const FormInput: React.FC<{
   keyboardType = "default",
   autoCapitalize = "none",
   disabled = false,
-  hideWhenDisabled = false, // Default to false
+  hideWhenDisabled = false,
 }) => {
-  // If hideWhenDisabled is true and field is disabled, don't render anything
   if (hideWhenDisabled && disabled) {
     return null;
   }
@@ -480,7 +480,7 @@ const Profile = () => {
         <Text style={styles.headerTitle}>Profile</Text>
       </View>
 
-      <ScrollView
+      <KeyboardAwareScrollView
         style={[
           styles.content,
           {
@@ -490,6 +490,11 @@ const Profile = () => {
           },
         ]}
         showsVerticalScrollIndicator={false}
+        enableOnAndroid={true}
+        extraScrollHeight={50}
+        keyboardShouldPersistTaps="handled"
+        enableAutomaticScroll={true}
+        enableResetScrollToCoords={false}
       >
         <View style={styles.form}>
           <View style={styles.profileHeader}>
@@ -707,7 +712,7 @@ const Profile = () => {
             </View>
           </View>
         </View>
-      </ScrollView>
+      </KeyboardAwareScrollView>
 
       <View style={styles.buttonContainer}>
         <TouchableOpacity
@@ -889,29 +894,29 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontStyle: "italic",
   },
-    lockedSection: {
+  lockedSection: {
     borderWidth: 1,
     borderRadius: 12,
     padding: 20,
     marginBottom: 20,
-    borderStyle: 'dashed',
+    borderStyle: "dashed",
   },
   lockedContent: {
-    alignItems: 'center',
+    alignItems: "center",
     gap: 10,
   },
   lockedTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   lockedSubtitle: {
     fontSize: 14,
-    textAlign: 'center',
+    textAlign: "center",
     lineHeight: 20,
   },
   authenticateButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 8,
@@ -919,9 +924,9 @@ const styles = StyleSheet.create({
     marginTop: 5,
   },
   authenticateButtonText: {
-    color: 'white',
+    color: "white",
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });
 

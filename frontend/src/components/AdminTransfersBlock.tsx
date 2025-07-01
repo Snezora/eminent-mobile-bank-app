@@ -113,7 +113,7 @@ const AdminTransfersBlock = (transaction: Transaction) => {
           <Text style={[styles.text, { color: isDarkMode ? "#d0d0c0" : "#000" }]}>$ {transaction.amount.toFixed(2)}</Text>
           {/* <Text style={styles.text}>RM {newRate?.toFixed(2)}</Text> */}
           <FontAwesome name="long-arrow-right" color={isDarkMode ? "white" : "#000"} size={32} />
-          <Text style={[styles.text, { color: isDarkMode ? "#d0d0c0" : "#000" }]}>{transaction.type_of_transfer}</Text>
+          <Text style={[styles.text, {fontSize: 12, fontWeight: "bold", color: isDarkMode ? "#d0d0c0" : "#000", textAlign: "center" }]}>{transaction.type_of_transfer}</Text>
         </View>
         <View style={styles.rightContainer}>
           <Text style={[styles.text, { color: isDarkMode ? "#d0d0c0" : "#000" }]}>

@@ -20,6 +20,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { TextInput } from "react-native";
 import * as LocalAuthentication from "expo-local-authentication";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 
 const schema = yup.object().shape({
   account_type: yup.string().required("Please select an account type"),
@@ -192,7 +193,7 @@ const NewAccountPage = () => {
         <View style={{ width: 24 }} />
       </View>
 
-      <ScrollView
+      <KeyboardAwareScrollView
         style={[
           styles.scrollView,
           {
@@ -203,6 +204,11 @@ const NewAccountPage = () => {
         ]}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        enableOnAndroid={true}
+        extraScrollHeight={50}
+        keyboardShouldPersistTaps="handled"
+        enableAutomaticScroll={true}
+        enableResetScrollToCoords={false}
       >
         <View style={styles.section}>
           <Text
@@ -507,7 +513,7 @@ const NewAccountPage = () => {
             </Text>
           </View>
         )}
-      </ScrollView>
+      </KeyboardAwareScrollView>
 
       <View style={styles.buttonContainer}>
         <TouchableOpacity
