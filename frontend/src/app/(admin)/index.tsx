@@ -36,14 +36,12 @@ const AdminPage = () => {
   const cardContainerStyle = isDarkMode
     ? {
         backgroundColor: "rgba(255, 255, 255, 0.09)",
-        elevation: 16,
       }
     : { backgroundColor: "white" };
 
   const bottomCardContainerStyle = isDarkMode
     ? {
         backgroundColor: "rgba(255, 255, 255, 0.16)",
-        elevation: 16,
       }
     : {
         backgroundColor: "white",

@@ -8,8 +8,8 @@ import {
   ActivityIndicator,
   Alert,
   Image,
-  Touchable,
   useColorScheme,
+  Dimensions,
 } from "react-native";
 import {
   GestureHandlerRootView,
@@ -24,24 +24,18 @@ import fetchListofAccounts from "@/src/providers/fetchListofAccounts";
 import { Account, Customer } from "@/assets/data/types";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/src/providers/AuthProvider";
-import Animated, {
-  FadeIn,
-  FadeOut,
-  FadeOutRight,
-  LinearTransition,
-} from "react-native-reanimated";
+import Animated, { FadeOut, LinearTransition } from "react-native-reanimated";
 import AdminAccountsBlock from "@/src/components/AdminAccountsBlock";
 import { Drawer } from "react-native-drawer-layout";
+import Modal from "react-native-modal";
 import dayjs from "dayjs";
 import { supabase } from "@/src/lib/supabase";
 import { fetchCustomerDetails } from "@/src/providers/fetchCustomerDetails";
-import Modal from "react-native-modal";
 import Button from "@/src/components/Button";
-import { Dropdown, MultiSelect } from "react-native-element-dropdown";
-import { set } from "react-hook-form";
+import { Dropdown } from "react-native-element-dropdown";
 import { useRealtimeSubscription } from "@/src/lib/useRealTimeSubscription";
 
-// DO MODAL FOR ACCOUNT DETAILS!!!!
+const { width, height } = Dimensions.get("window");
 
 const Accounts = () => {
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -631,352 +625,371 @@ const Accounts = () => {
                   }
                 />
               </View>
+              <Modal
+                isVisible={modalVisible}
+                onBackdropPress={() => setModalVisible(false)}
+                style={{
+                  justifyContent: "center",
+                }}
+                hideModalContentWhileAnimating
+                useNativeDriver={false}
+                backdropTransitionOutTiming={1}
+                animationIn={"slideInUp"}
+                animationOut={"slideOutDown"}
+              >
+                <View
+                  style={{
+                    backgroundColor: isDarkMode ? "#121212" : "white",
+                    borderRadius: 20,
+                    padding: 20,
+                    borderWidth: 5,
+                    borderColor: isDarkMode ? Colors.dark.themeColor : "white",
+                  }}
+                >
+                  <Text
+                    style={[
+                      styles.filterTitle,
+                      {
+                        fontSize: 20,
+                        color: isDarkMode
+                          ? Colors.dark.themeColorTertiary
+                          : Colors.light.themeColor,
+                      },
+                    ]}
+                  >
+                    Account Details
+                  </Text>
+                  <View style={styles.textContainer}>
+                    <Text
+                      style={[
+                        styles.nameText,
+                        { color: isDarkMode ? Colors.dark.text : "#000" },
+                      ]}
+                    >
+                      Account Number:{" "}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.normalText,
+                        { color: isDarkMode ? Colors.dark.text : "#000" },
+                      ]}
+                    >
+                      {chosenAccount?.account_no}
+                    </Text>
+                  </View>
+                  <View style={styles.textContainer}>
+                    <Text
+                      style={[
+                        styles.nameText,
+                        { color: isDarkMode ? Colors.dark.text : "#000" },
+                      ]}
+                    >
+                      Account Name:{" "}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.normalText,
+                        { color: isDarkMode ? Colors.dark.text : "#000" },
+                      ]}
+                    >
+                      {chosenAccount?.nickname ?? "N/A"}
+                    </Text>
+                  </View>
+                  <View style={styles.textContainer}>
+                    <Text
+                      style={[
+                        styles.nameText,
+                        { color: isDarkMode ? Colors.dark.text : "#000" },
+                      ]}
+                    >
+                      Account Holder:{" "}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.normalText,
+                        { color: isDarkMode ? Colors.dark.text : "#000" },
+                      ]}
+                    >
+                      {customerDetails?.first_name ?? "N/A"}{" "}
+                      {customerDetails?.last_name ?? "N/A"}
+                    </Text>
+                  </View>
+                  <View style={styles.textContainer}>
+                    <Text
+                      style={[
+                        styles.nameText,
+                        { color: isDarkMode ? Colors.dark.text : "#000" },
+                      ]}
+                    >
+                      Account Status:{" "}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.normalText,
+                        { color: isDarkMode ? Colors.dark.text : "#000" },
+                      ]}
+                    >
+                      {chosenAccount?.account_status ?? "N/A"}
+                    </Text>
+                  </View>
+                  <View style={styles.textContainer}>
+                    <Text
+                      style={[
+                        styles.nameText,
+                        { color: isDarkMode ? Colors.dark.text : "#000" },
+                      ]}
+                    >
+                      Account Type:{" "}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.normalText,
+                        { color: isDarkMode ? Colors.dark.text : "#000" },
+                      ]}
+                    >
+                      {chosenAccount?.account_type ?? "N/A"}
+                    </Text>
+                  </View>
+                  <View style={styles.textContainer}>
+                    <Text
+                      style={[
+                        styles.nameText,
+                        { color: isDarkMode ? Colors.dark.text : "#000" },
+                      ]}
+                    >
+                      Account Balance:{" "}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.normalText,
+                        { color: isDarkMode ? Colors.dark.text : "#000" },
+                      ]}
+                    >
+                      USD {chosenAccount?.balance.toFixed(2) ?? "N/A"}
+                    </Text>
+                  </View>
+                  <View style={styles.textContainer}>
+                    <Text
+                      style={[
+                        styles.nameText,
+                        { color: isDarkMode ? Colors.dark.text : "#000" },
+                      ]}
+                    >
+                      Created On:{" "}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.normalText,
+                        { color: isDarkMode ? Colors.dark.text : "#000" },
+                      ]}
+                    >
+                      {dayjs(chosenAccount?.created_at).format("DD/MM/YYYY")}
+                    </Text>
+                  </View>
+                  {chosenAccount?.account_status === "Pending" && (
+                    <>
+                      <View style={styles.textContainer}>
+                        <Text
+                          style={[
+                            styles.nameText,
+                            { color: isDarkMode ? Colors.dark.text : "#000" },
+                          ]}
+                        >
+                          Approval Status:{" "}
+                        </Text>
+                        <Text
+                          style={[
+                            styles.normalText,
+                            { color: isDarkMode ? Colors.dark.text : "#000" },
+                          ]}
+                        >
+                          Not Approved
+                        </Text>
+                      </View>
+
+                      <TouchableOpacity
+                        style={{
+                          backgroundColor: "green",
+                          padding: 10,
+                          borderRadius: 10,
+                          alignItems: "center",
+                          marginTop: 10,
+                        }}
+                        onPress={() => {
+                          Alert.alert(
+                            "Confirm Approval",
+                            "Are you sure you want to approve this account?",
+                            [
+                              {
+                                text: "Cancel",
+                                style: "cancel",
+                              },
+                              {
+                                text: "Approve",
+                                onPress: async () => {
+                                  setModalVisible(false);
+                                  const { error } = await supabase
+                                    .from("Account")
+                                    .update({
+                                      approved_at: dayjs().toISOString(),
+                                      account_status: "Active",
+                                    })
+                                    .eq(
+                                      "account_id",
+                                      chosenAccount?.account_id
+                                    );
+                                  if (error) {
+                                    console.error(
+                                      "Error blocking account:",
+                                      error
+                                    );
+                                  }
+                                },
+                              },
+                            ],
+                            { cancelable: false }
+                          );
+                        }}
+                      >
+                        <Text style={{ color: "white" }}>Approve Account</Text>
+                      </TouchableOpacity>
+                    </>
+                  )}
+
+                  {chosenAccount?.account_status !== "Pending" && (
+                    <>
+                      <View style={styles.textContainer}>
+                        <Text style={[styles.nameText, { color: "white"}]}>Approved On: </Text>
+                        <Text style={[styles.normalText, { color: "white" }]}>
+                          {dayjs(chosenAccount?.approved_at).format(
+                            "DD/MM/YYYY"
+                          )}
+                        </Text>
+                      </View>
+                      <View style={{ gap: 10 }}>
+                        <TouchableOpacity
+                          style={{
+                            backgroundColor: Colors.light.themeColor,
+                            padding: 10,
+                            borderRadius: 10,
+                            alignItems: "center",
+                          }}
+                          onPress={() => {
+                            setModalVisible(false);
+                            router.replace({
+                              pathname: "/(admin)/transfers",
+                              params: {
+                                searchIDExternal: chosenAccount?.account_no,
+                              },
+                            });
+                          }}
+                        >
+                          <Text style={{ color: "white" }}>View Transfers</Text>
+                        </TouchableOpacity>
+                        {chosenAccount?.account_status !== "Blocked" && (
+                          <TouchableOpacity
+                            style={{
+                              backgroundColor: Colors.light.themeColorReject,
+                              padding: 10,
+                              borderRadius: 10,
+                              alignItems: "center",
+                            }}
+                            onPress={() => {
+                              Alert.alert(
+                                "Confirm Block",
+                                "Are you sure you want to block this account?",
+                                [
+                                  {
+                                    text: "Cancel",
+                                    style: "cancel",
+                                  },
+                                  {
+                                    text: "Block",
+                                    onPress: async () => {
+                                      setModalVisible(false);
+                                      const { error } = await supabase
+                                        .from("Account")
+                                        .update({
+                                          account_status: "Blocked",
+                                        })
+                                        .eq(
+                                          "account_id",
+                                          chosenAccount?.account_id
+                                        );
+                                      if (error) {
+                                        console.error(
+                                          "Error blocking account:",
+                                          error
+                                        );
+                                      }
+                                    },
+                                  },
+                                ],
+                                { cancelable: false }
+                              );
+                            }}
+                          >
+                            <Text style={{ color: "white" }}>
+                              Block Account
+                            </Text>
+                          </TouchableOpacity>
+                        )}
+                        {chosenAccount?.account_status == "Blocked" && (
+                          <TouchableOpacity
+                            style={{
+                              backgroundColor: Colors.light.themeColor,
+                              padding: 10,
+                              borderRadius: 10,
+                              alignItems: "center",
+                            }}
+                            onPress={() => {
+                              Alert.alert(
+                                "Confirm Unblock",
+                                "Are you sure you want to unblock this account?",
+                                [
+                                  {
+                                    text: "Cancel",
+                                    style: "cancel",
+                                  },
+                                  {
+                                    text: "Unblock",
+                                    onPress: async () => {
+                                      setModalVisible(false);
+                                      const { error } = await supabase
+                                        .from("Account")
+                                        .update({
+                                          account_status: "Active",
+                                        })
+                                        .eq(
+                                          "account_id",
+                                          chosenAccount?.account_id
+                                        );
+                                      if (error) {
+                                        console.error(
+                                          "Error blocking account:",
+                                          error
+                                        );
+                                      }
+                                    },
+                                  },
+                                ],
+                                { cancelable: false }
+                              );
+                            }}
+                          >
+                            <Text style={{ color: "white" }}>
+                              Unblock Account
+                            </Text>
+                          </TouchableOpacity>
+                        )}
+                      </View>
+                    </>
+                  )}
+                </View>
+              </Modal>
             </View>
           </Drawer>
         )}
-
-        <Modal
-          isVisible={modalVisible}
-          onBackdropPress={() => setModalVisible(false)}
-          style={{
-            justifyContent: "center",
-          }}
-          hideModalContentWhileAnimating
-          useNativeDriver={false}
-          backdropTransitionOutTiming={1}
-          animationIn={"slideInUp"}
-          animationOut={"slideOutDown"}
-        >
-          <View
-            style={{
-              backgroundColor: isDarkMode ? "#121212" : "white",
-              borderRadius: 20,
-              padding: 20,
-              borderWidth: 5,
-              borderColor: isDarkMode ? Colors.dark.themeColor : "white",
-            }}
-          >
-            <Text
-              style={[
-                styles.filterTitle,
-                {
-                  fontSize: 20,
-                  color: isDarkMode
-                    ? Colors.dark.themeColorTertiary
-                    : Colors.light.themeColor,
-                },
-              ]}
-            >
-              Account Details
-            </Text>
-            <View style={styles.textContainer}>
-              <Text
-                style={[
-                  styles.nameText,
-                  { color: isDarkMode ? Colors.dark.text : "#000" },
-                ]}
-              >
-                Account Number:{" "}
-              </Text>
-              <Text
-                style={[
-                  styles.normalText,
-                  { color: isDarkMode ? Colors.dark.text : "#000" },
-                ]}
-              >
-                {chosenAccount?.account_no}
-              </Text>
-            </View>
-            <View style={styles.textContainer}>
-              <Text
-                style={[
-                  styles.nameText,
-                  { color: isDarkMode ? Colors.dark.text : "#000" },
-                ]}
-              >
-                Account Name:{" "}
-              </Text>
-              <Text
-                style={[
-                  styles.normalText,
-                  { color: isDarkMode ? Colors.dark.text : "#000" },
-                ]}
-              >
-                {chosenAccount?.nickname ?? "N/A"}
-              </Text>
-            </View>
-            <View style={styles.textContainer}>
-              <Text
-                style={[
-                  styles.nameText,
-                  { color: isDarkMode ? Colors.dark.text : "#000" },
-                ]}
-              >
-                Account Holder:{" "}
-              </Text>
-              <Text
-                style={[
-                  styles.normalText,
-                  { color: isDarkMode ? Colors.dark.text : "#000" },
-                ]}
-              >
-                {customerDetails?.first_name ?? "N/A"}{" "}
-                {customerDetails?.last_name ?? "N/A"}
-              </Text>
-            </View>
-            <View style={styles.textContainer}>
-              <Text
-                style={[
-                  styles.nameText,
-                  { color: isDarkMode ? Colors.dark.text : "#000" },
-                ]}
-              >
-                Account Status:{" "}
-              </Text>
-              <Text
-                style={[
-                  styles.normalText,
-                  { color: isDarkMode ? Colors.dark.text : "#000" },
-                ]}
-              >
-                {chosenAccount?.account_status ?? "N/A"}
-              </Text>
-            </View>
-            <View style={styles.textContainer}>
-              <Text
-                style={[
-                  styles.nameText,
-                  { color: isDarkMode ? Colors.dark.text : "#000" },
-                ]}
-              >
-                Account Type:{" "}
-              </Text>
-              <Text
-                style={[
-                  styles.normalText,
-                  { color: isDarkMode ? Colors.dark.text : "#000" },
-                ]}
-              >
-                {chosenAccount?.account_type ?? "N/A"}
-              </Text>
-            </View>
-            <View style={styles.textContainer}>
-              <Text
-                style={[
-                  styles.nameText,
-                  { color: isDarkMode ? Colors.dark.text : "#000" },
-                ]}
-              >
-                Account Balance:{" "}
-              </Text>
-              <Text
-                style={[
-                  styles.normalText,
-                  { color: isDarkMode ? Colors.dark.text : "#000" },
-                ]}
-              >
-                USD {chosenAccount?.balance.toFixed(2) ?? "N/A"}
-              </Text>
-            </View>
-            <View style={styles.textContainer}>
-              <Text
-                style={[
-                  styles.nameText,
-                  { color: isDarkMode ? Colors.dark.text : "#000" },
-                ]}
-              >
-                Created On:{" "}
-              </Text>
-              <Text
-                style={[
-                  styles.normalText,
-                  { color: isDarkMode ? Colors.dark.text : "#000" },
-                ]}
-              >
-                {dayjs(chosenAccount?.created_at).format("DD/MM/YYYY")}
-              </Text>
-            </View>
-            {chosenAccount?.account_status === "Pending" && (
-              <>
-                <View style={styles.textContainer}>
-                  <Text
-                    style={[
-                      styles.nameText,
-                      { color: isDarkMode ? Colors.dark.text : "#000" },
-                    ]}
-                  >
-                    Approval Status:{" "}
-                  </Text>
-                  <Text
-                    style={[
-                      styles.normalText,
-                      { color: isDarkMode ? Colors.dark.text : "#000" },
-                    ]}
-                  >
-                    Not Approved
-                  </Text>
-                </View>
-
-                <TouchableOpacity
-                  style={{
-                    backgroundColor: "green",
-                    padding: 10,
-                    borderRadius: 10,
-                    alignItems: "center",
-                    marginTop: 10,
-                  }}
-                  onPress={() => {
-                    Alert.alert(
-                      "Confirm Approval",
-                      "Are you sure you want to approve this account?",
-                      [
-                        {
-                          text: "Cancel",
-                          style: "cancel",
-                        },
-                        {
-                          text: "Approve",
-                          onPress: async () => {
-                            setModalVisible(false);
-                            const { error } = await supabase
-                              .from("Account")
-                              .update({
-                                approved_at: dayjs().toISOString(),
-                                account_status: "Active",
-                              })
-                              .eq("account_id", chosenAccount?.account_id);
-                            if (error) {
-                              console.error("Error blocking account:", error);
-                            }
-                          },
-                        },
-                      ],
-                      { cancelable: false }
-                    );
-                  }}
-                >
-                  <Text style={{ color: "white" }}>Approve Account</Text>
-                </TouchableOpacity>
-              </>
-            )}
-
-            {chosenAccount?.account_status !== "Pending" && (
-              <>
-                <View style={styles.textContainer}>
-                  <Text style={styles.nameText}>Approved On: </Text>
-                  <Text style={styles.normalText}>
-                    {dayjs(chosenAccount?.approved_at).format("DD/MM/YYYY")}
-                  </Text>
-                </View>
-                <View style={{ gap: 10 }}>
-                  <TouchableOpacity
-                    style={{
-                      backgroundColor: Colors.light.themeColor,
-                      padding: 10,
-                      borderRadius: 10,
-                      alignItems: "center",
-                    }}
-                    onPress={() => {
-                      setModalVisible(false);
-                      router.replace({
-                        pathname: "/(admin)/transfers",
-                        params: { searchIDExternal: chosenAccount?.account_no },
-                      });
-                    }}
-                  >
-                    <Text style={{ color: "white" }}>View Transfers</Text>
-                  </TouchableOpacity>
-                  {chosenAccount?.account_status !== "Blocked" && (
-                    <TouchableOpacity
-                      style={{
-                        backgroundColor: Colors.light.themeColorReject,
-                        padding: 10,
-                        borderRadius: 10,
-                        alignItems: "center",
-                      }}
-                      onPress={() => {
-                        Alert.alert(
-                          "Confirm Block",
-                          "Are you sure you want to block this account?",
-                          [
-                            {
-                              text: "Cancel",
-                              style: "cancel",
-                            },
-                            {
-                              text: "Block",
-                              onPress: async () => {
-                                setModalVisible(false);
-                                const { error } = await supabase
-                                  .from("Account")
-                                  .update({
-                                    account_status: "Blocked",
-                                  })
-                                  .eq("account_id", chosenAccount?.account_id);
-                                if (error) {
-                                  console.error(
-                                    "Error blocking account:",
-                                    error
-                                  );
-                                }
-                              },
-                            },
-                          ],
-                          { cancelable: false }
-                        );
-                      }}
-                    >
-                      <Text style={{ color: "white" }}>Block Account</Text>
-                    </TouchableOpacity>
-                  )}
-                  {chosenAccount?.account_status == "Blocked" && (
-                    <TouchableOpacity
-                      style={{
-                        backgroundColor: Colors.light.themeColor,
-                        padding: 10,
-                        borderRadius: 10,
-                        alignItems: "center",
-                      }}
-                      onPress={() => {
-                        Alert.alert(
-                          "Confirm Unblock",
-                          "Are you sure you want to unblock this account?",
-                          [
-                            {
-                              text: "Cancel",
-                              style: "cancel",
-                            },
-                            {
-                              text: "Unblock",
-                              onPress: async () => {
-                                setModalVisible(false);
-                                const { error } = await supabase
-                                  .from("Account")
-                                  .update({
-                                    account_status: "Active",
-                                  })
-                                  .eq("account_id", chosenAccount?.account_id);
-                                if (error) {
-                                  console.error(
-                                    "Error blocking account:",
-                                    error
-                                  );
-                                }
-                              },
-                            },
-                          ],
-                          { cancelable: false }
-                        );
-                      }}
-                    >
-                      <Text style={{ color: "white" }}>Unblock Account</Text>
-                    </TouchableOpacity>
-                  )}
-                </View>
-              </>
-            )}
-          </View>
-        </Modal>
       </SafeAreaView>
     </GestureHandlerRootView>
   );
@@ -1041,6 +1054,49 @@ const styles = StyleSheet.create({
   },
   normalText: {
     fontSize: 15,
+  },
+  modal: {
+    justifyContent: "center",
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 20,
+    borderBottomWidth: 1,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+  },
+  closeButton: {
+    padding: 8,
+    borderRadius: 20,
+  },
+  modalContent: {
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+  },
+  approveButton: {
+    backgroundColor: "green",
+    padding: 12,
+    borderRadius: 10,
+    alignItems: "center",
+    marginTop: 15,
+  },
+  actionButtonsContainer: {
+    gap: 10,
+    marginTop: 10,
+  },
+  actionButton: {
+    padding: 12,
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  buttonText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "600",
   },
 });
 
