@@ -48,7 +48,7 @@ const transferTypes = [
   { label: "IBG", value: "IBG" },
   { label: "FPX", value: "FPX" },
   { label: "DuitNow", value: "DuitNow" },
-  { label: "Instant Transfer", value: "Instant Transfer" },
+  { label: "Internal Transfer", value: "Internal Transfer" },
 ];
 
 const TransferAdminPage = () => {
@@ -120,11 +120,20 @@ const TransferAdminPage = () => {
     }
 
     if (selectedTransferTypes.length > 0) {
-      filtered = filtered.filter((transaction) => {
-        return selectedTransferTypes.includes(
-          transaction.type_of_transfer ?? ""
-        );
-      });
+      if (selectedTransferTypes.includes("Internal Transfer")) {
+        filtered = filtered.filter((transaction) => {
+          return (
+            transaction.type_of_transfer === "Internal Transfer" ||
+            transaction.type_of_transfer === "Customer Transfer"
+          );
+        });
+      } else {
+        filtered = filtered.filter((transaction) => {
+          return selectedTransferTypes.includes(
+            transaction.type_of_transfer ?? ""
+          );
+        });
+      }
     }
 
     if (startDate && endDate) {
@@ -243,7 +252,9 @@ const TransferAdminPage = () => {
                           style={{
                             textAlign: "center",
                             fontSize: 16,
-                            color: isDarkMode ? Colors.dark.themeColorTertiary : Colors.light.themeColor,
+                            color: isDarkMode
+                              ? Colors.dark.themeColorTertiary
+                              : Colors.light.themeColor,
                             fontWeight: "bold",
                           }}
                         >
@@ -328,7 +339,9 @@ const TransferAdminPage = () => {
                           style={{
                             textAlign: "center",
                             fontSize: 16,
-                            color: isDarkMode ? Colors.dark.themeColorTertiary : Colors.light.themeColor,
+                            color: isDarkMode
+                              ? Colors.dark.themeColorTertiary
+                              : Colors.light.themeColor,
                             fontWeight: "bold",
                           }}
                         >
@@ -475,16 +488,18 @@ const TransferAdminPage = () => {
                             setSearchID("");
                           }}
                         >
-                        <Text
-                          style={{
-                            textAlign: "center",
-                            fontSize: 16,
-                            color: isDarkMode ? Colors.dark.themeColorTertiary : Colors.light.themeColor,
-                            fontWeight: "bold",
-                          }}
-                        >
-                          Clear
-                        </Text>
+                          <Text
+                            style={{
+                              textAlign: "center",
+                              fontSize: 16,
+                              color: isDarkMode
+                                ? Colors.dark.themeColorTertiary
+                                : Colors.light.themeColor,
+                              fontWeight: "bold",
+                            }}
+                          >
+                            Clear
+                          </Text>
                         </TouchableOpacity>
                       )}
                     </View>
@@ -564,7 +579,9 @@ const TransferAdminPage = () => {
             borderBottomLeftRadius: 50,
           }}
           overlayStyle={{
-            backgroundColor: isDarkMode ? "rgba(0, 0, 0, 0.5)" : "rgba(0, 0, 0, 0.25)",
+            backgroundColor: isDarkMode
+              ? "rgba(0, 0, 0, 0.5)"
+              : "rgba(0, 0, 0, 0.25)",
           }}
         >
           {pageLoading && (
@@ -627,11 +644,20 @@ const TransferAdminPage = () => {
                 }}
               >
                 <View style={{ flexDirection: "column" }}>
-                  <Text style={{ fontSize: 14, fontWeight: "bold", color: isDarkMode ? "white" : Colors.light.themeColor }}>
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      fontWeight: "bold",
+                      color: isDarkMode ? "white" : Colors.light.themeColor,
+                    }}
+                  >
                     Last Updated On:{" "}
                   </Text>
                   <Text
-                    style={{ fontSize: 14, color: isDarkMode ? "white" : Colors.light.themeColor }}
+                    style={{
+                      fontSize: 14,
+                      color: isDarkMode ? "white" : Colors.light.themeColor,
+                    }}
                   >
                     {dayjs(updateTime).format("DD/MM/YYYY HH:mm:ss")}
                   </Text>
@@ -661,7 +687,9 @@ const TransferAdminPage = () => {
                     flex: 1,
                     // justifyContent: "center",
                     alignItems: "center",
-                    backgroundColor: isDarkMode ? Colors.dark.background : Colors.light.background,
+                    backgroundColor: isDarkMode
+                      ? Colors.dark.background
+                      : Colors.light.background,
                     paddingTop: 100,
                   }}
                 >
@@ -669,7 +697,13 @@ const TransferAdminPage = () => {
                     source={require("@/assets/images/laptop.gif")}
                     style={{ width: 150, height: 150 }}
                   />
-                  <Text style={{ fontSize: 18, fontWeight: "bold", color: isDarkMode ? "white" : Colors.light.themeColor }}>
+                  <Text
+                    style={{
+                      fontSize: 18,
+                      fontWeight: "bold",
+                      color: isDarkMode ? "white" : Colors.light.themeColor,
+                    }}
+                  >
                     No transactions found
                   </Text>
                   <TouchableOpacity
@@ -743,7 +777,9 @@ const TransferAdminPage = () => {
                   keyExtractor={(item) => item.transaction_id}
                   style={{
                     paddingVertical: 10,
-                    backgroundColor: isDarkMode ? Colors.dark.background : Colors.light.background,
+                    backgroundColor: isDarkMode
+                      ? Colors.dark.background
+                      : Colors.light.background,
                   }}
                   contentContainerStyle={{
                     paddingVertical: 10,

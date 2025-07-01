@@ -1,4 +1,10 @@
-import { View, Text, StyleSheet, TouchableOpacity, useColorScheme } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  useColorScheme,
+} from "react-native";
 import { Transaction } from "@/assets/data/types";
 import { accounts } from "@/assets/data/dummyAccounts";
 import { customers } from "@/assets/data/dummyCustomers";
@@ -100,26 +106,63 @@ const AdminTransfersBlock = (transaction: Transaction) => {
         })
       }
     >
-      <View style={[styles.container, { backgroundColor: isDarkMode ? "rgba(255, 255, 255, 0.25)" : "#fff" }]}>
+      <View
+        style={[
+          styles.container,
+          {
+            backgroundColor: isDarkMode ? "rgba(255, 255, 255, 0.25)" : "#fff",
+          },
+        ]}
+      >
         <View style={styles.leftContainer}>
-          <Text style={[styles.text, { color: isDarkMode ? "#d0d0c0" : "#000" }]}>
+          <Text
+            style={[styles.text, { color: isDarkMode ? "#d0d0c0" : "#000" }]}
+          >
             {dayjs(transaction.transfer_datetime).format("YYYY-MM-DD")}
           </Text>
-          <Text style={[styles.text, { color: isDarkMode ? "#d0d0c0" : "#000" }]}>
+          <Text
+            style={[styles.text, { color: isDarkMode ? "#d0d0c0" : "#000" }]}
+          >
             {senderName ?? "Loading..."}
           </Text>
         </View>
         <View style={styles.middleContainer}>
-          <Text style={[styles.text, { color: isDarkMode ? "#d0d0c0" : "#000" }]}>$ {transaction.amount.toFixed(2)}</Text>
+          <Text
+            style={[styles.text, { color: isDarkMode ? "#d0d0c0" : "#000" }]}
+          >
+            $ {transaction.amount.toFixed(2)}
+          </Text>
           {/* <Text style={styles.text}>RM {newRate?.toFixed(2)}</Text> */}
-          <FontAwesome name="long-arrow-right" color={isDarkMode ? "white" : "#000"} size={32} />
-          <Text style={[styles.text, {fontSize: 12, fontWeight: "bold", color: isDarkMode ? "#d0d0c0" : "#000", textAlign: "center" }]}>{transaction.type_of_transfer}</Text>
+          <FontAwesome
+            name="long-arrow-right"
+            color={isDarkMode ? "white" : "#000"}
+            size={32}
+          />
+          <Text
+            style={[
+              styles.text,
+              {
+                fontSize: 12,
+                fontWeight: "bold",
+                color: isDarkMode ? "#d0d0c0" : "#000",
+                textAlign: "center",
+              },
+            ]}
+          >
+            {transaction.type_of_transfer === "Customer Transfer"
+              ? "Internal Transfer"
+              : transaction.type_of_transfer}
+          </Text>
         </View>
         <View style={styles.rightContainer}>
-          <Text style={[styles.text, { color: isDarkMode ? "#d0d0c0" : "#000" }]}>
+          <Text
+            style={[styles.text, { color: isDarkMode ? "#d0d0c0" : "#000" }]}
+          >
             {dayjs(transaction.transfer_datetime).format("HH:mm")}
           </Text>
-          <Text style={[styles.text, { color: isDarkMode ? "#d0d0c0" : "#000" }]}>
+          <Text
+            style={[styles.text, { color: isDarkMode ? "#d0d0c0" : "#000" }]}
+          >
             {receiverName ?? "Loading..."}
           </Text>
         </View>

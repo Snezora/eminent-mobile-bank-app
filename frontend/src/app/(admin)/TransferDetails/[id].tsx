@@ -6,6 +6,7 @@ import {
   StyleSheet,
   ActivityIndicator,
   useColorScheme,
+  TouchableOpacity,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { transactions } from "@/assets/data/dummyTransactions";
@@ -98,7 +99,9 @@ const TransferDetails = () => {
       edges={["top"]}
     >
       <View style={styles.header}>
-        <Ionicons name="chevron-back-outline" size={24} color="white" />
+        <TouchableOpacity onPress={() => router.back()} >
+          <Ionicons name="chevron-back-outline" size={24} color="white" />
+        </TouchableOpacity>
         <Text style={{ color: "white", fontSize: 18, fontWeight: "bold" }}>
           Back To Transfers
         </Text>

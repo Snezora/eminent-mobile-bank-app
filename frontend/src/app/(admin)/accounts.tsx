@@ -144,7 +144,6 @@ const Accounts = () => {
     }
   }, [isAdmin, isMockEnabled, searchName, accountName, selectedStatus]);
 
-  // Handle realtime account changes
   const handleAccountChange = useCallback(
     (payload: any) => {
       console.log("Account change received:", payload);
