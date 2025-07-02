@@ -10,10 +10,10 @@ export default function authLayout() {
 
   return (
     <Stack>
-      <Stack.Screen name="home-page" options={{ headerShown: false }} />
+      <Stack.Screen name="home-page" options={{ headerShown: false, gestureEnabled: false }} />
       <Stack.Screen name="sign-in" options={{ headerShown: false }} />
       <Stack.Screen name="signup/sign-up" options={{ headerShown: false }} />
-      <Stack.Screen name="forgot-password" options={{ headerShown: false }} />  
+      <Stack.Screen name="forgot-password" options={{ headerShown: false, gestureEnabled: false }} />
     </Stack>
   );
 }

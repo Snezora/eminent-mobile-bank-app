@@ -5,6 +5,7 @@ import {
   Alert,
   Button,
   Image,
+  Platform,
   StyleSheet,
   Text,
   TextInput,
@@ -29,6 +30,7 @@ import { useForm, SubmitHandler, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { useAuth } from "@/src/providers/AuthProvider";
+import * as LocalAuthentication from "expo-local-authentication";
 
 const scheme = yup.object({
   email: yup.string().email("Invalid email").required("Email is required"),
@@ -40,6 +42,7 @@ const scheme = yup.object({
 
 const SignInScreen = () => {
   const [showPassword, setShowPassword] = useState(false);
+  const [signedInUsingEmail, setSignedInUsingEmail] = useState(false);
   const {
     control,
     handleSubmit,
@@ -77,6 +80,8 @@ const SignInScreen = () => {
         return;
       }
 
+      setSignedInUsingEmail(true);
+
       console.log("Sign-in successful. Waiting for AuthProvider to update...");
     } catch (error) {
       console.error("Error during sign-in:", error);
@@ -84,12 +89,69 @@ const SignInScreen = () => {
     }
   };
 
+  const authenticateBiometric = async () => {
+    if (Platform.OS === "android") {
+      console.log("Skipping biometric authentication for Android emulator.");
+      return true;
+    }
+
+    try {
+      const hasHardware = await LocalAuthentication.hasHardwareAsync();
+      const isEnrolled = await LocalAuthentication.isEnrolledAsync();
+
+      if (!hasHardware || !isEnrolled) {
+        Alert.alert(
+          "Authentication Error",
+          "Biometric authentication is not available on this device."
+        );
+        return false;
+      }
+
+      const result = await LocalAuthentication.authenticateAsync({
+        promptMessage: "Authenticate to continue",
+        fallbackLabel: "Enter PIN",
+      });
+
+      if (result.success) {
+        return true;
+      } else {
+        Alert.alert(
+          "Authentication Error",
+          "Biometric authentication failed. Please try again."
+        );
+        return false;
+      }
+    } catch (error) {
+      console.error("Error during biometric authentication:", error);
+      Alert.alert(
+        "Authentication Error",
+        "An error occurred during authentication."
+      );
+      return false;
+    }
+  };
+  const handleAuthenticationSuccess = () => {
+    console.log("Redirecting to the appropriate screen...");
+    router.dismissAll();
+    isAdmin ? router.push("/(admin)") : router.push("/(user)/(tabs)");
+  };
+
+  const handleAuthenticationFailure = () => {
+    router.dismissAll();
+    router.push("/(auth)/home-page");
+  };
+
   useEffect(() => {
-    if (!loading && session) {
-      console.log("AuthProvider updated. Redirecting...");
-      console.log("Redirecting to the appropriate screen...");
-      router.dismissAll();
-      isAdmin ? router.push("/(admin)") : router.push("/(user)/(tabs)");
+    if (!loading && session && !signedInUsingEmail) {
+      authenticateBiometric().then((result) => {
+        if (result) {
+          handleAuthenticationSuccess();
+        } else {
+          handleAuthenticationFailure();
+        }
+      });
+    } else if (!loading && session && signedInUsingEmail) {
+      handleAuthenticationSuccess();
     }
   }, [isAdmin, session]);
 

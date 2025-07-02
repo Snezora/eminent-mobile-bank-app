@@ -1,6 +1,6 @@
 import { supabase } from "@/src/lib/supabase";
 import { router, Stack } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Alert,
   Button,
@@ -28,6 +28,7 @@ import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view
 import { useForm, SubmitHandler, Controller, FormState } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
+import { useAuth } from "@/src/providers/AuthProvider";
 
 const scheme = yup.object({
   firstName: yup.string().required("First Name is required"),
@@ -47,6 +48,7 @@ const SignUpScreen = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const { session } = useAuth();
   const {
     control,
     handleSubmit,
@@ -189,6 +191,22 @@ const SignUpScreen = () => {
       console.error("Error during sign-up:", error);
     }
   };
+
+  useEffect(() => {
+    if (session) {
+      router.replace("/(auth)/home-page");
+      Alert.alert(
+        "Already Logged In",
+        "You are already logged in. Please log out to register a new account.",
+        [
+          {
+            text: "OK",
+            onPress: () => router.back(),
+          },
+        ]
+      );
+    }
+  }, [session]);
 
   return (
     <SafeAreaView

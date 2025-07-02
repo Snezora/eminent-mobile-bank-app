@@ -19,17 +19,20 @@ const Button = ({
   type = "default",
   style,
   textStyle,
+  disabled = false,
 }: {
   label: string;
   onClick?: () => void;
   type?: keyof typeof colorMap;
   style?: StyleProp<any>;
   textStyle?: StyleProp<any>;
+  disabled?: boolean;
 }) => {
   return (
     <TouchableOpacity
       onPress={onClick}
       style={[styles.button, style, { backgroundColor: colorMap[type] }]}
+      disabled={disabled}
     >
       <View>
         <Text style={[styles.buttonText, textStyle]}>{label}</Text>

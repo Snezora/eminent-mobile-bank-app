@@ -42,12 +42,12 @@ export default function AuthProvider({ children }: PropsWithChildren) {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isMockEnabled, setIsMockEnabled] = useState(false);
   const [isBiometricAuthenticated, setIsBiometricAuthenticated] =
-    useState(false); // New state for biometric authentication
+    useState(false);
 
   const authenticateBiometric = async () => {
     if (Platform.OS === "android") {
       console.log("Skipping biometric authentication for Android emulator.");
-      setIsBiometricAuthenticated(true); // Automatically authenticate for Android emulator
+      setIsBiometricAuthenticated(true); // change this if using non-emulator Android device
       return true;
     }
 

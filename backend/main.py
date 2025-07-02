@@ -19,7 +19,6 @@ load_dotenv()
 
 app = FastAPI()
 
-# 1. Load the model when the application starts
 try:
     model = joblib.load("model.joblib")
     scaler = joblib.load("scaler.pkl")
@@ -32,7 +31,6 @@ except FileNotFoundError:
     explainer = None
     scaler = None
 else:
-    # Initialize the SHAP explainer based on model type
     try:
         background = np.zeros((1, len(model_columns)))
         explainer = shap.KernelExplainer(model.predict_proba, background)
