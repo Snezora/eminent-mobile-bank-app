@@ -4,20 +4,20 @@ uvicorn[standard]==0.24.0
 
 # Data Processing & Scientific Computing
 pandas==2.1.3
-numpy==1.25.2
+numpy>=1.26.0
 scikit-learn==1.3.2
 
 # Machine Learning Models
-catboost==1.2.2
-lightgbm==4.1.0
-xgboost==2.0.1
+catboost
+lightgbm
+xgboost
 joblib==1.3.2
 
 # SHAP for Model Explainability
 shap==0.43.0
 
 # Encryption
-cryptography==41.0.8
+cryptography==46.0.3
 
 # Environment Variables
 python-dotenv==1.0.0

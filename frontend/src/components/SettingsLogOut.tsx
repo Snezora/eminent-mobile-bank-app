@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { navigate } from "expo-router/build/global-state/routing";
 import { TouchableOpacity, View } from "react-native";
-import { supabase } from "../lib/supabase";
+import { supabase } from "../lib/supabase.js";
 import { useAuth } from "../providers/AuthProvider";
 
 const SettingsLogOut = () => {

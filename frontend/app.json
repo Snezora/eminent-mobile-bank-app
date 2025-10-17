@@ -60,7 +60,9 @@
           "cameraPermissionText": "$(PRODUCT_NAME) needs access to your Camera.",
           "enableCodeScanner": true
         }
-      ]
+      ],
+      "expo-font",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true

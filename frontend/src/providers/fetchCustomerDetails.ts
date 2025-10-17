@@ -1,5 +1,5 @@
 import { customers } from "@/assets/data/dummyCustomers";
-import { supabase } from "../lib/supabase";
+import { supabase } from "../lib/supabase.js";
 
 export const fetchCustomerDetails = async (
   isMockEnabled: boolean,

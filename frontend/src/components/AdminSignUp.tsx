@@ -1,4 +1,4 @@
-import { supabase } from "../lib/supabase";
+import { supabase } from "../lib/supabase.js";
 
 const activated = false; // Set to true if admin sign-up is activated
 

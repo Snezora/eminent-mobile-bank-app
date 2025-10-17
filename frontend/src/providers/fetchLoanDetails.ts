@@ -1,5 +1,5 @@
 import { loans } from "@/assets/data/dummyLoans";
-import { supabase } from "../lib/supabase";
+import { supabase } from "../lib/supabase.js";
 
 const fetchLoanDetails = async (isMockEnabled: boolean, loanId: string) => {
   if (isMockEnabled) {

@@ -1,2 +1,16 @@
 Put
 source bin/activate in .venv
+
+FOR MAC:
+cd backend
+brew install python cmake ninja libomp conan
+uv venv --python 3.12.0
+source .venv/bin/activate
+uv pip install -r requirements.txt
+uvicorn main:app --reload
+
+If done already:
+cd backend
+source .venv/bin/activate
+uvicorn main:app --reload
+

@@ -1,4 +1,4 @@
-import { supabase } from "../lib/supabase";
+import { supabase } from "../lib/supabase.js";
 import { admins } from "@/assets/data/dummyAdmins";
 
 const fetchAdminInfo = async ({

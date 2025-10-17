@@ -12,7 +12,7 @@ import Animated, {
   Easing,
   FadeOut,
 } from "react-native-reanimated";
-import { supabase } from "../lib/supabase";
+import { supabase } from "../lib/supabase.js";
 import { useFocusEffect } from "@react-navigation/core";
 import { useCallback } from "react";
 

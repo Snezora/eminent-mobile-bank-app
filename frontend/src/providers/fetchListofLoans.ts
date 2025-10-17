@@ -1,4 +1,4 @@
-import { supabase } from "../lib/supabase";
+import { supabase } from "../lib/supabase.js";
 import { useAuth } from "./AuthProvider";
 import { Admin, Customer, Loan } from "@/assets/data/types";
 import { loans } from "@/assets/data/dummyLoans";

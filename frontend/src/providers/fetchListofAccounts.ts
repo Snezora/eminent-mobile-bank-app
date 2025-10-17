@@ -1,4 +1,4 @@
-import { supabase } from "../lib/supabase";
+import { supabase } from "../lib/supabase.js";
 import { accounts } from "@/assets/data/dummyAccounts";
 
 const fetchListofAccounts = async ({

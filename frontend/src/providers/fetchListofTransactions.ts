@@ -1,5 +1,5 @@
 import { transactions } from "@/assets/data/dummyTransactions";
-import { supabase } from "../lib/supabase";
+import { supabase } from "../lib/supabase.js";
 
 const fetchListofTransactions = async ({
   isMockEnabled,
